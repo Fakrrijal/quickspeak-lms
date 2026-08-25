@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { authService } from '../services/auth.service'
 
 export const Route = createFileRoute('/login')({
@@ -11,6 +11,7 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,6 +20,7 @@ function LoginPage() {
 
     try {
       await authService.signIn({ email, password })
+      navigate({ to: '/' })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
