@@ -52,6 +52,14 @@ export type CreateTeachingGroupInput = {
   groupType: 'private' | 'semi_private'
 }
 
+export type UpdateTeachingGroupInput = {
+  teachingGroupId: string
+  name: string
+  teacherId: string
+  levelId: string
+  groupType: 'private' | 'semi_private'
+}
+
 export async function getWaitingStudents() {
   const { data, error } = await supabase
     .from('profiles')
@@ -206,6 +214,31 @@ export async function createTeachingGroup({
   const { data, error } = await supabase.rpc(
     'admin_create_teaching_group',
     {
+      p_name: name,
+      p_teacher_id: teacherId,
+      p_level_id: levelId,
+      p_group_type: groupType,
+    },
+  )
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function updateTeachingGroup({
+  teachingGroupId,
+  name,
+  teacherId,
+  levelId,
+  groupType,
+}: UpdateTeachingGroupInput) {
+  const { data, error } = await supabase.rpc(
+    'admin_update_teaching_group',
+    {
+      p_teaching_group_id: teachingGroupId,
       p_name: name,
       p_teacher_id: teacherId,
       p_level_id: levelId,

@@ -6,6 +6,7 @@ import {
   getActiveTeachers,
   getTeacherLevelEligibility,
   getTeachingGroups,
+  updateTeachingGroup,
   type ActiveTeacher,
   type TeacherLevelEligibility,
   type TeachingGroup,
@@ -40,6 +41,15 @@ function AdminTeachingGroupsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editingGroupId, setEditingGroupId] = useState('')
+  const [editGroupName, setEditGroupName] = useState('')
+  const [editTeacherId, setEditTeacherId] = useState('')
+  const [editLevelId, setEditLevelId] = useState('')
+  const [editGroupType, setEditGroupType] = useState<'' | 'private' | 'semi_private'>('')
+  const [editEligibleLevels, setEditEligibleLevels] = useState<TeacherLevelEligibility[]>([])
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
+  const [editFormError, setEditFormError] = useState<string | null>(null)
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -196,6 +206,102 @@ function AdminTeachingGroupsPage() {
     }
   }
 
+  const resetEditForm = () => {
+    setEditGroupName('')
+    setEditTeacherId('')
+    setEditLevelId('')
+    setEditGroupType('')
+    setEditEligibleLevels([])
+    setEditFormError(null)
+  }
+
+  const openEditForm = (group: TeachingGroup) => {
+    resetEditForm()
+    setSuccessMessage(null)
+    setEditingGroupId(group.id)
+    setEditGroupName(group.name)
+    setEditTeacherId(group.teacher_id)
+    setEditLevelId(group.level_id)
+    setEditGroupType(group.group_type)
+    setIsEditOpen(true)
+    void loadActiveTeachers()
+    // Load eligible levels for current teacher
+    if (group.teacher_id) {
+      void handleEditTeacherChange(group.teacher_id, group.level_id)
+    }
+  }
+
+  const closeEditForm = () => {
+    setIsEditOpen(false)
+    resetEditForm()
+    setEditingGroupId('')
+  }
+
+  const handleEditTeacherChange = async (nextTeacherId: string, preserveLevelId?: string) => {
+    setEditTeacherId(nextTeacherId)
+    setEditLevelId(preserveLevelId || '')
+    setEditEligibleLevels([])
+    setEditFormError(null)
+
+    if (!nextTeacherId) {
+      return
+    }
+
+    setIsLoadingLevels(true)
+
+    try {
+      setEditEligibleLevels(await getTeacherLevelEligibility(nextTeacherId))
+    } catch (loadError) {
+      setEditFormError(
+        loadError instanceof Error
+          ? loadError.message
+          : 'Unable to load teacher eligibility.',
+      )
+    } finally {
+      setIsLoadingLevels(false)
+    }
+  }
+
+  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const trimmedName = editGroupName.trim()
+
+    if (!trimmedName) {
+      setEditFormError('Teaching group name is required.')
+      return
+    }
+
+    if (!editTeacherId || !editLevelId || !editGroupType) {
+      setEditFormError('Select a teacher, eligible level, and group type.')
+      return
+    }
+
+    setIsSubmittingEdit(true)
+    setEditFormError(null)
+    setSuccessMessage(null)
+
+    try {
+      await updateTeachingGroup({
+        teachingGroupId: editingGroupId,
+        name: trimmedName,
+        teacherId: editTeacherId,
+        levelId: editLevelId,
+        groupType: editGroupType,
+      })
+      setSuccessMessage(`Teaching group “${trimmedName}” was updated successfully.`)
+      closeEditForm()
+      await loadTeachingGroups()
+    } catch (updateError) {
+      setEditFormError(
+        updateError instanceof Error
+          ? updateError.message
+          : 'Unable to update teaching group.',
+      )
+    } finally {
+      setIsSubmittingEdit(false)
+    }
+  }
+
   if (loading || profileLoading) {
     return <p>Loading...</p>
   }
@@ -340,6 +446,112 @@ function AdminTeachingGroupsPage() {
         </div>
       )}
 
+      {isEditOpen && (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-xl font-semibold text-slate-900">Edit Teaching Group</h3>
+            <button
+              type="button"
+              onClick={closeEditForm}
+              disabled={isSubmittingEdit}
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <form className="mt-5 grid gap-5 md:grid-cols-2" onSubmit={handleUpdate}>
+            <label className="grid gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+              Group Name
+              <input
+                value={editGroupName}
+                onChange={(event) => setEditGroupName(event.target.value)}
+                disabled={isSubmittingEdit}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Teacher
+              <select
+                value={editTeacherId}
+                onChange={(event) => void handleEditTeacherChange(event.target.value)}
+                disabled={isLoadingTeachers || isSubmittingEdit}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              >
+                <option value="">{isLoadingTeachers ? 'Loading teachers...' : 'Select a teacher'}</option>
+                {activeTeachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.profiles?.full_name ?? 'Unknown teacher'} — {teacher.teacher_code}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Level
+              <select
+                value={editLevelId}
+                onChange={(event) => setEditLevelId(event.target.value)}
+                disabled={!editTeacherId || isLoadingLevels || isSubmittingEdit}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              >
+                <option value="">
+                  {!editTeacherId
+                    ? 'Select a teacher first'
+                    : isLoadingLevels
+                      ? 'Loading eligible levels...'
+                      : 'Select an eligible level'}
+                </option>
+                {editEligibleLevels.map((level) => (
+                  <option key={level.id} value={level.id}>
+                    {level.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Type
+              <select
+                value={editGroupType}
+                onChange={(event) => setEditGroupType(event.target.value as '' | 'private' | 'semi_private')}
+                disabled={isSubmittingEdit}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              >
+                <option value="">Select a type</option>
+                <option value="private">Private</option>
+                <option value="semi_private">Semi-private</option>
+              </select>
+            </label>
+
+            {editFormError && (
+              <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 md:col-span-2">
+                {editFormError}
+              </p>
+            )}
+
+            <div className="flex gap-3 md:col-span-2">
+              <button
+                type="submit"
+                disabled={isSubmittingEdit}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmittingEdit ? 'Updating...' : 'Update Teaching Group'}
+              </button>
+              <button
+                type="button"
+                onClick={closeEditForm}
+                disabled={isSubmittingEdit}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="mt-8 overflow-hidden rounded-xl border bg-white shadow-sm">
         {isLoading && (
           <p className="p-6 text-sm text-slate-600">Loading teaching groups...</p>
@@ -366,6 +578,7 @@ function AdminTeachingGroupsPage() {
                   <th className="px-6 py-3 font-semibold">Type</th>
                   <th className="px-6 py-3 font-semibold">Students</th>
                   <th className="px-6 py-3 font-semibold">Status</th>
+                  <th className="px-6 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -409,6 +622,15 @@ function AdminTeachingGroupsPage() {
                         }`}>
                           {group.is_active ? 'Active' : 'Inactive'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          type="button"
+                          onClick={() => openEditForm(group)}
+                          className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                        >
+                          Edit
+                        </button>
                       </td>
                     </tr>
                   )
