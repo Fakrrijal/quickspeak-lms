@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
+  createTeachingGroup,
+  getActiveTeachers,
+  getTeacherLevelEligibility,
   getTeachingGroups,
+  type ActiveTeacher,
+  type TeacherLevelEligibility,
   type TeachingGroup,
 } from '../../services/admin.service'
 
@@ -23,6 +28,18 @@ function AdminTeachingGroupsPage() {
   const [teachingGroups, setTeachingGroups] = useState<TeachingGroup[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [activeTeachers, setActiveTeachers] = useState<ActiveTeacher[]>([])
+  const [eligibleLevels, setEligibleLevels] = useState<TeacherLevelEligibility[]>([])
+  const [groupName, setGroupName] = useState('')
+  const [teacherId, setTeacherId] = useState('')
+  const [levelId, setLevelId] = useState('')
+  const [groupType, setGroupType] = useState<'' | 'private' | 'semi_private'>('')
+  const [isLoadingTeachers, setIsLoadingTeachers] = useState(false)
+  const [isLoadingLevels, setIsLoadingLevels] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -77,6 +94,108 @@ function AdminTeachingGroupsPage() {
     }
   }, [canViewTeachingGroups, loadTeachingGroups])
 
+  const resetCreateForm = () => {
+    setGroupName('')
+    setTeacherId('')
+    setLevelId('')
+    setGroupType('')
+    setEligibleLevels([])
+    setFormError(null)
+  }
+
+  const loadActiveTeachers = useCallback(async () => {
+    setIsLoadingTeachers(true)
+    setFormError(null)
+
+    try {
+      setActiveTeachers(await getActiveTeachers())
+    } catch (loadError) {
+      setFormError(
+        loadError instanceof Error
+          ? loadError.message
+          : 'Unable to load active teachers.',
+      )
+    } finally {
+      setIsLoadingTeachers(false)
+    }
+  }, [])
+
+  const openCreateForm = () => {
+    resetCreateForm()
+    setSuccessMessage(null)
+    setIsCreateOpen(true)
+    void loadActiveTeachers()
+  }
+
+  const closeCreateForm = () => {
+    setIsCreateOpen(false)
+    resetCreateForm()
+  }
+
+  const handleTeacherChange = async (nextTeacherId: string) => {
+    setTeacherId(nextTeacherId)
+    setLevelId('')
+    setEligibleLevels([])
+    setFormError(null)
+
+    if (!nextTeacherId) {
+      return
+    }
+
+    setIsLoadingLevels(true)
+
+    try {
+      setEligibleLevels(await getTeacherLevelEligibility(nextTeacherId))
+    } catch (loadError) {
+      setFormError(
+        loadError instanceof Error
+          ? loadError.message
+          : 'Unable to load teacher eligibility.',
+      )
+    } finally {
+      setIsLoadingLevels(false)
+    }
+  }
+
+  const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const trimmedName = groupName.trim()
+
+    if (!trimmedName) {
+      setFormError('Teaching group name is required.')
+      return
+    }
+
+    if (!teacherId || !levelId || !groupType) {
+      setFormError('Select a teacher, eligible level, and group type.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setFormError(null)
+    setSuccessMessage(null)
+
+    try {
+      await createTeachingGroup({
+        name: trimmedName,
+        teacherId,
+        levelId,
+        groupType,
+      })
+      setSuccessMessage(`Teaching group “${trimmedName}” was created successfully.`)
+      closeCreateForm()
+      await loadTeachingGroups()
+    } catch (createError) {
+      setFormError(
+        createError instanceof Error
+          ? createError.message
+          : 'Unable to create teaching group.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   if (loading || profileLoading) {
     return <p>Loading...</p>
   }
@@ -96,9 +215,130 @@ function AdminTeachingGroupsPage() {
 
   return (
     <section>
-      <h2 className="text-3xl font-bold text-slate-900">
-        Admin Teaching Groups
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-3xl font-bold text-slate-900">
+          Admin Teaching Groups
+        </h2>
+        <button
+          type="button"
+          onClick={openCreateForm}
+          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        >
+          + Create Teaching Group
+        </button>
+      </div>
+
+      {successMessage && (
+        <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
+          {successMessage}
+        </p>
+      )}
+
+      {isCreateOpen && (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-xl font-semibold text-slate-900">Create Teaching Group</h3>
+            <button
+              type="button"
+              onClick={closeCreateForm}
+              disabled={isSubmitting}
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <form className="mt-5 grid gap-5 md:grid-cols-2" onSubmit={handleCreate}>
+            <label className="grid gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+              Group Name
+              <input
+                value={groupName}
+                onChange={(event) => setGroupName(event.target.value)}
+                disabled={isSubmitting}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Teacher
+              <select
+                value={teacherId}
+                onChange={(event) => void handleTeacherChange(event.target.value)}
+                disabled={isLoadingTeachers || isSubmitting}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              >
+                <option value="">{isLoadingTeachers ? 'Loading teachers...' : 'Select a teacher'}</option>
+                {activeTeachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.profiles?.full_name ?? 'Unknown teacher'} — {teacher.teacher_code}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Level
+              <select
+                value={levelId}
+                onChange={(event) => setLevelId(event.target.value)}
+                disabled={!teacherId || isLoadingLevels || isSubmitting}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              >
+                <option value="">
+                  {!teacherId
+                    ? 'Select a teacher first'
+                    : isLoadingLevels
+                      ? 'Loading eligible levels...'
+                      : 'Select an eligible level'}
+                </option>
+                {eligibleLevels.map((level) => (
+                  <option key={level.id} value={level.id}>
+                    {level.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Type
+              <select
+                value={groupType}
+                onChange={(event) => setGroupType(event.target.value as '' | 'private' | 'semi_private')}
+                disabled={isSubmitting}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+              >
+                <option value="">Select a type</option>
+                <option value="private">Private</option>
+                <option value="semi_private">Semi-private</option>
+              </select>
+            </label>
+
+            {formError && (
+              <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 md:col-span-2">
+                {formError}
+              </p>
+            )}
+
+            <div className="flex gap-3 md:col-span-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Teaching Group'}
+              </button>
+              <button
+                type="button"
+                onClick={closeCreateForm}
+                disabled={isSubmitting}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="mt-8 overflow-hidden rounded-xl border bg-white shadow-sm">
         {isLoading && (
