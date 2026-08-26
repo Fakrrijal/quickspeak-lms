@@ -6,6 +6,7 @@ import {
   getActiveTeachers,
   getTeacherLevelEligibility,
   getTeachingGroups,
+  setTeachingGroupStatus,
   updateTeachingGroup,
   type ActiveTeacher,
   type TeacherLevelEligibility,
@@ -299,6 +300,23 @@ function AdminTeachingGroupsPage() {
       )
     } finally {
       setIsSubmittingEdit(false)
+    }
+  }
+
+  const handleToggleStatus = async (group: TeachingGroup) => {
+    const newStatus = !group.is_active
+    const action = newStatus ? 'reactivate' : 'deactivate'
+
+    try {
+      await setTeachingGroupStatus(group.id, newStatus)
+      setSuccessMessage(`Teaching group ${action}d successfully.`)
+      await loadTeachingGroups()
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : `Unable to ${action} teaching group.`,
+      )
     }
   }
 
@@ -624,13 +642,26 @@ function AdminTeachingGroupsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(group)}
-                          className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditForm(group)}
+                            className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleToggleStatus(group)}
+                            className={`rounded px-3 py-1.5 text-sm font-medium ${
+                              group.is_active
+                                ? 'text-red-600 hover:bg-red-50'
+                                : 'text-emerald-600 hover:bg-emerald-50'
+                            }`}
+                          >
+                            {group.is_active ? 'Deactivate' : 'Reactivate'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

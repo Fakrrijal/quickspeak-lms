@@ -253,6 +253,25 @@ export async function updateTeachingGroup({
   return data
 }
 
+export async function setTeachingGroupStatus(
+  teachingGroupId: string,
+  isActive: boolean,
+) {
+  const { data, error } = await supabase.rpc(
+    'admin_set_teaching_group_status',
+    {
+      p_teaching_group_id: teachingGroupId,
+      p_is_active: isActive,
+    },
+  )
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
 export async function activateStudent(
   profileId: string,
   teachingGroupId: string,
