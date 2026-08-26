@@ -6,11 +6,24 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { useAuth } from '../hooks/useAuth'
 
+type Profile = {
+  id: string
+  full_name: string
+  email: string
+  role: string
+  status: string
+}
+
 type AuthContextValue = {
   session: Session | null
   user: User | null
   loading: boolean
   isAuthenticated: boolean
+  profile: Profile | null
+  profileLoading: boolean
+  profileError: Error | null
+  role: string | null
+  status: string | null
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(

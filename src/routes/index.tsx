@@ -7,16 +7,41 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
-  const { isAuthenticated, loading } = useAuthContext()
+  const { isAuthenticated, loading, profileLoading, status, profileError } = useAuthContext()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate({ to: '/login' })
+    // Auth session loading
+    if (loading) {
+      return
     }
-  }, [isAuthenticated, loading, navigate])
 
-  if (loading) {
+    // Not authenticated
+    if (!isAuthenticated) {
+      navigate({ to: '/login' })
+      return
+    }
+
+    // Profile still loading
+    if (profileLoading) {
+      return
+    }
+
+    // Profile fetch error or missing
+    if (profileError || status === null) {
+      navigate({ to: '/login' })
+      return
+    }
+
+    // Status-based routing
+    if (status !== 'active') {
+      navigate({ to: '/waiting' })
+      return
+    }
+  }, [isAuthenticated, loading, profileLoading, status, profileError, navigate])
+
+  // Show loading while auth or profile is loading
+  if (loading || profileLoading) {
     return (
       <main className="min-h-screen p-8">
         <p>Loading...</p>
@@ -24,7 +49,18 @@ function HomePage() {
     )
   }
 
+  // Don't show content if not authenticated
   if (!isAuthenticated) {
+    return null
+  }
+
+  // Don't show content if profile error or missing
+  if (profileError || status === null) {
+    return null
+  }
+
+  // Don't show content if status is not active
+  if (status !== 'active') {
     return null
   }
 
