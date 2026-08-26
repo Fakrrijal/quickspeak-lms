@@ -27,6 +27,10 @@ export type ActiveTeachingGroup = {
   } | null
 }
 
+export type TeachingGroup = ActiveTeachingGroup & {
+  student_count: number
+}
+
 export async function getWaitingStudents() {
   const { data, error } = await supabase
     .from('profiles')
@@ -84,6 +88,52 @@ export async function getActiveTeachingGroups() {
         : null,
     }
   }) as ActiveTeachingGroup[]
+}
+
+export async function getTeachingGroups() {
+  const { data, error } = await supabase
+    .from('teaching_groups')
+    .select(`
+      id,
+      name,
+      group_type,
+      level_id,
+      teacher_id,
+      is_active,
+      levels (name, level_number),
+      teachers (teacher_code, profiles (full_name)),
+      teaching_group_students (count)
+    `)
+    .order('name', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).map((group) => {
+    const level = Array.isArray(group.levels)
+      ? group.levels[0] ?? null
+      : group.levels
+    const teacher = Array.isArray(group.teachers)
+      ? group.teachers[0] ?? null
+      : group.teachers
+    const teacherProfile = teacher && Array.isArray(teacher.profiles)
+      ? teacher.profiles[0] ?? null
+      : teacher?.profiles ?? null
+    const membershipCount = group.teaching_group_students[0]?.count ?? 0
+
+    return {
+      ...group,
+      levels: level,
+      teachers: teacher
+        ? {
+            ...teacher,
+            profiles: teacherProfile,
+          }
+        : null,
+      student_count: membershipCount,
+    }
+  }) as TeachingGroup[]
 }
 
 export async function activateStudent(

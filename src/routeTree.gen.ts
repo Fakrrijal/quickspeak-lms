@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as WaitingRouteImport } from './routes/waiting'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminTeachingGroupsRouteImport } from './routes/admin/teaching-groups'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,12 +41,18 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTeachingGroupsRoute = AdminTeachingGroupsRouteImport.update({
+  id: '/admin/teaching-groups',
+  path: '/admin/teaching-groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/waiting': typeof WaitingRoute
+  '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/waiting': typeof WaitingRoute
+  '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,34 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/waiting': typeof WaitingRoute
+  '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/waiting' | '/admin/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/waiting'
+    | '/admin/teaching-groups'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/waiting' | '/admin'
-  id: '__root__' | '/' | '/login' | '/register' | '/waiting' | '/admin/'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/waiting'
+    | '/admin/teaching-groups'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/register'
+    | '/waiting'
+    | '/admin/teaching-groups'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +104,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   WaitingRoute: typeof WaitingRoute
+  AdminTeachingGroupsRoute: typeof AdminTeachingGroupsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/teaching-groups': {
+      id: '/admin/teaching-groups'
+      path: '/admin/teaching-groups'
+      fullPath: '/admin/teaching-groups'
+      preLoaderRoute: typeof AdminTeachingGroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -124,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   WaitingRoute: WaitingRoute,
+  AdminTeachingGroupsRoute: AdminTeachingGroupsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
