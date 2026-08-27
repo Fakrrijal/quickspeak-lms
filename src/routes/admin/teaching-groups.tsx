@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
+  assignStudentToTeachingGroup,
   createTeachingGroup,
+  getActiveStudents,
   getActiveTeachers,
   getTeacherLevelEligibility,
   getTeachingGroups,
+  removeStudentFromTeachingGroup,
   setTeachingGroupStatus,
   updateTeachingGroup,
+  type ActiveStudent,
   type ActiveTeacher,
   type TeacherLevelEligibility,
   type TeachingGroup,
@@ -51,6 +55,12 @@ function AdminTeachingGroupsPage() {
   const [editEligibleLevels, setEditEligibleLevels] = useState<TeacherLevelEligibility[]>([])
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
   const [editFormError, setEditFormError] = useState<string | null>(null)
+  const [managingGroupId, setManagingGroupId] = useState<string | null>(null)
+  const [activeStudents, setActiveStudents] = useState<ActiveStudent[]>([])
+  const [selectedStudentId, setSelectedStudentId] = useState('')
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false)
+  const [isManagingStudents, setIsManagingStudents] = useState(false)
+  const [studentManagementError, setStudentManagementError] = useState<string | null>(null)
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -320,6 +330,82 @@ function AdminTeachingGroupsPage() {
     }
   }
 
+  const openManageStudents = async (group: TeachingGroup) => {
+    setManagingGroupId(group.id)
+    setSelectedStudentId('')
+    setStudentManagementError(null)
+    setSuccessMessage(null)
+    setIsLoadingStudents(true)
+
+    try {
+      setActiveStudents(await getActiveStudents())
+    } catch (loadError) {
+      setStudentManagementError(
+        loadError instanceof Error
+          ? loadError.message
+          : 'Unable to load active students.',
+      )
+    } finally {
+      setIsLoadingStudents(false)
+    }
+  }
+
+  const closeManageStudents = () => {
+    setManagingGroupId(null)
+    setSelectedStudentId('')
+    setStudentManagementError(null)
+  }
+
+  const handleAssignStudent = async (group: TeachingGroup) => {
+    if (!selectedStudentId) {
+      setStudentManagementError('Select a student.')
+      return
+    }
+
+    setIsManagingStudents(true)
+    setStudentManagementError(null)
+    setSuccessMessage(null)
+
+    try {
+      await assignStudentToTeachingGroup(group.id, selectedStudentId)
+      await loadTeachingGroups()
+      setSelectedStudentId('')
+      setSuccessMessage('Student assigned successfully.')
+    } catch (assignError) {
+      setStudentManagementError(
+        assignError instanceof Error
+          ? assignError.message
+          : 'Unable to assign student.',
+      )
+    } finally {
+      setIsManagingStudents(false)
+    }
+  }
+
+  const handleRemoveStudent = async (group: TeachingGroup, studentId: string) => {
+    setIsManagingStudents(true)
+    setStudentManagementError(null)
+    setSuccessMessage(null)
+
+    try {
+      await removeStudentFromTeachingGroup(group.id, studentId)
+      await loadTeachingGroups()
+      setSuccessMessage('Student removed successfully.')
+    } catch (removeError) {
+      setStudentManagementError(
+        removeError instanceof Error
+          ? removeError.message
+          : 'Unable to remove student.',
+      )
+    } finally {
+      setIsManagingStudents(false)
+    }
+  }
+
+  const managingGroup = managingGroupId
+    ? teachingGroups.find((group) => group.id === managingGroupId) ?? null
+    : null
+
   if (loading || profileLoading) {
     return <p>Loading...</p>
   }
@@ -570,6 +656,100 @@ function AdminTeachingGroupsPage() {
         </div>
       )}
 
+      {managingGroup && (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-semibold text-slate-900">
+                Manage Students: {managingGroup.name}
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Capacity: {managingGroup.student_count} / {managingGroup.group_type === 'private' ? 1 : 4}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={closeManageStudents}
+              disabled={isManagingStudents}
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
+            >
+              Close
+            </button>
+          </div>
+
+          {studentManagementError && (
+            <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              {studentManagementError}
+            </p>
+          )}
+
+          {managingGroup.is_active && (
+            <div className="mt-5 rounded-lg bg-slate-50 p-4">
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Assign Student
+                <select
+                  value={selectedStudentId}
+                  onChange={(event) => setSelectedStudentId(event.target.value)}
+                  disabled={isLoadingStudents || isManagingStudents}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 disabled:bg-slate-100"
+                >
+                  <option value="">
+                    {isLoadingStudents ? 'Loading active students...' : 'Select a student'}
+                  </option>
+                  {activeStudents
+                    .filter((student) => !managingGroup.memberships.some(
+                      (membership) => membership.student_id === student.id,
+                    ))
+                    .map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.profiles?.full_name ?? 'Unknown student'} - {student.student_code}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => void handleAssignStudent(managingGroup)}
+                disabled={!selectedStudentId || isLoadingStudents || isManagingStudents}
+                className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isManagingStudents ? 'Assigning...' : 'Assign Student'}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-5">
+            <h4 className="text-sm font-semibold text-slate-900">Current Students</h4>
+            {managingGroup.memberships.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-600">No students are assigned to this group.</p>
+            ) : (
+              <ul className="mt-2 divide-y divide-slate-200 rounded-lg border border-slate-200">
+                {managingGroup.memberships.map((membership) => (
+                  <li key={membership.student_id} className="flex items-center justify-between gap-4 p-3">
+                    <div className="text-sm text-slate-700">
+                      <p className="font-medium text-slate-900">
+                        {membership.students?.profiles?.full_name ?? 'Unknown student'}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {membership.students?.student_code ?? 'No student code'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleRemoveStudent(managingGroup, membership.student_id)}
+                      disabled={isManagingStudents}
+                      className="rounded px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 overflow-hidden rounded-xl border bg-white shadow-sm">
         {isLoading && (
           <p className="p-6 text-sm text-slate-600">Loading teaching groups...</p>
@@ -649,6 +829,13 @@ function AdminTeachingGroupsPage() {
                             className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
                           >
                             Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void openManageStudents(group)}
+                            className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                          >
+                            Manage Students
                           </button>
                           <button
                             type="button"

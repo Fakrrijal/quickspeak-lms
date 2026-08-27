@@ -29,6 +29,26 @@ export type ActiveTeachingGroup = {
 
 export type TeachingGroup = ActiveTeachingGroup & {
   student_count: number
+  memberships: TeachingGroupMembership[]
+}
+
+export type TeachingGroupMembership = {
+  student_id: string
+  students: {
+    id: string
+    student_code: string
+    profiles: {
+      full_name: string
+    } | null
+  } | null
+}
+
+export type ActiveStudent = {
+  id: string
+  student_code: string
+  profiles: {
+    full_name: string
+  } | null
 }
 
 export type ActiveTeacher = {
@@ -131,7 +151,10 @@ export async function getTeachingGroups() {
       is_active,
       levels (name, level_number),
       teachers (teacher_code, profiles (full_name)),
-      teaching_group_students (count)
+      teaching_group_students (
+        student_id,
+        students (id, student_code, profiles (full_name))
+      )
     `)
     .order('name', { ascending: true })
 
@@ -149,7 +172,27 @@ export async function getTeachingGroups() {
     const teacherProfile = teacher && Array.isArray(teacher.profiles)
       ? teacher.profiles[0] ?? null
       : teacher?.profiles ?? null
-    const membershipCount = group.teaching_group_students[0]?.count ?? 0
+    const membershipCount = group.teaching_group_students?.length ?? 0
+    const memberships = group.teaching_group_students
+      .filter((membership) => membership.student_id)
+      .map((membership) => {
+        const student = Array.isArray(membership.students)
+          ? membership.students[0] ?? null
+          : membership.students
+        const profile = student && Array.isArray(student.profiles)
+          ? student.profiles[0] ?? null
+          : student?.profiles ?? null
+
+        return {
+          student_id: membership.student_id,
+          students: student
+            ? {
+                ...student,
+                profiles: profile,
+              }
+            : null,
+        }
+      })
 
     return {
       ...group,
@@ -161,8 +204,28 @@ export async function getTeachingGroups() {
           }
         : null,
       student_count: membershipCount,
+      memberships,
     }
   }) as TeachingGroup[]
+}
+
+export async function getActiveStudents() {
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, student_code, profiles (full_name)')
+    .eq('is_active', true)
+    .order('student_code', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).map((student) => ({
+    ...student,
+    profiles: Array.isArray(student.profiles)
+      ? student.profiles[0] ?? null
+      : student.profiles,
+  })) as ActiveStudent[]
 }
 
 export async function getActiveTeachers() {
@@ -262,6 +325,44 @@ export async function setTeachingGroupStatus(
     {
       p_teaching_group_id: teachingGroupId,
       p_is_active: isActive,
+    },
+  )
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function assignStudentToTeachingGroup(
+  teachingGroupId: string,
+  studentId: string,
+) {
+  const { data, error } = await supabase.rpc(
+    'admin_assign_student_to_teaching_group',
+    {
+      p_teaching_group_id: teachingGroupId,
+      p_student_id: studentId,
+    },
+  )
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function removeStudentFromTeachingGroup(
+  teachingGroupId: string,
+  studentId: string,
+) {
+  const { data, error } = await supabase.rpc(
+    'admin_remove_student_from_teaching_group',
+    {
+      p_teaching_group_id: teachingGroupId,
+      p_student_id: studentId,
     },
   )
 
