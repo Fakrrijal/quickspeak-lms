@@ -59,6 +59,21 @@ export type ActiveTeacher = {
   } | null
 }
 
+export type AdminTeacher = {
+  id: string
+  teacher_code: string
+  is_active: boolean
+  profiles: {
+    full_name: string
+    email: string
+  } | null
+  eligible_levels: {
+    id: string
+    level_number: number
+    name: string
+  }[]
+}
+
 export type TeacherLevelEligibility = {
   id: string
   level_number: number
@@ -245,6 +260,99 @@ export async function getActiveTeachers() {
       ? teacher.profiles[0] ?? null
       : teacher.profiles,
   })) as ActiveTeacher[]
+}
+
+export async function getTeachers() {
+  const { data, error } = await supabase
+    .from('teachers')
+    .select(`
+      id,
+      teacher_code,
+      is_active,
+      profiles (full_name, email),
+      teacher_levels (levels (id, level_number, name))
+    `)
+    .order('teacher_code', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).map((teacher) => {
+    const profile = Array.isArray(teacher.profiles)
+      ? teacher.profiles[0] ?? null
+      : teacher.profiles
+    const eligibleLevels = teacher.teacher_levels.flatMap((eligibility) => {
+      const levels = Array.isArray(eligibility.levels)
+        ? eligibility.levels
+        : eligibility.levels
+          ? [eligibility.levels]
+          : []
+
+      return levels
+    })
+
+    return {
+      ...teacher,
+      profiles: profile,
+      eligible_levels: eligibleLevels,
+    }
+  }) as AdminTeacher[]
+}
+
+export async function getLevels() {
+  const { data, error } = await supabase
+    .from('levels')
+    .select('id, level_number, name')
+    .order('level_number', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as TeacherLevelEligibility[]
+}
+
+export async function setTeacherStatus(
+  teacherId: string,
+  isActive: boolean,
+) {
+  const { data, error } = await supabase.rpc('admin_set_teacher_status', {
+    p_teacher_id: teacherId,
+    p_is_active: isActive,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function addTeacherLevel(teacherId: string, levelId: string) {
+  const { data, error } = await supabase.rpc('admin_add_teacher_level', {
+    p_teacher_id: teacherId,
+    p_level_id: levelId,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function removeTeacherLevel(teacherId: string, levelId: string) {
+  const { data, error } = await supabase.rpc('admin_remove_teacher_level', {
+    p_teacher_id: teacherId,
+    p_level_id: levelId,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return data
 }
 
 export async function getTeacherLevelEligibility(teacherId: string) {
