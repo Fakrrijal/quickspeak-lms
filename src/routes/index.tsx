@@ -7,7 +7,14 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
-  const { isAuthenticated, loading, profileLoading, status, profileError } = useAuthContext()
+  const {
+    isAuthenticated,
+    loading,
+    profileLoading,
+    role,
+    status,
+    profileError,
+  } = useAuthContext()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -33,12 +40,25 @@ function HomePage() {
       return
     }
 
-    // Status-based routing
     if (status !== 'active') {
       navigate({ to: '/waiting' })
       return
     }
-  }, [isAuthenticated, loading, profileLoading, status, profileError, navigate])
+
+    if (role === 'admin') {
+      navigate({ to: '/admin/dashboard' })
+      return
+    }
+
+    if (role === 'teacher') {
+      navigate({ to: '/teacher' })
+      return
+    }
+
+    if (role === 'student') {
+      navigate({ to: '/student' })
+    }
+  }, [isAuthenticated, loading, profileLoading, profileError, role, status, navigate])
 
   // Show loading while auth or profile is loading
   if (loading || profileLoading) {
@@ -66,8 +86,8 @@ function HomePage() {
 
   return (
     <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">QuickSpeak LMS</h1>
-      <p className="mt-2">Routing foundation is ready.</p>
+      <h1 className="text-3xl font-bold">Access error</h1>
+      <p className="mt-2">Your account has an unrecognized role.</p>
     </main>
   )
 }

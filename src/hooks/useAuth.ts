@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
+import { queryClient } from '../lib/queryClient'
 import { supabase } from '../lib/supabase'
 
 type Profile = {
@@ -18,9 +19,27 @@ export function useAuth() {
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileError, setProfileError] = useState<Error | null>(null)
   const profileRequestIdRef = useRef<number>(0)
+  const currentUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     let mounted = true
+
+    const applySession = (nextSession: Session | null) => {
+      const nextUser = nextSession?.user ?? null
+
+      if (currentUserIdRef.current !== nextUser?.id) {
+        queryClient.removeQueries({ queryKey: ['my-profile'] })
+        queryClient.removeQueries({ queryKey: ['my-avatar-url'] })
+        currentUserIdRef.current = nextUser?.id ?? null
+        profileRequestIdRef.current += 1
+        setProfile(null)
+        setProfileError(null)
+        setProfileLoading(Boolean(nextUser))
+      }
+
+      setSession(nextSession)
+      setUser(nextUser)
+    }
 
     async function loadSession() {
       const { data, error } = await supabase.auth.getSession()
@@ -31,12 +50,9 @@ export function useAuth() {
 
       if (error) {
         console.error('Failed to load auth session:', error)
-        setSession(null)
-        setUser(null)
-        setProfile(null)
+        applySession(null)
       } else {
-        setSession(data.session)
-        setUser(data.session?.user ?? null)
+        applySession(data.session)
       }
 
       setLoading(false)
@@ -51,8 +67,7 @@ export function useAuth() {
         return
       }
 
-      setSession(nextSession)
-      setUser(nextSession?.user ?? null)
+      applySession(nextSession)
       setLoading(false)
     })
 
@@ -108,6 +123,7 @@ export function useAuth() {
     } else {
       setProfile(null)
       setProfileError(null)
+      setProfileLoading(false)
     }
   }, [user, loadProfile])
 

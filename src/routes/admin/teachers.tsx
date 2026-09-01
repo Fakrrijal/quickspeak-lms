@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
   addTeacherLevel,
+  deactivateTeacher,
   getLevels,
   getTeachers,
   removeTeacherLevel,
-  setTeacherStatus,
+  type ActiveLevel,
   type AdminTeacher,
-  type TeacherLevelEligibility,
 } from '../../services/admin.service'
 
 export const Route = createFileRoute('/admin/teachers')({
@@ -28,14 +28,17 @@ function AdminTeachersPage() {
   const [teachers, setTeachers] = useState<AdminTeacher[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [updatingTeacherId, setUpdatingTeacherId] = useState<string | null>(null)
-  const [managingTeacherId, setManagingTeacherId] = useState<string | null>(null)
-  const [levels, setLevels] = useState<TeacherLevelEligibility[]>([])
-  const [isLoadingLevels, setIsLoadingLevels] = useState(false)
-  const [draftLevelIds, setDraftLevelIds] = useState<string[]>([])
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active')
+  const [levelFilter, setLevelFilter] = useState('all')
+  const [classTypeFilter, setClassTypeFilter] = useState<'all' | 'private' | 'semi_private'>('all')
+  const [levels, setLevels] = useState<ActiveLevel[]>([])
+  const [editingTeacher, setEditingTeacher] = useState<AdminTeacher | null>(null)
+  const [selectedLevelIds, setSelectedLevelIds] = useState<string[]>([])
+  const [editError, setEditError] = useState<string | null>(null)
   const [isSavingLevels, setIsSavingLevels] = useState(false)
+  const [isRemovingTeacher, setIsRemovingTeacher] = useState(false)
+  const [isRemoveConfirmationOpen, setIsRemoveConfirmationOpen] = useState(false)
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -69,140 +72,105 @@ function AdminTeachersPage() {
     }
   }, [])
 
+  const loadLevels = useCallback(async () => {
+    try {
+      setLevels(await getLevels())
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load levels.')
+    }
+  }, [])
+
   const canViewTeachers =
     isAuthenticated && role === 'admin' && status === 'active'
 
   useEffect(() => {
     if (canViewTeachers) {
       void loadTeachers()
+      void loadLevels()
     }
-  }, [canViewTeachers, loadTeachers])
+  }, [canViewTeachers, loadLevels, loadTeachers])
 
-  const handleToggleStatus = async (teacher: AdminTeacher) => {
-    const isActive = !teacher.is_active
+  const filteredTeachers = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase()
+    return teachers.filter((teacher) => {
+      const matchesSearch = !normalizedSearch
+        || teacher.profiles?.full_name.toLowerCase().includes(normalizedSearch)
+        || teacher.teacher_code.toLowerCase().includes(normalizedSearch)
+        || teacher.profiles?.email.toLowerCase().includes(normalizedSearch)
+      const matchesStatus = statusFilter === 'all'
+        || (statusFilter === 'active' ? teacher.is_active : !teacher.is_active)
+      const matchesLevel = levelFilter === 'all' || teacher.eligible_levels.some((level) => level.id === levelFilter)
+      const matchesClassType = classTypeFilter === 'all' || teacher.active_class_types.includes(classTypeFilter)
+      return matchesSearch && matchesStatus && matchesLevel && matchesClassType
+    })
+  }, [classTypeFilter, levelFilter, search, statusFilter, teachers])
 
-    setUpdatingTeacherId(teacher.id)
-    setActionError(null)
-    setSuccessMessage(null)
+  const openTeacherEditor = (teacher: AdminTeacher) => {
+    setEditingTeacher(teacher)
+    setSelectedLevelIds(teacher.eligible_levels.map((level) => level.id))
+    setEditError(null)
+  }
 
+  const closeTeacherEditor = () => {
+    if (isSavingLevels || isRemovingTeacher) return
+    setEditingTeacher(null)
+    setSelectedLevelIds([])
+    setEditError(null)
+    setIsRemoveConfirmationOpen(false)
+  }
+
+  const removeTeacher = async () => {
+    if (!editingTeacher) return
+
+    setIsRemovingTeacher(true)
+    setEditError(null)
     try {
-      await setTeacherStatus(teacher.id, isActive)
+      await deactivateTeacher(editingTeacher.id)
       await loadTeachers()
-      setSuccessMessage(
-        isActive
-          ? 'Teacher reactivated successfully.'
-          : 'Teacher deactivated successfully.',
-      )
-    } catch (statusError) {
-      const backendMessage =
-        statusError &&
-        typeof statusError === 'object' &&
-        'message' in statusError &&
-        typeof statusError.message === 'string'
-          ? statusError.message
-          : null
-
-      setActionError(
-        backendMessage ??
-          (statusError instanceof Error
-            ? statusError.message
-            : 'Unable to update teacher status.'),
-      )
+      setEditingTeacher(null)
+      setSelectedLevelIds([])
+      setIsRemoveConfirmationOpen(false)
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'Unable to remove this teacher.')
     } finally {
-      setUpdatingTeacherId(null)
+      setIsRemovingTeacher(false)
     }
   }
 
-  const openManageLevels = async (teacher: AdminTeacher) => {
-    setManagingTeacherId(teacher.id)
-    setDraftLevelIds(teacher.eligible_levels.map((level) => level.id))
-    setActionError(null)
-    setSuccessMessage(null)
-    setIsLoadingLevels(true)
+  const toggleSelectedLevel = (levelId: string) => {
+    setSelectedLevelIds((current) => current.includes(levelId)
+      ? current.filter((id) => id !== levelId)
+      : [...current, levelId])
+  }
 
-    try {
-      setLevels(await getLevels())
-    } catch (loadError) {
-      const backendMessage =
-        loadError &&
-        typeof loadError === 'object' &&
-        'message' in loadError &&
-        typeof loadError.message === 'string'
-          ? loadError.message
-          : null
+  const saveTeacherLevels = async () => {
+    if (!editingTeacher) return
 
-      setActionError(
-        backendMessage ??
-          (loadError instanceof Error
-            ? loadError.message
-            : 'Unable to load levels.'),
-      )
-    } finally {
-      setIsLoadingLevels(false)
+    const currentLevelIds = new Set(editingTeacher.eligible_levels.map((level) => level.id))
+    const nextLevelIds = new Set(selectedLevelIds)
+    const additions = selectedLevelIds.filter((levelId) => !currentLevelIds.has(levelId))
+    const removals = [...currentLevelIds].filter((levelId) => !nextLevelIds.has(levelId))
+
+    if (additions.length === 0 && removals.length === 0) {
+      closeTeacherEditor()
+      return
     }
-  }
-
-  const handleDraftLevelChange = (levelId: string, isEligible: boolean) => {
-    setDraftLevelIds((currentLevelIds) => (
-      isEligible
-        ? currentLevelIds.filter((currentLevelId) => currentLevelId !== levelId)
-        : [...currentLevelIds, levelId]
-    ))
-  }
-
-  const closeManageLevels = () => {
-    setManagingTeacherId(null)
-    setDraftLevelIds([])
-  }
-
-  const handleSaveLevels = async (teacher: AdminTeacher) => {
-    const currentLevelIds = teacher.eligible_levels.map((level) => level.id)
-    const levelIdsToAdd = draftLevelIds.filter(
-      (levelId) => !currentLevelIds.includes(levelId),
-    )
-    const levelIdsToRemove = currentLevelIds.filter(
-      (levelId) => !draftLevelIds.includes(levelId),
-    )
 
     setIsSavingLevels(true)
-    setActionError(null)
-    setSuccessMessage(null)
-
+    setEditError(null)
     try {
-      for (const levelId of levelIdsToRemove) {
-        await removeTeacherLevel(teacher.id, levelId)
-      }
-
-      for (const levelId of levelIdsToAdd) {
-        await addTeacherLevel(teacher.id, levelId)
-      }
-
+      await Promise.all(additions.map((levelId) => addTeacherLevel(editingTeacher.id, levelId)))
+      await Promise.all(removals.map((levelId) => removeTeacherLevel(editingTeacher.id, levelId)))
       await loadTeachers()
-      closeManageLevels()
-      setSuccessMessage('Teacher levels updated successfully.')
-    } catch (levelError) {
-      const backendMessage =
-        levelError &&
-        typeof levelError === 'object' &&
-        'message' in levelError &&
-        typeof levelError.message === 'string'
-          ? levelError.message
-          : null
-
-      setActionError(
-        backendMessage ??
-          (levelError instanceof Error
-            ? levelError.message
-            : 'Unable to update teacher level eligibility.'),
-      )
+      setEditingTeacher(null)
+      setSelectedLevelIds([])
+    } catch (saveError) {
+      await loadTeachers()
+      setEditError(saveError instanceof Error ? saveError.message : 'Unable to update teaching eligibility.')
     } finally {
       setIsSavingLevels(false)
     }
   }
-
-  const managingTeacher = managingTeacherId
-    ? teachers.find((teacher) => teacher.id === managingTeacherId) ?? null
-    : null
 
   if (loading || profileLoading) {
     return <p>Loading...</p>
@@ -223,92 +191,18 @@ function AdminTeachersPage() {
 
   return (
     <section>
-      <h2 className="text-3xl font-bold text-slate-900">Admin Teachers</h2>
+      <h2 className="text-3xl font-bold text-slate-900">Teacher Management</h2>
+      <p className="mt-2 text-slate-600">View teacher assignments and review waiting teacher registrations.</p>
 
-      {successMessage && (
-        <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
-          {successMessage}
-        </p>
-      )}
-
-      {actionError && (
-        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-          {actionError}
-        </p>
-      )}
-
-      {managingTeacher && (
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-xl font-semibold text-slate-900">
-                Manage Levels: {managingTeacher.profiles?.full_name ?? managingTeacher.teacher_code}
-              </h3>
-              {!managingTeacher.is_active && (
-                <p className="mt-1 text-sm text-slate-600">
-                  Inactive teachers cannot receive new level eligibility.
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={closeManageLevels}
-              disabled={isSavingLevels}
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
-            >
-              Close
-            </button>
-          </div>
-
-          {isLoadingLevels ? (
-            <p className="mt-5 text-sm text-slate-600">Loading levels...</p>
-          ) : (
-            <ul className="mt-5 divide-y divide-slate-200 rounded-lg border border-slate-200">
-              {levels.map((level) => {
-                const isEligible = draftLevelIds.includes(level.id)
-
-                return (
-                  <li key={level.id} className="flex items-center justify-between gap-4 p-3">
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                      <input
-                        type="checkbox"
-                        checked={isEligible}
-                        onChange={() => handleDraftLevelChange(level.id, isEligible)}
-                        disabled={isSavingLevels || (!isEligible && !managingTeacher.is_active)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
-                      {level.name}
-                    </label>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-
-          {!isLoadingLevels && (
-            <div className="mt-5 flex gap-3">
-              <button
-                type="button"
-                onClick={() => void handleSaveLevels(managingTeacher)}
-                disabled={isSavingLevels}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              >
-                {isSavingLevels ? 'Saving...' : 'Save Changes'}
-              </button>
-              <button
-                type="button"
-                onClick={closeManageLevels}
-                disabled={isSavingLevels}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
+      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-semibold text-slate-900">Teacher Directory</h3>
+        <div className="mt-5 flex flex-col gap-3 md:flex-row">
+          <label className="flex-1"><span className="sr-only">Search teachers</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teacher..." className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" /></label>
+          <label className="text-sm font-medium text-slate-700">Status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | 'active' | 'inactive')} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+          <label className="text-sm font-medium text-slate-700">Level<select value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="all">All levels</option>{levels.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}</select></label>
+          <label className="text-sm font-medium text-slate-700">Class Type<select value={classTypeFilter} onChange={(event) => setClassTypeFilter(event.target.value as 'all' | 'private' | 'semi_private')} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="all">All types</option><option value="private">Private</option><option value="semi_private">Semi-private</option></select></label>
         </div>
-      )}
-
-      <div className="mt-8 overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-lg border border-slate-200">
         {isLoading && (
           <p className="p-6 text-sm text-slate-600">Loading teachers...</p>
         )}
@@ -319,33 +213,40 @@ function AdminTeachersPage() {
           </p>
         )}
 
-        {!isLoading && !error && teachers.length === 0 && (
-          <p className="p-6 text-sm text-slate-600">There are no teachers.</p>
+        {!isLoading && !error && filteredTeachers.length === 0 && (
+          <p className="p-6 text-sm text-slate-600">No teachers match the current search or filter.</p>
         )}
 
-        {!isLoading && !error && teachers.length > 0 && (
+        {!isLoading && !error && filteredTeachers.length > 0 && (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
-                  <th className="px-6 py-3 font-semibold">Teacher Name</th>
+                  <th className="px-6 py-3 font-semibold">Teacher</th>
                   <th className="px-6 py-3 font-semibold">Email</th>
+                  <th className="px-6 py-3 font-semibold">Phone</th>
                   <th className="px-6 py-3 font-semibold">Teacher Code</th>
+                  <th className="px-6 py-3 font-semibold">Joined Date</th>
+                  <th className="px-6 py-3 font-semibold">Supported Levels</th>
+                  <th className="px-6 py-3 font-semibold">Class Type</th>
+                  <th className="px-6 py-3 font-semibold">Teaching Groups</th>
                   <th className="px-6 py-3 font-semibold">Status</th>
-                  <th className="px-6 py-3 font-semibold">Allowed Levels</th>
                   <th className="px-6 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {teachers.map((teacher) => (
+                {filteredTeachers.map((teacher) => (
                   <tr key={teacher.id} className="text-slate-700">
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {teacher.profiles?.full_name ?? 'Unknown teacher'}
                     </td>
-                    <td className="px-6 py-4">
-                      {teacher.profiles?.email ?? 'No email'}
-                    </td>
+                    <td className="px-6 py-4">{teacher.profiles?.email ?? '—'}</td>
+                    <td className="px-6 py-4">{teacher.profiles?.phone ?? '—'}</td>
                     <td className="px-6 py-4">{teacher.teacher_code}</td>
+                    <td className="px-6 py-4">{teacher.profiles?.created_at ? new Intl.DateTimeFormat('en-US').format(new Date(teacher.profiles.created_at)) : '—'}</td>
+                    <td className="px-6 py-4">{teacher.eligible_levels.length > 0 ? [...teacher.eligible_levels].sort((left, right) => left.level_number - right.level_number).map((level) => level.name).join(', ') : 'None'}</td>
+                    <td className="px-6 py-4"><div className="flex flex-wrap gap-1">{teacher.active_class_types.length > 0 ? teacher.active_class_types.map((classType) => <span key={classType} className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">{classType === 'private' ? 'Private' : 'Semi-private'}</span>) : '—'}</div></td>
+                    <td className="px-6 py-4">{teacher.active_teaching_group_names.length > 0 ? teacher.active_teaching_group_names.join(', ') : 'Not Assigned'}</td>
                     <td className="px-6 py-4">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                         teacher.is_active
@@ -355,38 +256,7 @@ function AdminTeachersPage() {
                         {teacher.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      {teacher.eligible_levels.length > 0
-                        ? teacher.eligible_levels.map((level) => level.name).join(', ')
-                        : 'No allowed levels'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void openManageLevels(teacher)}
-                          className="rounded px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-                        >
-                          Manage Levels
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleToggleStatus(teacher)}
-                          disabled={updatingTeacherId === teacher.id}
-                          className={`rounded px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${
-                            teacher.is_active
-                              ? 'text-red-600 hover:bg-red-50'
-                              : 'text-emerald-600 hover:bg-emerald-50'
-                          }`}
-                        >
-                          {updatingTeacherId === teacher.id
-                            ? 'Updating...'
-                            : teacher.is_active
-                              ? 'Deactivate'
-                              : 'Reactivate'}
-                        </button>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4"><button type="button" onClick={() => openTeacherEditor(teacher)} className="font-medium text-slate-900 underline">Edit</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -394,6 +264,30 @@ function AdminTeachersPage() {
           </div>
         )}
       </div>
+      </section>
+      {editingTeacher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="edit-teacher-title" className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 id="edit-teacher-title" className="text-xl font-semibold text-slate-900">Edit Teacher</h3>
+            <dl className="mt-5 space-y-3 text-sm"><div><dt className="font-medium text-slate-700">Teacher</dt><dd>{editingTeacher.profiles?.full_name ?? 'Unknown teacher'}</dd></div><div><dt className="font-medium text-slate-700">Teacher Code</dt><dd>{editingTeacher.teacher_code}</dd></div></dl>
+            <fieldset className="mt-5"><legend className="text-sm font-medium text-slate-700">Supported Levels</legend><div className="mt-2 space-y-2">{levels.map((level) => <label key={level.id} className="flex items-center gap-2 text-sm text-slate-800"><input type="checkbox" checked={selectedLevelIds.includes(level.id)} onChange={() => toggleSelectedLevel(level.id)} disabled={isSavingLevels} />{level.name}</label>)}</div></fieldset>
+            <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">This changes teaching eligibility only. Existing teaching groups are unchanged.</p>
+            {editError && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
+            {editingTeacher.is_active && <button type="button" onClick={() => setIsRemoveConfirmationOpen(true)} disabled={isSavingLevels || isRemovingTeacher} className="mt-6 text-sm font-medium text-red-700 underline disabled:opacity-50">Remove Teacher</button>}
+            <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={closeTeacherEditor} disabled={isSavingLevels || isRemovingTeacher} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Cancel</button><button type="button" onClick={() => void saveTeacherLevels()} disabled={isSavingLevels || isRemovingTeacher} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{isSavingLevels ? 'Saving...' : 'Save'}</button></div>
+          </section>
+        </div>
+      )}
+      {editingTeacher && isRemoveConfirmationOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="remove-teacher-title" className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 id="remove-teacher-title" className="text-xl font-semibold text-slate-900">Remove this teacher?</h3>
+            <p className="mt-3 text-sm text-slate-600">This will deactivate the teacher and remove them from active teacher management. Historical attendance, teacher fee, and teaching group records will be preserved.</p>
+            {editError && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
+            <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setIsRemoveConfirmationOpen(false)} disabled={isRemovingTeacher} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Cancel</button><button type="button" onClick={() => void removeTeacher()} disabled={isRemovingTeacher} className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{isRemovingTeacher ? 'Removing...' : 'Remove Teacher'}</button></div>
+          </section>
+        </div>
+      )}
     </section>
   )
 }

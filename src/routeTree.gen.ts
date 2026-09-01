@@ -10,16 +10,51 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmailConfirmedRouteImport } from './routes/email-confirmed'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as StudentRouteImport } from './routes/student'
+import { Route as StudentPaymentRouteImport } from './routes/student-payment'
+import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as WaitingRouteImport } from './routes/waiting'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminApprovedEnrollmentsRouteImport } from './routes/admin/approved-enrollments'
+import { Route as AdminAttendanceReportsRouteImport } from './routes/admin/attendance-reports'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminEbooksRouteImport } from './routes/admin/ebooks'
+import { Route as AdminPaymentHistoryRouteImport } from './routes/admin/payment-history'
+import { Route as AdminPaymentSettingsRouteImport } from './routes/admin/payment-settings'
+import { Route as AdminPaymentVerificationRouteImport } from './routes/admin/payment-verification'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminTeacherFeesRouteImport } from './routes/admin/teacher-fees'
 import { Route as AdminTeachersRouteImport } from './routes/admin/teachers'
 import { Route as AdminTeachingGroupsRouteImport } from './routes/admin/teaching-groups'
+import { Route as AdminWaitingStudentsRouteImport } from './routes/admin/waiting-students'
+import { Route as AdminWaitingTeachersRouteImport } from './routes/admin/waiting-teachers'
+import { Route as StudentAttendanceRouteImport } from './routes/student/attendance'
+import { Route as StudentLearningRouteImport } from './routes/student/learning'
+import { Route as StudentProfileRouteImport } from './routes/student/profile'
+import { Route as TeacherAttendanceRouteImport } from './routes/teacher/attendance'
+import { Route as TeacherFeeRouteImport } from './routes/teacher/fee'
+import { Route as TeacherProfileRouteImport } from './routes/teacher/profile'
+import { Route as StudentEbooksEbookIdRouteImport } from './routes/student/ebooks/$ebookId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailConfirmedRoute = EmailConfirmedRouteImport.update({
+  id: '/email-confirmed',
+  path: '/email-confirmed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -27,9 +62,34 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentPaymentRoute = StudentPaymentRouteImport.update({
+  id: '/student-payment',
+  path: '/student-payment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherRoute = TeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WaitingRoute = WaitingRouteImport.update({
@@ -42,6 +102,53 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminApprovedEnrollmentsRoute =
+  AdminApprovedEnrollmentsRouteImport.update({
+    id: '/admin/approved-enrollments',
+    path: '/admin/approved-enrollments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminAttendanceReportsRoute = AdminAttendanceReportsRouteImport.update({
+  id: '/admin/attendance-reports',
+  path: '/admin/attendance-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEbooksRoute = AdminEbooksRouteImport.update({
+  id: '/admin/ebooks',
+  path: '/admin/ebooks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentHistoryRoute = AdminPaymentHistoryRouteImport.update({
+  id: '/admin/payment-history',
+  path: '/admin/payment-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentSettingsRoute = AdminPaymentSettingsRouteImport.update({
+  id: '/admin/payment-settings',
+  path: '/admin/payment-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentVerificationRoute =
+  AdminPaymentVerificationRouteImport.update({
+    id: '/admin/payment-verification',
+    path: '/admin/payment-verification',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/admin/payments',
+  path: '/admin/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTeacherFeesRoute = AdminTeacherFeesRouteImport.update({
+  id: '/admin/teacher-fees',
+  path: '/admin/teacher-fees',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTeachersRoute = AdminTeachersRouteImport.update({
   id: '/admin/teachers',
   path: '/admin/teachers',
@@ -52,72 +159,285 @@ const AdminTeachingGroupsRoute = AdminTeachingGroupsRouteImport.update({
   path: '/admin/teaching-groups',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWaitingStudentsRoute = AdminWaitingStudentsRouteImport.update({
+  id: '/admin/waiting-students',
+  path: '/admin/waiting-students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWaitingTeachersRoute = AdminWaitingTeachersRouteImport.update({
+  id: '/admin/waiting-teachers',
+  path: '/admin/waiting-teachers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentAttendanceRoute = StudentAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentLearningRoute = StudentLearningRouteImport.update({
+  id: '/learning',
+  path: '/learning',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => StudentRoute,
+} as any)
+const TeacherAttendanceRoute = TeacherAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherFeeRoute = TeacherFeeRouteImport.update({
+  id: '/fee',
+  path: '/fee',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherProfileRoute = TeacherProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const StudentEbooksEbookIdRoute = StudentEbooksEbookIdRouteImport.update({
+  id: '/ebooks/$ebookId',
+  path: '/ebooks/$ebookId',
+  getParentRoute: () => StudentRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/email-confirmed': typeof EmailConfirmedRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/student': typeof StudentRouteWithChildren
+  '/student-payment': typeof StudentPaymentRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/waiting': typeof WaitingRoute
+  '/admin/approved-enrollments': typeof AdminApprovedEnrollmentsRoute
+  '/admin/attendance-reports': typeof AdminAttendanceReportsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/ebooks': typeof AdminEbooksRoute
+  '/admin/payment-history': typeof AdminPaymentHistoryRoute
+  '/admin/payment-settings': typeof AdminPaymentSettingsRoute
+  '/admin/payment-verification': typeof AdminPaymentVerificationRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/teacher-fees': typeof AdminTeacherFeesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
+  '/admin/waiting-students': typeof AdminWaitingStudentsRoute
+  '/admin/waiting-teachers': typeof AdminWaitingTeachersRoute
+  '/student/attendance': typeof StudentAttendanceRoute
+  '/student/learning': typeof StudentLearningRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/fee': typeof TeacherFeeRoute
+  '/teacher/profile': typeof TeacherProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/student/ebooks/$ebookId': typeof StudentEbooksEbookIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/email-confirmed': typeof EmailConfirmedRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/student': typeof StudentRouteWithChildren
+  '/student-payment': typeof StudentPaymentRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/waiting': typeof WaitingRoute
+  '/admin/approved-enrollments': typeof AdminApprovedEnrollmentsRoute
+  '/admin/attendance-reports': typeof AdminAttendanceReportsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/ebooks': typeof AdminEbooksRoute
+  '/admin/payment-history': typeof AdminPaymentHistoryRoute
+  '/admin/payment-settings': typeof AdminPaymentSettingsRoute
+  '/admin/payment-verification': typeof AdminPaymentVerificationRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/teacher-fees': typeof AdminTeacherFeesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
+  '/admin/waiting-students': typeof AdminWaitingStudentsRoute
+  '/admin/waiting-teachers': typeof AdminWaitingTeachersRoute
+  '/student/attendance': typeof StudentAttendanceRoute
+  '/student/learning': typeof StudentLearningRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/fee': typeof TeacherFeeRoute
+  '/teacher/profile': typeof TeacherProfileRoute
   '/admin': typeof AdminIndexRoute
+  '/student/ebooks/$ebookId': typeof StudentEbooksEbookIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/email-confirmed': typeof EmailConfirmedRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/student': typeof StudentRouteWithChildren
+  '/student-payment': typeof StudentPaymentRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/waiting': typeof WaitingRoute
+  '/admin/approved-enrollments': typeof AdminApprovedEnrollmentsRoute
+  '/admin/attendance-reports': typeof AdminAttendanceReportsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/ebooks': typeof AdminEbooksRoute
+  '/admin/payment-history': typeof AdminPaymentHistoryRoute
+  '/admin/payment-settings': typeof AdminPaymentSettingsRoute
+  '/admin/payment-verification': typeof AdminPaymentVerificationRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/teacher-fees': typeof AdminTeacherFeesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
+  '/admin/waiting-students': typeof AdminWaitingStudentsRoute
+  '/admin/waiting-teachers': typeof AdminWaitingTeachersRoute
+  '/student/attendance': typeof StudentAttendanceRoute
+  '/student/learning': typeof StudentLearningRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/fee': typeof TeacherFeeRoute
+  '/teacher/profile': typeof TeacherProfileRoute
   '/admin/': typeof AdminIndexRoute
+  '/student/ebooks/$ebookId': typeof StudentEbooksEbookIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/email-confirmed'
+    | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/register'
+    | '/reset-password'
+    | '/student'
+    | '/student-payment'
+    | '/teacher'
     | '/waiting'
+    | '/admin/approved-enrollments'
+    | '/admin/attendance-reports'
+    | '/admin/dashboard'
+    | '/admin/ebooks'
+    | '/admin/payment-history'
+    | '/admin/payment-settings'
+    | '/admin/payment-verification'
+    | '/admin/payments'
+    | '/admin/teacher-fees'
     | '/admin/teachers'
     | '/admin/teaching-groups'
+    | '/admin/waiting-students'
+    | '/admin/waiting-teachers'
+    | '/student/attendance'
+    | '/student/learning'
+    | '/student/profile'
+    | '/teacher/attendance'
+    | '/teacher/fee'
+    | '/teacher/profile'
     | '/admin/'
+    | '/student/ebooks/$ebookId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/email-confirmed'
+    | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/register'
+    | '/reset-password'
+    | '/student'
+    | '/student-payment'
+    | '/teacher'
     | '/waiting'
+    | '/admin/approved-enrollments'
+    | '/admin/attendance-reports'
+    | '/admin/dashboard'
+    | '/admin/ebooks'
+    | '/admin/payment-history'
+    | '/admin/payment-settings'
+    | '/admin/payment-verification'
+    | '/admin/payments'
+    | '/admin/teacher-fees'
     | '/admin/teachers'
     | '/admin/teaching-groups'
+    | '/admin/waiting-students'
+    | '/admin/waiting-teachers'
+    | '/student/attendance'
+    | '/student/learning'
+    | '/student/profile'
+    | '/teacher/attendance'
+    | '/teacher/fee'
+    | '/teacher/profile'
     | '/admin'
+    | '/student/ebooks/$ebookId'
   id:
     | '__root__'
     | '/'
+    | '/email-confirmed'
+    | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/register'
+    | '/reset-password'
+    | '/student'
+    | '/student-payment'
+    | '/teacher'
     | '/waiting'
+    | '/admin/approved-enrollments'
+    | '/admin/attendance-reports'
+    | '/admin/dashboard'
+    | '/admin/ebooks'
+    | '/admin/payment-history'
+    | '/admin/payment-settings'
+    | '/admin/payment-verification'
+    | '/admin/payments'
+    | '/admin/teacher-fees'
     | '/admin/teachers'
     | '/admin/teaching-groups'
+    | '/admin/waiting-students'
+    | '/admin/waiting-teachers'
+    | '/student/attendance'
+    | '/student/learning'
+    | '/student/profile'
+    | '/teacher/attendance'
+    | '/teacher/fee'
+    | '/teacher/profile'
     | '/admin/'
+    | '/student/ebooks/$ebookId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EmailConfirmedRoute: typeof EmailConfirmedRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  StudentRoute: typeof StudentRouteWithChildren
+  StudentPaymentRoute: typeof StudentPaymentRoute
+  TeacherRoute: typeof TeacherRouteWithChildren
   WaitingRoute: typeof WaitingRoute
+  AdminApprovedEnrollmentsRoute: typeof AdminApprovedEnrollmentsRoute
+  AdminAttendanceReportsRoute: typeof AdminAttendanceReportsRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminEbooksRoute: typeof AdminEbooksRoute
+  AdminPaymentHistoryRoute: typeof AdminPaymentHistoryRoute
+  AdminPaymentSettingsRoute: typeof AdminPaymentSettingsRoute
+  AdminPaymentVerificationRoute: typeof AdminPaymentVerificationRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminTeacherFeesRoute: typeof AdminTeacherFeesRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminTeachingGroupsRoute: typeof AdminTeachingGroupsRoute
+  AdminWaitingStudentsRoute: typeof AdminWaitingStudentsRoute
+  AdminWaitingTeachersRoute: typeof AdminWaitingTeachersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -130,6 +450,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email-confirmed': {
+      id: '/email-confirmed'
+      path: '/email-confirmed'
+      fullPath: '/email-confirmed'
+      preLoaderRoute: typeof EmailConfirmedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -137,11 +471,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-payment': {
+      id: '/student-payment'
+      path: '/student-payment'
+      fullPath: '/student-payment'
+      preLoaderRoute: typeof StudentPaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher': {
+      id: '/teacher'
+      path: '/teacher'
+      fullPath: '/teacher'
+      preLoaderRoute: typeof TeacherRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/waiting': {
@@ -158,6 +527,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/approved-enrollments': {
+      id: '/admin/approved-enrollments'
+      path: '/admin/approved-enrollments'
+      fullPath: '/admin/approved-enrollments'
+      preLoaderRoute: typeof AdminApprovedEnrollmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/attendance-reports': {
+      id: '/admin/attendance-reports'
+      path: '/admin/attendance-reports'
+      fullPath: '/admin/attendance-reports'
+      preLoaderRoute: typeof AdminAttendanceReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/ebooks': {
+      id: '/admin/ebooks'
+      path: '/admin/ebooks'
+      fullPath: '/admin/ebooks'
+      preLoaderRoute: typeof AdminEbooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payment-history': {
+      id: '/admin/payment-history'
+      path: '/admin/payment-history'
+      fullPath: '/admin/payment-history'
+      preLoaderRoute: typeof AdminPaymentHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payment-settings': {
+      id: '/admin/payment-settings'
+      path: '/admin/payment-settings'
+      fullPath: '/admin/payment-settings'
+      preLoaderRoute: typeof AdminPaymentSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payment-verification': {
+      id: '/admin/payment-verification'
+      path: '/admin/payment-verification'
+      fullPath: '/admin/payment-verification'
+      preLoaderRoute: typeof AdminPaymentVerificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/teacher-fees': {
+      id: '/admin/teacher-fees'
+      path: '/admin/teacher-fees'
+      fullPath: '/admin/teacher-fees'
+      preLoaderRoute: typeof AdminTeacherFeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/teachers': {
       id: '/admin/teachers'
       path: '/admin/teachers'
@@ -172,16 +604,129 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeachingGroupsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/waiting-students': {
+      id: '/admin/waiting-students'
+      path: '/admin/waiting-students'
+      fullPath: '/admin/waiting-students'
+      preLoaderRoute: typeof AdminWaitingStudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/waiting-teachers': {
+      id: '/admin/waiting-teachers'
+      path: '/admin/waiting-teachers'
+      fullPath: '/admin/waiting-teachers'
+      preLoaderRoute: typeof AdminWaitingTeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/attendance': {
+      id: '/student/attendance'
+      path: '/attendance'
+      fullPath: '/student/attendance'
+      preLoaderRoute: typeof StudentAttendanceRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/learning': {
+      id: '/student/learning'
+      path: '/learning'
+      fullPath: '/student/learning'
+      preLoaderRoute: typeof StudentLearningRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/profile': {
+      id: '/student/profile'
+      path: '/profile'
+      fullPath: '/student/profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/teacher/attendance': {
+      id: '/teacher/attendance'
+      path: '/attendance'
+      fullPath: '/teacher/attendance'
+      preLoaderRoute: typeof TeacherAttendanceRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/fee': {
+      id: '/teacher/fee'
+      path: '/fee'
+      fullPath: '/teacher/fee'
+      preLoaderRoute: typeof TeacherFeeRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/profile': {
+      id: '/teacher/profile'
+      path: '/profile'
+      fullPath: '/teacher/profile'
+      preLoaderRoute: typeof TeacherProfileRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/student/ebooks/$ebookId': {
+      id: '/student/ebooks/$ebookId'
+      path: '/ebooks/$ebookId'
+      fullPath: '/student/ebooks/$ebookId'
+      preLoaderRoute: typeof StudentEbooksEbookIdRouteImport
+      parentRoute: typeof StudentRoute
+    }
   }
 }
 
+interface StudentRouteChildren {
+  StudentAttendanceRoute: typeof StudentAttendanceRoute
+  StudentLearningRoute: typeof StudentLearningRoute
+  StudentProfileRoute: typeof StudentProfileRoute
+  StudentEbooksEbookIdRoute: typeof StudentEbooksEbookIdRoute
+}
+
+const StudentRouteChildren: StudentRouteChildren = {
+  StudentAttendanceRoute: StudentAttendanceRoute,
+  StudentLearningRoute: StudentLearningRoute,
+  StudentProfileRoute: StudentProfileRoute,
+  StudentEbooksEbookIdRoute: StudentEbooksEbookIdRoute,
+}
+
+const StudentRouteWithChildren =
+  StudentRoute._addFileChildren(StudentRouteChildren)
+
+interface TeacherRouteChildren {
+  TeacherAttendanceRoute: typeof TeacherAttendanceRoute
+  TeacherFeeRoute: typeof TeacherFeeRoute
+  TeacherProfileRoute: typeof TeacherProfileRoute
+}
+
+const TeacherRouteChildren: TeacherRouteChildren = {
+  TeacherAttendanceRoute: TeacherAttendanceRoute,
+  TeacherFeeRoute: TeacherFeeRoute,
+  TeacherProfileRoute: TeacherProfileRoute,
+}
+
+const TeacherRouteWithChildren =
+  TeacherRoute._addFileChildren(TeacherRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EmailConfirmedRoute: EmailConfirmedRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  StudentRoute: StudentRouteWithChildren,
+  StudentPaymentRoute: StudentPaymentRoute,
+  TeacherRoute: TeacherRouteWithChildren,
   WaitingRoute: WaitingRoute,
+  AdminApprovedEnrollmentsRoute: AdminApprovedEnrollmentsRoute,
+  AdminAttendanceReportsRoute: AdminAttendanceReportsRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminEbooksRoute: AdminEbooksRoute,
+  AdminPaymentHistoryRoute: AdminPaymentHistoryRoute,
+  AdminPaymentSettingsRoute: AdminPaymentSettingsRoute,
+  AdminPaymentVerificationRoute: AdminPaymentVerificationRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminTeacherFeesRoute: AdminTeacherFeesRoute,
   AdminTeachersRoute: AdminTeachersRoute,
   AdminTeachingGroupsRoute: AdminTeachingGroupsRoute,
+  AdminWaitingStudentsRoute: AdminWaitingStudentsRoute,
+  AdminWaitingTeachersRoute: AdminWaitingTeachersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport

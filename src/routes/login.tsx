@@ -56,6 +56,15 @@ function LoginPage() {
             className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2"
           />
 
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
           {error && (
             <p className="text-sm text-red-600">
               {error}

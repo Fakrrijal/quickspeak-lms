@@ -1,10 +1,14 @@
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { authService } from '../../services/auth.service'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { useState } from 'react'
+import { EnterprisePortalShell } from '../portal/EnterprisePortalShell'
+import { isPortalPath, type PortalRole } from '../portal/portal-navigation'
 
 export function AppLayout() {
-  const { isAuthenticated } = useAuthContext()
+  const { isAuthenticated, profile, role } = useAuthContext()
+  const navigate = useNavigate()
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
 
@@ -14,12 +18,32 @@ export function AppLayout() {
 
     try {
       await authService.signOut()
+      navigate({ to: '/login', replace: true })
     } catch (err) {
       setLogoutError(err instanceof Error ? err.message : 'Logout failed')
       console.error('Logout error:', err)
     } finally {
       setIsLoggingOut(false)
     }
+  }
+
+  const portalRole: PortalRole | null = (
+    role === 'student' || role === 'teacher' || role === 'admin'
+  ) ? role : null
+
+  if (isAuthenticated && profile && portalRole && isPortalPath(pathname)) {
+    return (
+      <EnterprisePortalShell
+        role={portalRole}
+        userName={profile.full_name || 'QuickSpeak user'}
+        pathname={pathname}
+        isLoggingOut={isLoggingOut}
+        logoutError={logoutError}
+        onLogout={() => void handleLogout()}
+      >
+        <Outlet />
+      </EnterprisePortalShell>
+    )
   }
 
   return (
