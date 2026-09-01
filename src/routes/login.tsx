@@ -36,7 +36,7 @@ function LoginPage() {
         </h2>
 
         <p className="mt-2 text-sm text-slate-600">
-          Login to your QuickSpeak LMS account.
+          Login to your QuickSpeak account.
         </p>
 
         <form onSubmit={handleLogin} className="mt-6 space-y-4">

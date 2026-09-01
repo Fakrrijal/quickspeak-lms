@@ -56,7 +56,7 @@ function AdminDashboardPage() {
     <section>
       <div>
         <h2 className="text-3xl font-bold text-slate-900">Admin Dashboard</h2>
-        <p className="mt-2 text-slate-600">Operational overview for QuickSpeak LMS.</p>
+        <p className="mt-2 text-slate-600">Operational overview for QuickSpeak.</p>
       </div>
 
       {dashboard.error && (

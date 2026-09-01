@@ -132,7 +132,7 @@ function RegisterPage() {
         </h2>
 
         <p className="mt-2 text-sm text-slate-600">
-          Create your QuickSpeak LMS account.
+          Create your QuickSpeak account.
         </p>
 
         <form onSubmit={handleRegister} className="mt-6 space-y-4">

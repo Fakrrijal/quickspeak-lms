@@ -32,7 +32,7 @@ function ForgotPasswordPage() {
       <div className="rounded-xl border bg-white p-8 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-900">Forgot Password</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Enter the email address associated with your QuickSpeak LMS account.
+          Enter the email address associated with your QuickSpeak account.
         </p>
 
         {sent ? (

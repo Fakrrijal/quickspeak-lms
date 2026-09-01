@@ -38,7 +38,7 @@ export function PortalHeader({
         </button>
 
         <div className="min-w-0">
-          <p className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">QuickSpeak LMS</p>
+          <p className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">QuickSpeak</p>
           <p className="hidden text-xs font-medium text-slate-500 sm:block">{getPortalRoleLabel(role)}</p>
         </div>
 

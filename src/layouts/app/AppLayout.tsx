@@ -51,7 +51,7 @@ export function AppLayout() {
       <header className="border-b bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <h1 className="text-xl font-bold text-slate-900">
-            QuickSpeak LMS
+            QuickSpeak
           </h1>
 
           {isAuthenticated && (
