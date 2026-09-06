@@ -15,6 +15,7 @@ import {
   type StudentPaymentDetails,
   validatePaymentProofFile,
 } from '../services/student-payment.service'
+import { reportSystemError } from '../lib/systemErrorReporter'
 
 export const Route = createFileRoute('/student-payment')({
   component: StudentPaymentPage,
@@ -186,6 +187,11 @@ function StudentPaymentPage() {
       setSelectedProof(null)
       setProofMessage('Payment proof submitted. Waiting for payment verification.')
     } catch (uploadError) {
+      await reportSystemError({
+        feature: 'PAYMENT_UPLOAD',
+        action: 'UPLOAD_PROOF',
+        error: uploadError,
+      })
       try {
         const details = await getCurrentStudentPaymentDetails()
 

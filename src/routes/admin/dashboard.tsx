@@ -119,6 +119,7 @@ function AdminDashboardPage() {
           <Link to="/admin/teaching-groups" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teaching Groups</Link>
           <Link to="/admin/teacher-fees" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teacher Fees</Link>
           <Link to="/admin/attendance-reports" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Attendance Reports</Link>
+          <Link to="/admin/system-errors" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">System Errors</Link>
         </div>
       </section>
     </section>

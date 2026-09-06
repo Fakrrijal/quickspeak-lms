@@ -73,6 +73,7 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
       label: 'Reports',
       items: [
         { label: 'Attendance Reports', to: '/admin/attendance-reports' },
+        { label: 'System Errors', to: '/admin/system-errors' },
       ],
     },
     {

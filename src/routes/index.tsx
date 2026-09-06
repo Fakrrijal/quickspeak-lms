@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { QuickSpeakLanding } from '../components/public/QuickSpeakLanding'
 import { useAuthContext } from '../providers/AuthProvider'
 import { useEffect } from 'react'
 
@@ -18,23 +19,18 @@ function HomePage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Auth session loading
     if (loading) {
       return
     }
 
-    // Not authenticated
     if (!isAuthenticated) {
-      navigate({ to: '/login' })
       return
     }
 
-    // Profile still loading
     if (profileLoading) {
       return
     }
 
-    // Profile fetch error or missing
     if (profileError || status === null) {
       navigate({ to: '/login' })
       return
@@ -57,10 +53,10 @@ function HomePage() {
 
     if (role === 'student') {
       navigate({ to: '/student' })
+      return
     }
   }, [isAuthenticated, loading, profileLoading, profileError, role, status, navigate])
 
-  // Show loading while auth or profile is loading
   if (loading || profileLoading) {
     return (
       <main className="min-h-screen p-8">
@@ -69,18 +65,19 @@ function HomePage() {
     )
   }
 
-  // Don't show content if not authenticated
   if (!isAuthenticated) {
-    return null
+    return <QuickSpeakLanding />
   }
 
-  // Don't show content if profile error or missing
   if (profileError || status === null) {
     return null
   }
 
-  // Don't show content if status is not active
   if (status !== 'active') {
+    return null
+  }
+
+  if (role === 'admin' || role === 'teacher' || role === 'student') {
     return null
   }
 

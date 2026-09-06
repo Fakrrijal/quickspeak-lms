@@ -10,6 +10,7 @@ import {
   type TeacherFeeStatus,
 } from '../../services/teacher-fee.service'
 import { downloadAdminTeacherFeePdf } from '../../utils/teacher-fee-pdf'
+import { reportSystemError } from '../../lib/systemErrorReporter'
 
 export const Route = createFileRoute('/admin/teacher-fees')({ component: AdminTeacherFeesPage })
 
@@ -128,7 +129,7 @@ function AdminTeacherFeesPage() {
   const load = useCallback(async () => {
     setIsLoading(true)
     setError(null)
-    try { setReports(await getAdminTeacherFeeReports(month, year, statusFilter)) } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Unable to load teacher fee reports.') } finally { setIsLoading(false) }
+    try { setReports(await getAdminTeacherFeeReports(month, year, statusFilter)) } catch (loadError) { await reportSystemError({ feature: 'TEACHER_FEE', action: 'LOAD_TEACHER_FEES', error: loadError }); setError(loadError instanceof Error ? loadError.message : 'Unable to load teacher fee reports.') } finally { setIsLoading(false) }
   }, [month, statusFilter, year])
 
   useEffect(() => { if (isAuthenticated && role === 'admin' && status === 'active') void load() }, [isAuthenticated, load, role, status])

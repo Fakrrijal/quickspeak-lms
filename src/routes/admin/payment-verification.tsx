@@ -8,6 +8,7 @@ import {
   type PaymentReviewDecision,
   type PendingPaymentVerification,
 } from '../../services/admin-payment-verification.service'
+import { reportSystemError } from '../../lib/systemErrorReporter'
 
 export const Route = createFileRoute('/admin/payment-verification')({
   component: AdminPaymentVerificationPage,
@@ -160,10 +161,8 @@ function AdminPaymentVerificationPage() {
       )
       await loadPayments()
     } catch (decisionError) {
-      const message = getErrorMessage(
-        decisionError,
-        'Unable to process this payment.',
-      )
+      await reportSystemError({ feature: 'PAYMENT_VERIFICATION', action: 'VERIFY_PAYMENT', error: decisionError })
+      const message = getErrorMessage(decisionError, 'Unable to process this payment.')
 
       if (message.includes('Payment was already processed')) {
         setError('Payment was already processed. Refreshing the list.')

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { authService } from '../services/auth.service'
+import { reportSystemError } from '../lib/systemErrorReporter'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -22,6 +23,11 @@ function LoginPage() {
       await authService.signIn({ email, password })
       navigate({ to: '/' })
     } catch (err) {
+      await reportSystemError({
+        feature: 'LOGIN',
+        action: 'SIGN_IN',
+        error,
+      })
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)

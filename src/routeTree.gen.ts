@@ -14,6 +14,7 @@ import { Route as EmailConfirmedRouteImport } from './routes/email-confirmed'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StudentRouteImport } from './routes/student'
@@ -29,6 +30,7 @@ import { Route as AdminPaymentHistoryRouteImport } from './routes/admin/payment-
 import { Route as AdminPaymentSettingsRouteImport } from './routes/admin/payment-settings'
 import { Route as AdminPaymentVerificationRouteImport } from './routes/admin/payment-verification'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminSystemErrorsRouteImport } from './routes/admin/system-errors'
 import { Route as AdminTeacherFeesRouteImport } from './routes/admin/teacher-fees'
 import { Route as AdminTeachersRouteImport } from './routes/admin/teachers'
 import { Route as AdminTeachingGroupsRouteImport } from './routes/admin/teaching-groups'
@@ -65,6 +67,11 @@ const LoginRoute = LoginRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -144,6 +151,11 @@ const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   path: '/admin/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSystemErrorsRoute = AdminSystemErrorsRouteImport.update({
+  id: '/admin/system-errors',
+  path: '/admin/system-errors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTeacherFeesRoute = AdminTeacherFeesRouteImport.update({
   id: '/admin/teacher-fees',
   path: '/admin/teacher-fees',
@@ -211,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/partner': typeof PartnerRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/student': typeof StudentRouteWithChildren
@@ -225,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/admin/payment-settings': typeof AdminPaymentSettingsRoute
   '/admin/payment-verification': typeof AdminPaymentVerificationRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/system-errors': typeof AdminSystemErrorsRoute
   '/admin/teacher-fees': typeof AdminTeacherFeesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
@@ -245,6 +259,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/partner': typeof PartnerRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/student': typeof StudentRouteWithChildren
@@ -259,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/payment-settings': typeof AdminPaymentSettingsRoute
   '/admin/payment-verification': typeof AdminPaymentVerificationRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/system-errors': typeof AdminSystemErrorsRoute
   '/admin/teacher-fees': typeof AdminTeacherFeesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
@@ -280,6 +296,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/partner': typeof PartnerRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/student': typeof StudentRouteWithChildren
@@ -294,6 +311,7 @@ export interface FileRoutesById {
   '/admin/payment-settings': typeof AdminPaymentSettingsRoute
   '/admin/payment-verification': typeof AdminPaymentVerificationRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/system-errors': typeof AdminSystemErrorsRoute
   '/admin/teacher-fees': typeof AdminTeacherFeesRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/admin/teaching-groups': typeof AdminTeachingGroupsRoute
@@ -316,6 +334,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/notifications'
+    | '/partner'
     | '/register'
     | '/reset-password'
     | '/student'
@@ -330,6 +349,7 @@ export interface FileRouteTypes {
     | '/admin/payment-settings'
     | '/admin/payment-verification'
     | '/admin/payments'
+    | '/admin/system-errors'
     | '/admin/teacher-fees'
     | '/admin/teachers'
     | '/admin/teaching-groups'
@@ -350,6 +370,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/notifications'
+    | '/partner'
     | '/register'
     | '/reset-password'
     | '/student'
@@ -364,6 +385,7 @@ export interface FileRouteTypes {
     | '/admin/payment-settings'
     | '/admin/payment-verification'
     | '/admin/payments'
+    | '/admin/system-errors'
     | '/admin/teacher-fees'
     | '/admin/teachers'
     | '/admin/teaching-groups'
@@ -384,6 +406,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/notifications'
+    | '/partner'
     | '/register'
     | '/reset-password'
     | '/student'
@@ -398,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin/payment-settings'
     | '/admin/payment-verification'
     | '/admin/payments'
+    | '/admin/system-errors'
     | '/admin/teacher-fees'
     | '/admin/teachers'
     | '/admin/teaching-groups'
@@ -419,6 +443,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
+  PartnerRoute: typeof PartnerRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StudentRoute: typeof StudentRouteWithChildren
@@ -433,6 +458,7 @@ export interface RootRouteChildren {
   AdminPaymentSettingsRoute: typeof AdminPaymentSettingsRoute
   AdminPaymentVerificationRoute: typeof AdminPaymentVerificationRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminSystemErrorsRoute: typeof AdminSystemErrorsRoute
   AdminTeacherFeesRoute: typeof AdminTeacherFeesRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminTeachingGroupsRoute: typeof AdminTeachingGroupsRoute
@@ -476,6 +502,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -581,6 +614,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/payments'
       fullPath: '/admin/payments'
       preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/system-errors': {
+      id: '/admin/system-errors'
+      path: '/admin/system-errors'
+      fullPath: '/admin/system-errors'
+      preLoaderRoute: typeof AdminSystemErrorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/teacher-fees': {
@@ -708,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
+  PartnerRoute: PartnerRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StudentRoute: StudentRouteWithChildren,
@@ -722,6 +763,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPaymentSettingsRoute: AdminPaymentSettingsRoute,
   AdminPaymentVerificationRoute: AdminPaymentVerificationRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminSystemErrorsRoute: AdminSystemErrorsRoute,
   AdminTeacherFeesRoute: AdminTeacherFeesRoute,
   AdminTeachersRoute: AdminTeachersRoute,
   AdminTeachingGroupsRoute: AdminTeachingGroupsRoute,

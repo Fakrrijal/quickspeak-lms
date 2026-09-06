@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { authService, type SignUpRole } from '../services/auth.service'
 import { registrationService, type Level } from '../services/registration.service'
+import { reportSystemError } from '../lib/systemErrorReporter'
 
 export const Route = createFileRoute('/register')({
   component: RegisterPage,
@@ -89,6 +90,11 @@ function RegisterPage() {
       setSuccess(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
+      await reportSystemError({
+        feature: 'REGISTER',
+        action: 'SIGN_UP',
+        error: err,
+      })
     } finally {
       setLoading(false)
     }

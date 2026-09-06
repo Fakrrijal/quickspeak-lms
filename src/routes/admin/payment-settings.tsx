@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
   getActivePaymentSettings,
@@ -34,6 +34,7 @@ function AdminPaymentSettingsPage() {
     status,
   } = useAuthContext()
   const navigate = useNavigate()
+  const router = useRouter()
   const [settings, setSettings] = useState<PaymentSettings | null>(null)
   const [bankName, setBankName] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
@@ -155,12 +156,13 @@ function AdminPaymentSettingsPage() {
     <section className="max-w-2xl">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-3xl font-bold text-slate-900">Payment Settings</h2>
-        <Link
-          to="/admin"
+        <button
+          type="button"
+          onClick={() => { router.history.back() }}
           className="text-sm font-medium text-slate-700 underline"
         >
-          Back to Admin
-        </Link>
+          Back to Payments
+        </button>
       </div>
 
       {successMessage && (

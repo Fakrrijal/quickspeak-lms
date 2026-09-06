@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getAdminDashboardSummary } from '../services/admin.service'
 import { getAdminTeacherFeePeriods } from '../services/teacher-fee.service'
+import { reportSystemError } from '../lib/systemErrorReporter'
 
 export function useAdminDashboard(enabled: boolean) {
   const today = new Date()
@@ -17,6 +19,26 @@ export function useAdminDashboard(enabled: boolean) {
     queryFn: () => getAdminTeacherFeePeriods(month, year),
     enabled,
   })
+
+  useEffect(() => {
+    if (summaryQuery.isError) {
+      void reportSystemError({
+        feature: 'DASHBOARD',
+        action: 'LOAD_DASHBOARD',
+        error: summaryQuery.error,
+      })
+    }
+  }, [summaryQuery.isError, summaryQuery.error])
+
+  useEffect(() => {
+    if (feePeriodsQuery.isError) {
+      void reportSystemError({
+        feature: 'DASHBOARD',
+        action: 'LOAD_DASHBOARD',
+        error: feePeriodsQuery.error,
+      })
+    }
+  }, [feePeriodsQuery.isError, feePeriodsQuery.error])
 
   const unpaidPeriods = (feePeriodsQuery.data ?? []).filter((period) => period.status === 'unpaid')
 
