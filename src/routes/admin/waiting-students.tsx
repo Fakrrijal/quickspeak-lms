@@ -4,10 +4,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
   approveStudent,
-  getWaitingStudents,
   rejectWaitingStudent,
   type WaitingStudent,
 } from '../../services/admin.service'
+import { getVerifiedWaitingStudents } from '../../services/admin-waiting.service'
 
 export const Route = createFileRoute('/admin/waiting-students')({ component: WaitingStudentsPage })
 
@@ -26,7 +26,7 @@ function WaitingStudentsPage() {
   const load = useCallback(async () => {
     try {
       setError(null)
-      setStudents(await getWaitingStudents())
+      setStudents(await getVerifiedWaitingStudents())
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load waiting students.')
     }
