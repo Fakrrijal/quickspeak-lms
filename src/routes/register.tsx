@@ -8,6 +8,67 @@ export const Route = createFileRoute('/register')({
   component: RegisterPage,
 })
 
+const RESEND_COOLDOWN_SECONDS = 60
+const RESEND_MAX_ATTEMPTS = 3
+const RESEND_WINDOW_MS = 15 * 60 * 1000
+const RESEND_STORAGE_PREFIX = 'quickspeak:verification-resend:'
+
+type ResendState = {
+  timestamps: number[]
+  cooldownUntil: number
+}
+
+function getResendStorageKey(email: string) {
+  return `${RESEND_STORAGE_PREFIX}${email.trim().toLowerCase()}`
+}
+
+function readResendState(email: string): ResendState {
+  if (typeof window === 'undefined') {
+    return { timestamps: [], cooldownUntil: 0 }
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getResendStorageKey(email))
+    if (!raw) return { timestamps: [], cooldownUntil: 0 }
+
+    const parsed = JSON.parse(raw) as Partial<ResendState>
+    const now = Date.now()
+    const timestamps = Array.isArray(parsed.timestamps)
+      ? parsed.timestamps.filter(
+          (timestamp): timestamp is number =>
+            typeof timestamp === 'number' && now - timestamp < RESEND_WINDOW_MS,
+        )
+      : []
+
+    return {
+      timestamps,
+      cooldownUntil:
+        typeof parsed.cooldownUntil === 'number' ? parsed.cooldownUntil : 0,
+    }
+  } catch {
+    return { timestamps: [], cooldownUntil: 0 }
+  }
+}
+
+function writeResendState(email: string, state: ResendState) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem(
+    getResendStorageKey(email),
+    JSON.stringify(state),
+  )
+}
+
+function getRemainingSeconds(until: number) {
+  return Math.max(0, Math.ceil((until - Date.now()) / 1000))
+}
+
+function formatCountdown(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
+}
+
 function RegisterPage() {
   const [role, setRole] = useState<SignUpRole>('student')
   const [fullName, setFullName] = useState('')
@@ -18,6 +79,8 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [resendAttemptsRemaining, setResendAttemptsRemaining] = useState(RESEND_MAX_ATTEMPTS)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -40,6 +103,35 @@ function RegisterPage() {
       .catch((err) => console.error('Failed to load levels:', err))
       .finally(() => setLoadingLevels(false))
   }, [])
+
+  useEffect(() => {
+    if (!success || !email.trim()) return
+
+    const refreshResendState = () => {
+      const state = readResendState(email)
+      const now = Date.now()
+      const cooldown = getRemainingSeconds(state.cooldownUntil)
+      const timestamps = state.timestamps.filter(
+        (timestamp) => now - timestamp < RESEND_WINDOW_MS,
+      )
+
+      if (timestamps.length !== state.timestamps.length || cooldown === 0) {
+        writeResendState(email, {
+          timestamps,
+          cooldownUntil: cooldown === 0 ? 0 : state.cooldownUntil,
+        })
+      }
+
+      setResendCooldown(cooldown)
+      setResendAttemptsRemaining(
+        Math.max(0, RESEND_MAX_ATTEMPTS - timestamps.length),
+      )
+    }
+
+    refreshResendState()
+    const interval = window.setInterval(refreshResendState, 1000)
+    return () => window.clearInterval(interval)
+  }, [success, email])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,9 +156,6 @@ function RegisterPage() {
         }
       }
 
-      // The database provisions both the profile and its application in the
-      // Auth-user creation transaction. This works whether email confirmation
-      // returns a session now or only after the email is confirmed.
       const signUpResult = await authService.signUp({
         email,
         password,
@@ -88,9 +177,6 @@ function RegisterPage() {
         throw new Error('Registration could not be completed')
       }
 
-      // Email confirmation is enabled, so a successful signup normally has no
-      // session yet. A valid user and no Auth error is the registration success
-      // condition; the database trigger created the waiting application.
       setSuccess(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
@@ -105,8 +191,33 @@ function RegisterPage() {
   }
 
   const handleResendConfirmation = async () => {
-    if (!email.trim()) {
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
       setError('Enter your email address first.')
+      return
+    }
+
+    const state = readResendState(normalizedEmail)
+    const now = Date.now()
+    const recentTimestamps = state.timestamps.filter(
+      (timestamp) => now - timestamp < RESEND_WINDOW_MS,
+    )
+    const cooldown = getRemainingSeconds(state.cooldownUntil)
+
+    if (cooldown > 0) {
+      setResendCooldown(cooldown)
+      setError(`Please wait ${formatCountdown(cooldown)} before requesting another email.`)
+      return
+    }
+
+    if (recentTimestamps.length >= RESEND_MAX_ATTEMPTS) {
+      const oldestTimestamp = Math.min(...recentTimestamps)
+      const retryAt = oldestTimestamp + RESEND_WINDOW_MS
+      const waitSeconds = Math.max(1, Math.ceil((retryAt - now) / 1000))
+      setResendAttemptsRemaining(0)
+      setError(
+        `You have reached the limit of ${RESEND_MAX_ATTEMPTS} verification emails within 15 minutes. Please try again in ${formatCountdown(waitSeconds)}.`,
+      )
       return
     }
 
@@ -115,7 +226,18 @@ function RegisterPage() {
     setError(null)
 
     try {
-      await authService.resendConfirmationEmail(email.trim())
+      await authService.resendConfirmationEmail(normalizedEmail)
+
+      const updatedTimestamps = [...recentTimestamps, now]
+      const updatedState: ResendState = {
+        timestamps: updatedTimestamps,
+        cooldownUntil: now + RESEND_COOLDOWN_SECONDS * 1000,
+      }
+      writeResendState(normalizedEmail, updatedState)
+      setResendCooldown(RESEND_COOLDOWN_SECONDS)
+      setResendAttemptsRemaining(
+        Math.max(0, RESEND_MAX_ATTEMPTS - updatedTimestamps.length),
+      )
       setResendSuccess(true)
     } catch (err) {
       await reportSystemError({
@@ -134,6 +256,8 @@ function RegisterPage() {
   }
 
   if (success) {
+    const resendBlocked = resendLoading || resendCooldown > 0 || resendAttemptsRemaining === 0
+
     return (
       <div className="mx-auto max-w-md">
         <div className="rounded-xl border bg-white p-8 shadow-sm">
@@ -158,11 +282,23 @@ function RegisterPage() {
             <button
               type="button"
               onClick={handleResendConfirmation}
-              disabled={resendLoading}
-              className="mt-3 w-full rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-medium text-amber-900 disabled:opacity-50"
+              disabled={resendBlocked}
+              className="mt-3 w-full rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-medium text-amber-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {resendLoading ? 'Sending...' : 'Resend Verification Email'}
+              {resendLoading
+                ? 'Sending...'
+                : resendCooldown > 0
+                  ? `Resend available in ${formatCountdown(resendCooldown)}`
+                  : resendAttemptsRemaining === 0
+                    ? 'Resend limit reached'
+                    : 'Resend Verification Email'}
             </button>
+
+            <p className="mt-2 text-xs text-amber-800">
+              {resendAttemptsRemaining > 0
+                ? `${resendAttemptsRemaining} resend attempt${resendAttemptsRemaining === 1 ? '' : 's'} remaining in this 15-minute window.`
+                : 'The resend limit will reset after the 15-minute window expires.'}
+            </p>
 
             {resendSuccess && (
               <p className="mt-2 text-sm text-green-700">
@@ -235,7 +371,6 @@ function RegisterPage() {
             </div>
           </div>
 
-          {/* Student-specific fields */}
           {role === 'student' && (
             <>
               <div>
@@ -290,7 +425,6 @@ function RegisterPage() {
             </>
           )}
 
-          {/* Teacher-specific fields */}
           {role === 'teacher' && (
             <>
               <div>
