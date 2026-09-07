@@ -59,6 +59,17 @@ export type PaymentProofSubmission = {
   uploaded_at: string
 }
 
+export type PaymentRetryResult = {
+  enrollment_id: string
+  invoice_id: string
+  invoice_number: string
+  invoice_amount: number
+  invoice_status: string
+  payment_id: string
+  payment_amount: number
+  payment_status: string
+}
+
 const maximumProofFileSize = 5242880
 const paymentProofBucket = 'payment_proofs'
 const acceptedProofTypes = {
@@ -178,6 +189,23 @@ export async function initializeEnrollmentPayment(enrollmentId: string) {
   }
 
   return payment
+}
+
+export async function retryStudentPayment(enrollmentId: string): Promise<PaymentRetryResult> {
+  const { data, error } = await supabase.rpc('retry_student_payment', {
+    p_enrollment_id: enrollmentId,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  const payment = Array.isArray(data) ? data[0] : data
+  if (!payment) {
+    throw new Error('Payment retry did not return a new payment attempt.')
+  }
+
+  return payment as PaymentRetryResult
 }
 
 function getProofExtension(file: File) {
