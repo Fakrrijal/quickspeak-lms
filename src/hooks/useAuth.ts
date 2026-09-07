@@ -44,9 +44,7 @@ export function useAuth() {
     async function loadSession() {
       const { data, error } = await supabase.auth.getSession()
 
-      if (!mounted) {
-        return
-      }
+      if (!mounted) return
 
       if (error) {
         console.error('Failed to load auth session:', error)
@@ -63,9 +61,7 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) {
-        return
-      }
+      if (!mounted) return
 
       applySession(nextSession)
       setLoading(false)
@@ -77,7 +73,6 @@ export function useAuth() {
     }
   }, [])
 
-  // Load profile when user changes (handles initial session and auth state changes)
   const loadProfile = useCallback(async (userId: string) => {
     const requestId = ++profileRequestIdRef.current
     setProfileLoading(true)
@@ -90,27 +85,17 @@ export function useAuth() {
         .eq('id', userId)
         .single()
 
-      // Only update state if this is still the current request
       if (requestId === profileRequestIdRef.current) {
-        if (error) {
-          throw error
-        }
-
-        if (data) {
-          setProfile(data as Profile)
-        } else {
-          setProfile(null)
-        }
+        if (error) throw error
+        setProfile(data ? (data as Profile) : null)
       }
     } catch (err) {
-      // Only update state if this is still the current request
       if (requestId === profileRequestIdRef.current) {
         console.error('Failed to load profile:', err)
         setProfileError(err instanceof Error ? err : new Error('Profile load failed'))
         setProfile(null)
       }
     } finally {
-      // Only update loading state if this is still the current request
       if (requestId === profileRequestIdRef.current) {
         setProfileLoading(false)
       }
@@ -127,11 +112,15 @@ export function useAuth() {
     }
   }, [user, loadProfile])
 
+  const emailVerified = Boolean(user?.email_confirmed_at)
+
   return {
     session,
     user,
     loading,
-    isAuthenticated: Boolean(session),
+    emailVerified,
+    // A session without a verified email is never considered authenticated by the application.
+    isAuthenticated: Boolean(session && emailVerified),
     profile,
     profileLoading,
     profileError,
