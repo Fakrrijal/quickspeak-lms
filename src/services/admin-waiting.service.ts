@@ -1,6 +1,30 @@
 import { supabase } from '../lib/supabase'
 import type { ActiveLevel, ClassType, WaitingStudent, WaitingTeacher } from './admin.service'
 
+type WaitingStudentRow = {
+  id: string
+  full_name: string
+  email: string
+  phone: string | null
+  status: string
+  registration_date: string
+  starting_level_id: string | null
+  starting_level_number: number | null
+  starting_level_name: string | null
+  class_type: string | null
+}
+
+type WaitingTeacherRow = {
+  id: string
+  full_name: string
+  email: string
+  phone: string | null
+  status: string
+  registration_date: string
+  class_type: string | null
+  supported_levels: unknown
+}
+
 export async function getVerifiedWaitingStudents(): Promise<WaitingStudent[]> {
   const { data, error } = await supabase.rpc('get_waiting_students')
 
@@ -8,7 +32,9 @@ export async function getVerifiedWaitingStudents(): Promise<WaitingStudent[]> {
     throw error
   }
 
-  return (data ?? []).map((student) => ({
+  const rows = (data ?? []) as WaitingStudentRow[]
+
+  return rows.map((student) => ({
     id: student.id,
     full_name: student.full_name,
     email: student.email,
@@ -18,12 +44,12 @@ export async function getVerifiedWaitingStudents(): Promise<WaitingStudent[]> {
     starting_level: student.starting_level_id
       ? {
           id: student.starting_level_id,
-          level_number: student.starting_level_number,
-          name: student.starting_level_name,
+          level_number: student.starting_level_number ?? 0,
+          name: student.starting_level_name ?? '',
         }
       : null,
     class_type: student.class_type as ClassType | null,
-  })) as WaitingStudent[]
+  }))
 }
 
 export async function getVerifiedWaitingTeachers(): Promise<WaitingTeacher[]> {
@@ -33,7 +59,9 @@ export async function getVerifiedWaitingTeachers(): Promise<WaitingTeacher[]> {
     throw error
   }
 
-  return (data ?? []).map((teacher) => ({
+  const rows = (data ?? []) as WaitingTeacherRow[]
+
+  return rows.map((teacher) => ({
     id: teacher.id,
     full_name: teacher.full_name,
     email: teacher.email,
@@ -42,7 +70,7 @@ export async function getVerifiedWaitingTeachers(): Promise<WaitingTeacher[]> {
     registration_date: teacher.registration_date,
     class_type: teacher.class_type as ClassType | null,
     supported_levels: Array.isArray(teacher.supported_levels)
-      ? teacher.supported_levels as ActiveLevel[]
+      ? (teacher.supported_levels as ActiveLevel[])
       : [],
-  })) as WaitingTeacher[]
+  }))
 }
