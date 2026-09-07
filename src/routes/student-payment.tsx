@@ -10,6 +10,7 @@ import {
   getMyStudentContinuationStatus,
   initializeEnrollmentPayment,
   requestNextLevelEnrollment,
+  retryStudentPayment,
   type StudentContinuationStatus,
   submitStudentPaymentProof,
   type StudentPaymentDetails,
@@ -77,6 +78,7 @@ function StudentPaymentPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedProof, setSelectedProof] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
   const [proofMessage, setProofMessage] = useState<string | null>(null)
   const [proofError, setProofError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -168,6 +170,27 @@ function StudentPaymentPage() {
     }
   }
 
+  const handleRetryPayment = async () => {
+    if (!paymentDetails || paymentDetails.payment?.status !== 'rejected' || isRetrying) {
+      return
+    }
+
+    setIsRetrying(true)
+    setProofError(null)
+    setProofMessage(null)
+    setSelectedProof(null)
+
+    try {
+      await retryStudentPayment(paymentDetails.enrollment.id)
+      await loadPaymentPage()
+      setProofMessage('A new payment attempt has been created. Please make the payment and upload the new proof.')
+    } catch (retryError) {
+      setProofError(getErrorMessage(retryError, 'Unable to create a new payment attempt.'))
+    } finally {
+      setIsRetrying(false)
+    }
+  }
+
   const handleProofUpload = async () => {
     if (!selectedProof || !paymentDetails?.payment) {
       return
@@ -233,7 +256,7 @@ function StudentPaymentPage() {
   const isPaid = invoice?.status === 'paid' || payment?.status === 'approved'
   const isRejected = payment?.status === 'rejected'
   const isProofSubmitted = payment?.status === 'proof_submitted'
-  const canUploadProof = payment?.status === 'unpaid' || isRejected
+  const canUploadProof = payment?.status === 'unpaid'
   const isLevelFourComplete = continuationStatus?.is_completed
     && continuationStatus.next_level_id === null
   const existingContinuation = Boolean(
@@ -354,10 +377,22 @@ function StudentPaymentPage() {
               </dl>
 
               {isRejected && (
-                <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                  Your payment was rejected. Please review the instructions before submitting a new proof.
-                  {payment.rejection_reason ? ` Reason: ${payment.rejection_reason}` : ''}
-                </p>
+                <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  <p>
+                    Your payment was rejected. Your previous payment attempt has been kept in the payment history.
+                  </p>
+                  {payment.rejection_reason && (
+                    <p className="mt-2"><span className="font-semibold">Reason:</span> {payment.rejection_reason}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleRetryPayment()}
+                    disabled={isRetrying}
+                    className="mt-4 rounded-lg bg-slate-900 px-4 py-2 font-medium text-white disabled:opacity-50"
+                  >
+                    {isRetrying ? 'Creating New Payment...' : 'Pay Again'}
+                  </button>
+                </div>
               )}
 
               {proofMessage && (
@@ -432,7 +467,7 @@ function StudentPaymentPage() {
               <p className="mt-1">A continuation enrollment already exists. Continue with its payment below.</p>
               <a href="#payment-details" className="mt-3 inline-block font-medium underline">
                 {paymentDetails.payment?.status === 'rejected'
-                  ? 'Perbaiki / Kirim Ulang Pembayaran'
+                  ? 'Pay Again'
                   : 'Lanjutkan Pembayaran'}
               </a>
             </div>
