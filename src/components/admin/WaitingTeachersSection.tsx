@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   approveTeacher,
-  getWaitingTeachers,
   rejectWaitingTeacher,
   type WaitingTeacher,
 } from '../../services/admin.service'
+import { getVerifiedWaitingTeachers } from '../../services/admin-waiting.service'
 
 type WaitingTeachersSectionProps = { enabled: boolean }
 const date = (value: string) => new Intl.DateTimeFormat('en-US').format(new Date(value))
@@ -17,7 +17,7 @@ export function WaitingTeachersSection({ enabled }: WaitingTeachersSectionProps)
   const [rejectedTeacher, setRejectedTeacher] = useState<WaitingTeacher | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async () => { try { setError(null); setTeachers(await getWaitingTeachers()) } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Unable to load waiting teachers.') } }, [])
+  const load = useCallback(async () => { try { setError(null); setTeachers(await getVerifiedWaitingTeachers()) } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Unable to load waiting teachers.') } }, [])
 
   useEffect(() => {
     if (!enabled) return
