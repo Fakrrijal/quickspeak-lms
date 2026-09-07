@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { authService } from '../services/auth.service'
+import { useAuthContext } from '../providers/AuthProvider'
 import { reportSystemError } from '../lib/systemErrorReporter'
 
 export const Route = createFileRoute('/login')({
@@ -13,20 +14,65 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const loginAttemptedRef = useRef(false)
+
+  const {
+    isAuthenticated,
+    profileLoading,
+    role,
+    status,
+    profileError,
+  } = useAuthContext()
+
+  useEffect(() => {
+    if (!isAuthenticated || profileLoading || !loginAttemptedRef.current) {
+      return
+    }
+
+    loginAttemptedRef.current = false
+
+    if (profileError) {
+      setError('Failed to load profile. Please try again.')
+      return
+    }
+
+    if (status !== 'active') {
+      setError('Your account is not active. Please contact support.')
+      return
+    }
+
+    if (role === 'admin') {
+      navigate({ to: '/admin/dashboard', replace: true })
+      return
+    }
+
+    if (role === 'teacher') {
+      navigate({ to: '/teacher', replace: true })
+      return
+    }
+
+    if (role === 'student') {
+      navigate({ to: '/student', replace: true })
+      return
+    }
+
+    setError('Your account has an unrecognized role.')
+  }, [isAuthenticated, profileLoading, role, status, profileError, navigate])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    loginAttemptedRef.current = true
 
     try {
       await authService.signIn({ email, password })
-      navigate({ to: '/' })
     } catch (err) {
+      loginAttemptedRef.current = false
       await reportSystemError({
         feature: 'LOGIN',
         action: 'SIGN_IN',
-        error,
+        error: err,
       })
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
