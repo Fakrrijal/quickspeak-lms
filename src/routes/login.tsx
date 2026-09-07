@@ -12,6 +12,9 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const loginAttemptedRef = useRef(false)
@@ -63,20 +66,62 @@ function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setResendSuccess(false)
+    setShowResendConfirmation(false)
     loginAttemptedRef.current = true
 
     try {
       await authService.signIn({ email, password })
     } catch (err) {
       loginAttemptedRef.current = false
-      await reportSystemError({
-        feature: 'LOGIN',
-        action: 'SIGN_IN',
-        error: err,
-      })
-      setError(err instanceof Error ? err.message : 'Login failed')
+
+      const authError = err as { code?: string; message?: string }
+      const isEmailNotConfirmed =
+        authError.code === 'email_not_confirmed' ||
+        authError.message?.toLowerCase().includes('email not confirmed')
+
+      if (isEmailNotConfirmed) {
+        setShowResendConfirmation(true)
+        setError('Please confirm your email address before logging in.')
+      } else {
+        await reportSystemError({
+          feature: 'LOGIN',
+          action: 'SIGN_IN',
+          error: err,
+        })
+        setError(err instanceof Error ? err.message : 'Login failed')
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResendConfirmation = async () => {
+    if (!email.trim()) {
+      setError('Enter your email address first.')
+      return
+    }
+
+    setResendLoading(true)
+    setResendSuccess(false)
+    setError(null)
+
+    try {
+      await authService.resendConfirmationEmail(email.trim())
+      setResendSuccess(true)
+    } catch (err) {
+      await reportSystemError({
+        feature: 'LOGIN',
+        action: 'RESEND_CONFIRMATION_EMAIL',
+        error: err,
+      })
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Could not resend the confirmation email.',
+      )
+    } finally {
+      setResendLoading(false)
     }
   }
 
@@ -96,7 +141,10 @@ function LoginPage() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setResendSuccess(false)
+            }}
             className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2"
           />
 
@@ -121,6 +169,29 @@ function LoginPage() {
             <p className="text-sm text-red-600">
               {error}
             </p>
+          )}
+
+          {showResendConfirmation && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm text-amber-900">
+                Your email has not been confirmed yet. Send a new confirmation email to continue.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resendLoading}
+                className="mt-3 w-full rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-medium text-amber-900 disabled:opacity-50"
+              >
+                {resendLoading ? 'Sending...' : 'Resend Confirmation Email'}
+              </button>
+
+              {resendSuccess && (
+                <p className="mt-2 text-sm text-green-700">
+                  A new confirmation email has been sent. Please check your inbox.
+                </p>
+              )}
+            </div>
           )}
 
           <button
