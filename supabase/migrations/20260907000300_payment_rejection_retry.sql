@@ -73,7 +73,6 @@ BEGIN
     WHERE i.id = v_latest_payment.invoice_id
     FOR UPDATE;
 
-    -- A rejected payment is a closed financial attempt. Preserve it in history.
     UPDATE public.invoices
     SET status = 'cancelled'
     WHERE id = v_old_invoice.id
@@ -160,3 +159,68 @@ FOR EACH ROW
 EXECUTE FUNCTION public.close_invoice_on_payment_rejection();
 
 REVOKE ALL ON FUNCTION public.close_invoice_on_payment_rejection() FROM PUBLIC;
+
+-- Prevent the old rejected payment attempt from accepting another proof.
+CREATE OR REPLACE FUNCTION public.reject_proof_for_closed_payment()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+    v_payment public.payments%ROWTYPE;
+    v_invoice public.invoices%ROWTYPE;
+    v_enrollment public.enrollments%ROWTYPE;
+BEGIN
+    SELECT p.*
+    INTO v_payment
+    FROM public.payments AS p
+    WHERE p.id = NEW.payment_id
+    FOR KEY SHARE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Payment not found'
+            USING ERRCODE = 'P0002';
+    END IF;
+
+    SELECT i.*
+    INTO v_invoice
+    FROM public.invoices AS i
+    WHERE i.id = v_payment.invoice_id
+    FOR KEY SHARE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Payment invoice not found'
+            USING ERRCODE = 'P0002';
+    END IF;
+
+    SELECT e.*
+    INTO v_enrollment
+    FROM public.enrollments AS e
+    WHERE e.id = v_invoice.enrollment_id
+    FOR KEY SHARE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Payment enrollment not found'
+            USING ERRCODE = 'P0002';
+    END IF;
+
+    IF v_payment.status <> 'unpaid'
+       OR v_invoice.status <> 'unpaid'
+       OR v_enrollment.status <> 'payment_pending' THEN
+        RAISE EXCEPTION 'This payment attempt is closed. Start a new payment attempt instead.'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS payment_proofs_reject_closed_payment ON public.payment_proofs;
+
+CREATE TRIGGER payment_proofs_reject_closed_payment
+BEFORE INSERT ON public.payment_proofs
+FOR EACH ROW
+EXECUTE FUNCTION public.reject_proof_for_closed_payment();
+
+REVOKE ALL ON FUNCTION public.reject_proof_for_closed_payment() FROM PUBLIC;
