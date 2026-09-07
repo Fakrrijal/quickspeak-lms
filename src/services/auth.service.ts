@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getAuthRedirect } from '../lib/app-url'
 
 export type SignInInput = {
   email: string
@@ -52,7 +53,7 @@ export const authService = {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/email-confirmed`,
+        emailRedirectTo: getAuthRedirect('/email-confirmed'),
         data: {
           full_name,
           phone,
@@ -77,7 +78,7 @@ export const authService = {
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/email-confirmed`,
+        emailRedirectTo: getAuthRedirect('/email-confirmed'),
       },
     })
 
@@ -88,7 +89,7 @@ export const authService = {
 
   async resetPasswordForEmail({ email }: PasswordResetInput) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: getAuthRedirect('/reset-password'),
     })
 
     if (error) {
