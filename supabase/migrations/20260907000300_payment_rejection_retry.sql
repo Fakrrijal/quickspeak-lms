@@ -175,8 +175,7 @@ BEGIN
     SELECT p.*
     INTO v_payment
     FROM public.payments AS p
-    WHERE p.id = NEW.payment_id
-    FOR KEY SHARE;
+    WHERE p.id = NEW.payment_id;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Payment not found'
@@ -186,8 +185,7 @@ BEGIN
     SELECT i.*
     INTO v_invoice
     FROM public.invoices AS i
-    WHERE i.id = v_payment.invoice_id
-    FOR KEY SHARE;
+    WHERE i.id = v_payment.invoice_id;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Payment invoice not found'
@@ -197,8 +195,7 @@ BEGIN
     SELECT e.*
     INTO v_enrollment
     FROM public.enrollments AS e
-    WHERE e.id = v_invoice.enrollment_id
-    FOR KEY SHARE;
+    WHERE e.id = v_invoice.enrollment_id;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Payment enrollment not found'
