@@ -8,12 +8,14 @@ import {
 import {
   getCurrentStudentPaymentDetails,
   getMyStudentContinuationStatus,
+  getStudentPaymentHistory,
   initializeEnrollmentPayment,
   requestNextLevelEnrollment,
   retryStudentPayment,
   type StudentContinuationStatus,
   submitStudentPaymentProof,
   type StudentPaymentDetails,
+  type StudentPaymentHistoryItem,
   validatePaymentProofFile,
 } from '../services/student-payment.service'
 import { reportSystemError } from '../lib/systemErrorReporter'
@@ -45,6 +47,13 @@ function formatPaymentStatus(status: string) {
   )).join(' ')
 }
 
+function formatPaymentDate(value: string) {
+  return new Intl.DateTimeFormat('id-ID', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
+}
+
 function getContinuationErrorMessage(error: unknown) {
   const message = getErrorMessage(error, 'Unable to continue to the next level.')
 
@@ -73,6 +82,7 @@ function StudentPaymentPage() {
   } = useAuthContext()
   const navigate = useNavigate()
   const [paymentDetails, setPaymentDetails] = useState<StudentPaymentDetails | null>(null)
+  const [paymentHistory, setPaymentHistory] = useState<StudentPaymentHistoryItem[]>([])
   const [continuationStatus, setContinuationStatus] = useState<StudentContinuationStatus | null>(null)
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -114,7 +124,12 @@ function StudentPaymentPage() {
         getActivePaymentSettings(),
         getMyStudentContinuationStatus(),
       ])
+      const history = details
+        ? await getStudentPaymentHistory(details.enrollment.id)
+        : []
+
       setPaymentDetails(details)
+      setPaymentHistory(history)
       setPaymentSettings(settings)
       setContinuationStatus(continuation)
     } catch (loadError) {
@@ -440,6 +455,64 @@ function StudentPaymentPage() {
             </div>
           )}
         </div>
+      )}
+
+      {!isLoading && !error && paymentHistory.length > 0 && (
+        <section className="mt-8 rounded-xl border bg-white p-6 shadow-sm" aria-labelledby="payment-history-heading">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 id="payment-history-heading" className="text-xl font-semibold text-slate-900">
+                Payment History
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                All payment attempts for this enrollment are kept here.
+              </p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+              {paymentHistory.length} {paymentHistory.length === 1 ? 'attempt' : 'attempts'}
+            </span>
+          </div>
+
+          <div className="mt-5 overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-slate-200 text-slate-600">
+                <tr>
+                  <th className="whitespace-nowrap px-3 py-3 font-medium">Date</th>
+                  <th className="whitespace-nowrap px-3 py-3 font-medium">Invoice</th>
+                  <th className="whitespace-nowrap px-3 py-3 font-medium">Amount</th>
+                  <th className="whitespace-nowrap px-3 py-3 font-medium">Payment Status</th>
+                  <th className="whitespace-nowrap px-3 py-3 font-medium">Invoice Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paymentHistory.map((historyItem) => (
+                  <tr key={historyItem.id} className="align-top">
+                    <td className="whitespace-nowrap px-3 py-4 text-slate-700">
+                      {formatPaymentDate(historyItem.created_at)}
+                    </td>
+                    <td className="px-3 py-4 font-medium text-slate-900">
+                      {historyItem.invoice_number}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-slate-700">
+                      Rp{historyItem.amount.toLocaleString('id-ID')}
+                    </td>
+                    <td className="px-3 py-4 text-slate-700">
+                      <span className="font-medium">{formatPaymentStatus(historyItem.status)}</span>
+                      {historyItem.rejection_reason && (
+                        <p className="mt-1 max-w-xs text-xs text-red-700">
+                          Reason: {historyItem.rejection_reason}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-3 py-4 text-slate-700">
+                      {formatPaymentStatus(historyItem.invoice_status)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {!isLoading && !error && continuationStatus && (
