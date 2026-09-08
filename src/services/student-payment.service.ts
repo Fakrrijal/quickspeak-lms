@@ -28,6 +28,18 @@ export type StudentPaymentDetails = {
   payment: StudentPayment | null
 }
 
+export type StudentPaymentHistoryItem = {
+  id: string
+  invoice_id: string
+  invoice_number: string
+  invoice_amount: number
+  invoice_status: string
+  amount: number
+  status: string
+  rejection_reason: string | null
+  created_at: string
+}
+
 export type StudentContinuationStatus = {
   enrollment_id: string
   level_id: string
@@ -142,6 +154,56 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
     invoice: invoice as StudentInvoice,
     payment: payment as StudentPayment | null,
   }
+}
+
+export async function getStudentPaymentHistory(
+  enrollmentId: string,
+): Promise<StudentPaymentHistoryItem[]> {
+  const { data: invoices, error: invoiceError } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, amount, status')
+    .eq('enrollment_id', enrollmentId)
+
+  if (invoiceError) {
+    throw invoiceError
+  }
+
+  if (!invoices || invoices.length === 0) {
+    return []
+  }
+
+  const invoiceIds = invoices.map((invoice) => invoice.id)
+  const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]))
+
+  const { data: payments, error: paymentError } = await supabase
+    .from('payments')
+    .select('id, invoice_id, amount, status, rejection_reason, created_at')
+    .in('invoice_id', invoiceIds)
+    .order('created_at', { ascending: false })
+
+  if (paymentError) {
+    throw paymentError
+  }
+
+  return (payments ?? []).flatMap((payment) => {
+    const invoice = invoiceById.get(payment.invoice_id)
+
+    if (!invoice) {
+      return []
+    }
+
+    return [{
+      id: payment.id,
+      invoice_id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      invoice_amount: invoice.amount,
+      invoice_status: invoice.status,
+      amount: payment.amount,
+      status: payment.status,
+      rejection_reason: payment.rejection_reason,
+      created_at: payment.created_at,
+    }]
+  })
 }
 
 export async function getMyStudentContinuationStatus(): Promise<StudentContinuationStatus | null> {
