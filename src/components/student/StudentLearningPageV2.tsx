@@ -15,10 +15,6 @@ function formatPackage(value: StudentLearningState['package_type']) {
   return value === 'private' ? 'Private' : 'Semi-Private'
 }
 
-function formatStatus(value: string) {
-  return value.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-}
-
 export function StudentLearningPageV2() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
