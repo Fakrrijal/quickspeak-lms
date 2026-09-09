@@ -1,129 +1,543 @@
 import { Link } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { PublicHeader } from './PublicHeader'
 
 const whatsappUrl =
   'https://wa.me/6282138138564?text=Halo%20QuickSpeak%2C%20saya%20ingin%20mendapatkan%20informasi%20mengenai%20program%20English%20Course.'
 
-const levels = [
-  { number: '01', title: 'Foundation', description: 'Membangun dasar bahasa Inggris dengan materi yang jelas dan terarah.' },
-  { number: '02', title: 'Development', description: 'Melatih kemampuan komunikasi dan pemahaman konsep secara bertahap.' },
-  { number: '03', title: 'Progress', description: 'Memperkuat kemampuan berbahasa melalui latihan dan evaluasi berkelanjutan.' },
-  { number: '04', title: 'Advanced Development', description: 'Membawa siswa ke level yang lebih siap untuk penggunaan bahasa yang luas.' },
+const navItems = [
+  { label: 'Beranda', href: '#top' },
+  { label: 'Program', href: '#programs' },
+  { label: 'Kontak', href: '#contact' },
 ]
 
-const programs = [
+const journeySteps = [
   {
-    tag: 'PRIVATE CLASS',
-    title: 'Belajar lebih fokus secara personal.',
-    description: 'Pendampingan yang lebih personal untuk kebutuhan belajar siswa.',
-    items: ['Fokus pada kebutuhan siswa', 'Interaksi personal', 'Dukungan teacher'],
-    price: 'Rp180.000',
+    step: '01',
+    title: 'Foundation',
+    description: 'Membangun dasar bahasa Inggris dengan materi yang jelas dan terarah.',
   },
   {
-    tag: 'SEMI-PRIVATE CLASS',
+    step: '02',
+    title: 'Development',
+    description: 'Melatih kemampuan komunikasi dan pemahaman konsep secara bertahap.',
+  },
+  {
+    step: '03',
+    title: 'Progress',
+    description: 'Memperkuat kemampuan berbahasa melalui latihan dan evaluasi berkelanjutan.',
+  },
+  {
+    step: '04',
+    title: 'Advanced Development',
+    description: 'Membawa siswa ke level yang lebih siap untuk penggunaan bahasa yang luas.',
+  },
+]
+
+const programCards = [
+  {
+    tag: 'Private Class',
+    title: 'Belajar lebih fokus secara personal.',
+    items: ['Fokus pada kebutuhan siswa', 'Interaksi personal', 'Dukungan teacher'],
+    accent: 'light',
+    fee: 'Rp180.000',
+  },
+  {
+    tag: 'Semi-Private Class',
     title: 'Belajar bersama kelompok kecil hingga 4 siswa.',
-    description: 'Interaksi aktif dalam kelompok kecil dengan suasana belajar yang kolaboratif.',
     items: ['Maksimal 4 siswa', 'Interaksi lebih aktif', 'Suasana kolaboratif'],
-    price: 'Rp150.000',
+    accent: 'dark',
+    fee: 'Rp150.000',
   },
 ]
 
 const testimonials = [
-  { name: 'Rayhan', identity: 'Siswa SD', quote: 'Belajar Bahasa Inggris di QuickSpeak menyenangkan. Saya jadi lebih berani berbicara Bahasa Inggris dan lebih percaya diri saat belajar.' },
-  { name: 'Hana', identity: 'Siswa SMP', quote: 'Saya suka karena teachernya menjelaskan dengan sabar dan membuat materi lebih mudah dipahami.' },
-  { name: 'Haikal', identity: 'Siswa SMP/SMA', quote: 'Latihan di QuickSpeak membuat saya lebih terbiasa menggunakan Bahasa Inggris. Belajarnya tidak terasa membosankan.' },
-  { name: 'Nizar Ali', identity: 'Siswa SMP/SMA', quote: 'Saya merasa kemampuan Bahasa Inggris saya semakin berkembang karena belajar secara bertahap dan terarah.' },
-  { name: 'Zahra', identity: 'Mahasiswa', quote: 'Pembelajarannya membantu saya lebih fokus pada kemampuan yang ingin saya tingkatkan, terutama dalam menggunakan Bahasa Inggris.' },
-  { name: 'Kaila', identity: 'Young Adult/Mahasiswa', quote: 'QuickSpeak membuat proses belajar Bahasa Inggris terasa lebih terstruktur dan lebih mudah diikuti.' },
+  {
+    id: 1,
+    name: 'Rayhan',
+    identity: 'Siswa SD',
+    quote: 'Belajar Bahasa Inggris di QuickSpeak menyenangkan. Saya jadi lebih berani berbicara Bahasa Inggris dan lebih percaya diri saat belajar.',
+    image: '/testimonials/rayhan.jpg',
+    placeholderColor: 'bg-gradient-to-br from-[#fef3c7] to-[#fef08a]',
+  },
+  {
+    id: 2,
+    name: 'Hana',
+    identity: 'Siswa SMP',
+    quote: 'Saya suka karena teachernya menjelaskan dengan sabar dan membuat materi lebih mudah dipahami.',
+    image: '/testimonials/hana.jpg',
+    placeholderColor: 'bg-gradient-to-br from-[#dcfce7] to-[#bbf7d0]',
+  },
+  {
+    id: 3,
+    name: 'Haikal',
+    identity: 'Siswa SMP/SMA',
+    quote: 'Latihan di QuickSpeak membuat saya lebih terbiasa menggunakan Bahasa Inggris. Belajarnya tidak terasa membosankan.',
+    image: '/testimonials/haikal.jpg',
+    placeholderColor: 'bg-gradient-to-br from-[#f5f3ff] to-[#ede9fe]',
+  },
+  {
+    id: 4,
+    name: 'Nizar Ali',
+    identity: 'Siswa SMP/SMA',
+    quote: 'Saya merasa kemampuan Bahasa Inggris saya semakin berkembang karena belajar secara bertahap dan terarah.',
+    image: '/testimonials/nizar-ali.jpg',
+    placeholderColor: 'bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe]',
+  },
+  {
+    id: 5,
+    name: 'Zahra',
+    identity: 'Mahasiswa',
+    quote: 'Pembelajarannya membantu saya lebih fokus pada kemampuan yang ingin saya tingkatkan, terutama dalam menggunakan Bahasa Inggris.',
+    image: '/testimonials/zahra.jpg',
+    placeholderColor: 'bg-gradient-to-br from-[#fbecf8] to-[#f3e8ff]',
+  },
+  {
+    id: 6,
+    name: 'Kaila',
+    identity: 'Young Adult/Mahasiswa',
+    quote: 'QuickSpeak membuat proses belajar Bahasa Inggris terasa lebih terstruktur. Saya bisa mengikuti perkembangan belajar saya dengan lebih jelas.',
+    image: '/testimonials/kaila.jpg',
+    placeholderColor: 'bg-gradient-to-br from-[#f0fdfa] to-[#ccfbf1]',
+  },
 ]
 
-const faqs = [
-  { question: 'Apa saja level QuickSpeak?', answer: 'QuickSpeak memiliki pembelajaran yang disusun dalam empat level, mulai dari dasar hingga pengembangan lanjutan.' },
-  { question: 'Bagaimana cara mendaftar?', answer: 'Calon siswa dapat mendaftar melalui formulir pendaftaran dan mengikuti proses review yang ditentukan oleh tim QuickSpeak.' },
-  { question: 'Apakah pendaftaran langsung aktif?', answer: 'Pendaftaran diproses sesuai administrasi dan peninjauan yang berlaku di QuickSpeak.' },
-  { question: 'Bagaimana proses belajar di QuickSpeak?', answer: 'Siswa mengikuti pembelajaran secara bertahap sesuai level, didampingi teacher, dengan latihan dan evaluasi yang terarah.' },
-  { question: 'Bagaimana cara menghubungi QuickSpeak?', answer: 'Anda dapat menghubungi tim QuickSpeak melalui WhatsApp admin di nomor 0821 3813 8564.' },
+const faqItems = [
+  {
+    question: 'Apa saja level QuickSpeak?',
+    answer:
+      'QuickSpeak memiliki pembelajaran yang disusun dalam empat level, mulai dari dasar hingga pengembangan lanjutan.',
+  },
+  {
+    question: 'Bagaimana cara mendaftar?',
+    answer:
+      'Calon siswa dapat mendaftar melalui formulir pendaftaran dan mengikuti proses review yang ditentukan oleh tim QuickSpeak.',
+  },
+  {
+    question: 'Apakah pendaftaran langsung aktif?',
+    answer:
+      'Pendaftaran dapat dilanjutkan sesuai proses administrasi dan peninjauan yang berlaku di QuickSpeak.',
+  },
+  {
+    question: 'Bagaimana siswa mengetahui perkembangan belajarnya?',
+    answer:
+      'Siswa dapat memantau perkembangan melalui fitur tracking progress serta sistem pembelajaran yang terstruktur.',
+  },
+  {
+    question: 'Bagaimana cara menghubungi QuickSpeak?',
+    answer:
+      'Anda dapat menghubungi tim QuickSpeak melalui WhatsApp admin di nomor 0821 3813 8564.',
+  },
 ]
 
 export function QuickSpeakLanding() {
-  const [openFaq, setOpenFaq] = useState(0)
-  const [showStickyCta, setShowStickyCta] = useState(false)
-
   useEffect(() => {
     document.title = 'QuickSpeak — English Course'
+
     let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null
     if (!meta) {
       meta = document.createElement('meta')
       meta.name = 'description'
       document.head.appendChild(meta)
     }
-    meta.content = 'QuickSpeak adalah English Course dengan pembelajaran terstruktur, empat level, dan dukungan teacher.'
+    meta.content =
+      'QuickSpeak adalah English Course dengan pembelajaran terstruktur, empat level, dan dukungan teacher.'
+  }, [])
 
-    const handleScroll = () => setShowStickyCta(window.scrollY > 320)
+  // Testimonial carousel state
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [cardsPerView, setCardsPerView] = useState(3)
+  const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true)
+  const autoPlayTimerRef = useRef<number | null>(null)
+  const carouselRef = useRef<HTMLDivElement | null>(null)
+
+  // Sticky WhatsApp CTA visibility
+  const [showStickyCta, setShowStickyCta] = useState(false)
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyCta(window.scrollY > 200)
+    }
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Calculate total slides based on cards per view
+  const totalSlides = Math.ceil(testimonials.length / cardsPerView)
+
+  // Check for prefers-reduced-motion
+  const prefersReducedMotion = () => {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }
+
+  // Handle responsive card count
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCardsPerView(1)
+      } else if (window.innerWidth < 1024) {
+        setCardsPerView(2)
+      } else {
+        setCardsPerView(3)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Auto-play carousel
+  useEffect(() => {
+    if (!isAutoPlayEnabled) return
+
+    const autoplayInterval = prefersReducedMotion() ? 7000 : 5000
+
+    autoPlayTimerRef.current = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % totalSlides)
+    }, autoplayInterval)
+
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current)
+      }
+    }
+  }, [totalSlides, isAutoPlayEnabled])
+
+  // Handle pause on hover/focus
+  const handleCarouselMouseEnter = () => {
+    setIsAutoPlayEnabled(false)
+  }
+
+  const handleCarouselMouseLeave = () => {
+    setIsAutoPlayEnabled(true)
+  }
+
+  const handleCarouselFocus = () => {
+    setIsAutoPlayEnabled(false)
+  }
+
+  const handleCarouselBlur = () => {
+    setIsAutoPlayEnabled(true)
+  }
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!carouselRef.current?.contains(document.activeElement)) return
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        handlePrevious()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [totalSlides])
+
+  const handlePrevious = () => {
+    setIsAutoPlayEnabled(false)
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
+    setTimeout(() => setIsAutoPlayEnabled(true), 500)
+  }
+
+  const handleNext = () => {
+    setIsAutoPlayEnabled(false)
+    setCurrentSlide((prev) => (prev + 1) % totalSlides)
+    setTimeout(() => setIsAutoPlayEnabled(true), 500)
+  }
+
+  const handleDotClick = (index: number) => {
+    setIsAutoPlayEnabled(false)
+    setCurrentSlide(index)
+    setTimeout(() => setIsAutoPlayEnabled(true), 500)
+  }
+
   return (
-    <div id="top" className="min-h-screen overflow-x-hidden bg-[#f7f9fc] text-slate-900">
+    <div id="top" className="min-h-screen overflow-x-hidden bg-[#f6f8fc] text-slate-900 pt-20">
       <PublicHeader />
 
       <main>
-        <section className="relative overflow-hidden bg-[#f7f9fc] pt-28 pb-20 sm:pt-32 lg:pb-28">
-          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-blue-100/70 blur-3xl" />
-          <div className="absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-sky-100/60 blur-3xl" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:px-12">
-            <div>
-              <span className="inline-flex rounded-full border border-blue-100 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-blue-700 shadow-sm">
-                ENGLISH COURSE
-              </span>
-              <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] text-[#102449] sm:text-5xl lg:text-[4.15rem]">
-                Belajar Bahasa Inggris dengan Cara Praktis dan Menyenangkan
-              </h1>
-              <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                Pembelajaran Bahasa Inggris yang terstruktur melalui 4 level, didampingi teacher, dan dirancang agar siswa berkembang secara bertahap.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/register" className="inline-flex items-center justify-center rounded-full bg-[#102449] px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5 hover:bg-[#16345f]">
-                  Mulai Pembelajaran
-                </Link>
-                <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-7 py-3.5 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50">
-                  Hubungi Kami
-                </a>
+        {/* HERO SECTION */}
+        <section className="relative bg-[#faf8f5] py-16 lg:py-24 overflow-hidden">
+          <div className="absolute inset-0 hidden lg:block pointer-events-none">
+            <img
+              src="/hero-student-hijab.png"
+              alt=""
+              className="absolute right-0 top-1/2 -translate-y-1/2 h-full w-auto max-w-none object-cover object-right opacity-95"
+            />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+            <div className="grid items-center lg:grid-cols-12">
+              {/* Left: Copy occupying approx 55-60% width on desktop */}
+              <div className="min-w-0 lg:col-span-7 xl:col-span-6 lg:pr-8">
+                <div className="inline-flex items-center rounded-full border border-[#dfe9ff] bg-[#edf4ff]/90 backdrop-blur-sm px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
+                  ENGLISH COURSE
+                </div>
+
+                <h1 className="mt-5 text-4xl font-semibold leading-[1.15] tracking-[-0.03em] text-[#102449] sm:text-5xl lg:text-[3.25rem]">
+                  Belajar Bahasa Inggris dengan Cara Praktis dan Menyenangkan
+                </h1>
+
+                <p className="mt-5 max-w-lg text-base leading-7 text-slate-700 sm:text-lg">
+                  Pembelajaran Bahasa Inggris yang terstruktur melalui 4 level, didampingi teacher, dan dirancang untuk membantu siswa berkembang secara bertahap.
+                </p>
+
+                {/* Trust Points */}
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1b5dd7] text-sm font-bold text-white">✓</div>
+                    <span className="text-sm font-medium text-slate-800">Kelas Online Interaktif</span>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1b5dd7] text-sm font-bold text-white">✓</div>
+                    <span className="text-sm font-medium text-slate-800">Pembelajaran Terstruktur</span>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1b5dd7] text-sm font-bold text-white">✓</div>
+                    <span className="text-sm font-medium text-slate-800">Tutor Profesional & Bersertifikat</span>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1b5dd7] text-sm font-bold text-white">✓</div>
+                    <span className="text-sm font-medium text-slate-800">4 Level Pembelajaran</span>
+                  </div>
+                </div>
+
+                {/* CTAs */}
+                <div className="mt-7 flex flex-col gap-4 sm:flex-row">
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center justify-center rounded-full bg-[#102449] px-8 py-4 text-base font-bold text-white shadow-lg shadow-slate-200 transition hover:bg-[#143562]"
+                  >
+                    Mulai Pembelajaran
+                  </Link>
+                  <a
+                    href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%2C%20saya%20ingin%20mendapatkan%20informasi%20mengenai%20program%20pembelajaran."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white/90 backdrop-blur-sm px-8 py-4 text-base font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Hubungi Kami
+                  </a>
+                </div>
               </div>
-              <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
-                {['4 Level', 'Teacher Support', 'Private', 'Semi-Private'].map((item) => (
-                  <div key={item} className="rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{item}</p>
+
+              {/* Mobile / Tablet Image View */}
+              <div className="mt-12 lg:hidden relative overflow-hidden rounded-3xl bg-transparent">
+                <img src="/hero-student-hijab.png" alt="QuickSpeak Learning Experience" className="w-full h-auto object-cover aspect-[4/3]" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">About QuickSpeak</p>
+                <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl">
+                  Belajar Bahasa Inggris Lebih Terarah Bersama QuickSpeak
+                </h2>
+                <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">
+                  QuickSpeak menghadirkan pembelajaran Bahasa Inggris yang terstruktur melalui tahapan Level 1 hingga Level 4, didukung teacher dan sistem pembelajaran yang membantu siswa belajar, berlatih, dan memantau perkembangannya.
+                </p>
+
+                <div className="mt-8 space-y-5">
+                  {[
+                    ['Terstruktur', 'Alur belajar jelas dari Level 1 hingga Level 4.'],
+                    ['Didampingi Teacher', 'Bimbingan langsung dalam proses belajar.'],
+                    ['Terukur', 'Perkembangan siswa dapat dipantau.'],
+                  ].map(([title, content]) => (
+                    <div key={title} className="flex gap-4 rounded-[24px] border border-slate-200 bg-[#f9fbff] p-5">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eaf2ff] text-lg font-black text-[#1b5dd7]">
+                        ✓
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-[#102449]">{title}</div>
+                        <div className="mt-1 text-sm leading-7 text-slate-600">{content}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -left-8 top-8 h-32 w-32 rounded-full bg-[#dfeaff] blur-3xl" />
+                <div className="absolute -right-8 bottom-0 h-40 w-40 rounded-full bg-[#f9eaa5] blur-3xl" />
+
+                <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 shadow-2xl shadow-slate-300/50 ring-1 ring-slate-200/50">
+                  <img src="/about-teacher-online.png.png" alt="QuickSpeak Teacher and Student Learning Environment" className="w-full h-full object-cover aspect-square" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white py-20">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
+                PEMBELAJARAN TERSTRUKTUR
+              </span>
+              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl lg:text-[2.5rem]">
+                Empat Level Pembelajaran untuk Perkembangan Bahasa Inggris Anda
+              </h2>
+              <p className="mt-4 text-base leading-8 text-slate-600 sm:text-lg">
+                Siswa belajar secara bertahap melalui empat level pembelajaran yang terstruktur dan disesuaikan dengan perkembangan kemampuan mereka.
+              </p>
+            </div>
+
+            <div className="mt-12">
+              {/* Desktop Horizontal Learning Journey */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-6 xl:gap-8 relative">
+                {/* Connecting Progress Bar Behind */}
+                <div className="absolute top-[38px] left-[10%] right-[10%] h-0.5 bg-slate-200 z-0" />
+
+                {journeySteps.map((item, index) => (
+                  <div key={item.title} className="relative z-10 flex flex-col items-center text-center group">
+                    {/* Level Number Node */}
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white border-2 border-[#1b5dd7] text-2xl font-black text-[#102449] shadow-sm transition-all group-hover:bg-[#1b5dd7] group-hover:text-white">
+                      0{index + 1}
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5dd7]">
+                        LEVEL {index + 1}
+                      </div>
+                      <h3 className="mt-2 text-lg xl:text-xl font-bold tracking-tight text-[#102449]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2.5 text-sm leading-6 text-slate-600 max-w-xs mx-auto">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tablet & Mobile Vertical Progression */}
+              <div className="lg:hidden max-w-2xl mx-auto space-y-8 relative">
+                <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-slate-200" />
+
+                {journeySteps.map((item, index) => (
+                  <div key={item.title} className="relative z-10 flex items-start gap-6">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white border-2 border-[#1b5dd7] text-base font-bold text-[#102449] shadow-sm">
+                      0{index + 1}
+                    </div>
+                    <div className="pt-1">
+                      <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b5dd7]">
+                        LEVEL {index + 1}
+                      </div>
+                      <h3 className="mt-1 text-lg font-bold text-[#102449]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-7 text-slate-600">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="relative">
-              <div className="absolute -right-8 top-8 h-28 w-28 rounded-full bg-yellow-100 blur-3xl" />
-              <div className="absolute -left-8 bottom-8 h-32 w-32 rounded-full bg-blue-100 blur-3xl" />
-              <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_30px_80px_rgba(16,36,73,0.10)]">
-                <div className="rounded-[26px] bg-[#102449] p-6 text-white sm:p-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200">QuickSpeak Learning Journey</p>
-                      <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">Grow step by step.</h2>
+        {/* LEARNING EXPERIENCE SECTION */}
+        <section className="bg-[#f8fafc] py-24 text-slate-900 border-t border-slate-200/80">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+            <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+              {/* Left: Copy */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
+                  YOUR LEARNING EXPERIENCE
+                </span>
+                <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl">
+                  Belajar Bahasa Inggris dengan Proses yang Terstruktur dan Terarah
+                </h2>
+                <p className="mt-5 text-base leading-8 text-slate-600">
+                  QuickSpeak dirancang untuk memberikan pengalaman belajar Bahasa Inggris yang konsisten. Siswa mengikuti alur pembelajaran yang jelas mulai dari pemahaman materi hingga pemantauan perkembangan bersama teacher.
+                </p>
+
+                <div className="mt-10 space-y-5">
+                  {[
+                    {
+                      step: '01',
+                      title: 'Materi Terstruktur',
+                      desc: 'Pembelajaran disusun secara sistematis sesuai dengan level kemampuan siswa.'
+                    },
+                    {
+                      step: '02',
+                      title: 'Pendampingan Teacher',
+                      desc: 'Siswa mendapat bimbingan dan arahan langsung dari teacher dalam proses belajar.'
+                    },
+                    {
+                      step: '03',
+                      title: 'Pemantauan Perkembangan',
+                      desc: 'Kehadiran dan perkembangan belajar terdokumentasi dengan jelas agar tetap terarah.'
+                    }
+                  ].map((item) => (
+                    <div key={item.step} className="flex gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#edf4ff] text-base font-bold text-[#1b5dd7]">
+                        {item.step}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[#102449]">{item.title}</h3>
+                        <p className="mt-1.5 text-sm leading-6 text-slate-600">{item.desc}</p>
+                      </div>
                     </div>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-sm font-extrabold">QS</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: Educational Process Visual */}
+              <div className="relative">
+                <div className="absolute -left-8 top-8 h-40 w-40 rounded-full bg-[#dfeaff] blur-3xl opacity-60" />
+                <div className="absolute -right-8 bottom-0 h-44 w-44 rounded-full bg-[#f9eaa5] blur-3xl opacity-50" />
+
+                <div className="relative rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl">
+                  <div className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
+                    ALUR BELAJAR QUICKSPEAK
                   </div>
-                  <div className="mt-8 space-y-3">
-                    {levels.map((level) => (
-                      <div key={level.number} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-[#102449]">{level.number}</div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-200">LEVEL {Number(level.number)}</p>
-                          <p className="mt-1 truncate text-sm font-bold sm:text-base">{level.title}</p>
-                        </div>
+                  <h3 className="mt-3 text-2xl font-bold tracking-tight text-[#102449]">
+                    Tahapan Pengalaman Belajar Siswa
+                  </h3>
+
+                  <div className="mt-8 space-y-6">
+                    {[
+                      {
+                        title: '1. Pelajari Materi',
+                        desc: 'Siswa mempelajari materi level yang relevan dengan bimbingan teacher.'
+                      },
+                      {
+                        title: '2. Latihan & Praktik',
+                        desc: 'Menerapkan konsep yang dipelajari melalui sesi interaktif dan latihan terarah.'
+                      },
+                      {
+                        title: '3. Evaluasi & Progress',
+                        desc: 'Memantau hasil belajar dan pencapaian secara konsisten.'
+                      }
+                    ].map((stepItem) => (
+                      <div key={stepItem.title} className="relative pl-6 border-l-2 border-[#1b5dd7]/30">
+                        <div className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#1b5dd7]" />
+                        <h4 className="font-bold text-[#102449]">{stepItem.title}</h4>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">{stepItem.desc}</p>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="mt-8 rounded-2xl bg-[#f9fbff] p-5 border border-slate-200/80 flex items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#102449] text-white font-bold text-sm">
+                      QS
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[#102449]">Dukungan Sistem & Teacher</div>
+                      <div className="text-xs text-slate-600 mt-0.5">Memastikan konsistensi dan arah belajar siswa tetap terjaga.</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -131,165 +545,405 @@ export function QuickSpeakLanding() {
           </div>
         </section>
 
-        <section className="border-y border-slate-100 bg-white py-20 sm:py-24">
+        <section id="programs" className="bg-white py-20">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="grid gap-12 lg:grid-cols-[.85fr_1.15fr] lg:items-start">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">ABOUT QUICKSPEAK</p>
-                <h2 className="mt-4 max-w-xl text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Sistem belajar yang jelas, rapi, dan bertahap.</h2>
-                <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">QuickSpeak membantu siswa belajar melalui alur yang mudah dipahami, pendampingan teacher, serta pilihan kelas yang sesuai kebutuhan.</p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  ['01', 'Terstruktur', 'Alur belajar jelas dari Level 1 hingga Level 4.'],
-                  ['02', 'Didampingi Teacher', 'Bimbingan langsung selama proses belajar.'],
-                  ['03', 'Fleksibel', 'Pilihan private dan semi-private.'],
-                ].map(([number, title, description]) => (
-                  <div key={number} className="rounded-3xl border border-slate-200 bg-[#f8fbff] p-6 shadow-sm">
-                    <div className="text-xs font-extrabold tracking-[0.18em] text-blue-700">{number}</div>
-                    <h3 className="mt-7 text-lg font-extrabold text-[#102449]">{title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">Choose Your Learning Program</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl">
+                Program belajar yang disesuaikan dengan kebutuhan Anda.
+              </h2>
+            </div>
+
+            <div className="mt-12 grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
+              {programCards.map((program) => (
+                <div
+                  key={program.tag}
+                  className="flex h-full flex-col rounded-3xl border border-slate-200/90 bg-[#f9fbff] p-8 sm:p-10 shadow-[0_10px_30px_rgba(16,36,73,0.04)] transition hover:shadow-md"
+                >
+                  <div className="flex flex-col">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex rounded-full bg-[#edf4ff] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#1b5dd7]">
+                        {program.tag}
+                      </span>
+                      {program.tag === 'Semi-Private Class' && (
+                        <span className="inline-flex items-center rounded-full border border-[#f5d779]/70 bg-[#f5d779]/25 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#102449]">
+                          Paling Populer
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="mt-3 text-2xl font-semibold leading-snug tracking-[-0.02em] text-[#102449] sm:text-[1.65rem]">
+                      {program.title}
+                    </h3>
+                    <div className="mt-3 h-[2px] w-10 rounded-full bg-[#f5d779]" />
+
+                    <ul className="mt-7 space-y-3.5 text-slate-700">
+                      {program.items.map((item) => (
+                        <li key={item} className="flex items-start gap-3">
+                          <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#eaf2ff] text-[11px] font-bold text-[#1b5dd7]">
+                            ✓
+                          </span>
+                          <span className="text-[0.95rem] font-medium leading-6">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-7 rounded-2xl border border-[#dfe9ff] bg-[#edf4ff]/70 px-5 py-4">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1b5dd7]">
+                        Biaya Pendaftaran
+                      </div>
+                      <div className="mt-1.5 text-2xl font-bold tracking-tight text-[#102449]">
+                        {program.fee}
+                      </div>
+                    </div>
                   </div>
+
+                  <div className="mt-auto pt-6 border-t border-slate-200/80">
+                    <Link
+                      to="/register"
+                      className="inline-flex w-full items-center justify-center rounded-full bg-[#102449] px-6 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-[#143562]"
+                    >
+                      Daftar {program.tag}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-16 text-center">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-7 py-4 text-base font-bold text-slate-700 transition hover:bg-slate-50 shadow-sm"
+              >
+                Konsultasikan program yang sesuai dengan kebutuhan Anda.
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f4f7ff] py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">What Our Students Say</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl">
+                Pengalaman siswa dalam perjalanan belajar bersama QuickSpeak.
+              </h2>
+            </div>
+
+            <div
+              ref={carouselRef}
+              className="relative mt-12"
+              onMouseEnter={handleCarouselMouseEnter}
+              onMouseLeave={handleCarouselMouseLeave}
+              onFocus={handleCarouselFocus}
+              onBlur={handleCarouselBlur}
+            >
+              {/* Carousel Container */}
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-500 ease-out"
+                  style={{
+                    transform: `translateX(-${currentSlide * 100}%)`,
+                  }}
+                >
+                  {Array.from({ length: totalSlides }).map((_, slideIdx) => (
+                    <div
+                      key={slideIdx}
+                      className="w-full flex-shrink-0"
+                    >
+                      <div className="grid gap-4 sm:gap-6" style={{ gridTemplateColumns: `repeat(${cardsPerView}, 1fr)` }}>
+                        {Array.from({ length: cardsPerView }).map((_, cardIdx) => {
+                          const testimonialIdx = slideIdx * cardsPerView + cardIdx
+                          if (testimonialIdx >= testimonials.length) return null
+                          const testimonial = testimonials[testimonialIdx]
+                          return (
+                            <div
+                              key={`${slideIdx}-${cardIdx}`}
+                              className="flex flex-col rounded-3xl border border-slate-200/90 bg-white shadow-[0_10px_30px_rgba(16,36,73,0.04)] transition duration-300 hover:shadow-md overflow-hidden"
+                            >
+                              {/* Student Photo Section */}
+<div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 p-3 sm:p-4">
+  <img
+    src={testimonial.image}
+    alt={testimonial.name}
+    className="h-full w-full object-contain"
+  />
+</div>
+
+                              {/* Card Content */}
+                              <div className="flex flex-1 flex-col p-6 sm:p-7">
+                                {/* Student Info */}
+                                <div className="mb-4">
+                                  <h3 className="text-xl font-bold tracking-[-0.03em] text-[#102449]">
+                                    {testimonial.name}
+                                  </h3>
+                                  <p className="mt-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#1b5dd7]">
+                                    {testimonial.identity}
+                                  </p>
+                                </div>
+
+                                {/* Testimonial Quote */}
+                                <p className="flex-1 text-sm leading-8 text-slate-600">
+                                  &quot;{testimonial.quote}&quot;
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Previous Arrow */}
+              <button
+                onClick={handlePrevious}
+                type="button"
+                aria-label="Previous testimonials"
+                className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-[#102449] p-2 text-white shadow-lg transition hover:bg-[#143562] hover:shadow-xl active:scale-95 sm:p-3 md:-left-16 lg:-left-20 focus:outline-none focus:ring-2 focus:ring-[#1b5dd7] focus:ring-offset-2"
+              >
+                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* Next Arrow */}
+              <button
+                onClick={handleNext}
+                type="button"
+                aria-label="Next testimonials"
+                className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-[#102449] p-2 text-white shadow-lg transition hover:bg-[#143562] hover:shadow-xl active:scale-95 sm:p-3 md:-right-16 lg:-right-20 focus:outline-none focus:ring-2 focus:ring-[#1b5dd7] focus:ring-offset-2"
+              >
+                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Pagination Dots */}
+              <div className="mt-8 flex justify-center gap-2">
+                {Array.from({ length: totalSlides }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleDotClick(idx)}
+                    type="button"
+                    aria-label={`Go to slide ${idx + 1}`}
+                    aria-current={idx === currentSlide ? 'true' : 'false'}
+                    className={`rounded-full transition focus:outline-none focus:ring-2 focus:ring-[#1b5dd7] focus:ring-offset-2 ${
+                      idx === currentSlide
+                        ? 'h-3 w-8 bg-[#1b5dd7]'
+                        : 'h-2.5 w-2.5 bg-slate-300 hover:bg-slate-400'
+                    }`}
+                  />
                 ))}
               </div>
             </div>
           </div>
         </section>
 
-        <section className="bg-[#f7f9fc] py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="max-w-3xl">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">LEARNING LEVELS</p>
-              <h2 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Empat level pembelajaran.</h2>
-              <p className="mt-4 text-base leading-8 text-slate-600">Siswa berkembang secara bertahap melalui level pembelajaran yang terarah.</p>
-            </div>
-            <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {levels.map((level) => (
-                <article key={level.number} className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/60">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#102449] text-sm font-extrabold text-white">{level.number}</span>
-                    <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">LEVEL {Number(level.number)}</span>
-                  </div>
-                  <h3 className="mt-7 text-xl font-extrabold tracking-tight text-[#102449]">{level.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{level.description}</p>
-                </article>
-              ))}
+
+
+        {/* CONSULTATION SECTION */}
+        <section className="bg-gradient-to-r from-[#102449] to-[#1b3a6b] py-16 sm:py-20">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
+              Belum yakin memilih program yang tepat?
+            </h2>
+            <p className="mt-6 text-lg text-slate-200">
+              Konsultasikan kebutuhan belajar Anda dengan Admin QuickSpeak.
+            </p>
+            <div className="mt-8">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full bg-[#f5d779] px-8 py-4 text-base font-bold text-[#102449] transition hover:bg-[#f1cc59]"
+              >
+                Chat Admin via WhatsApp
+              </a>
             </div>
           </div>
         </section>
 
-        <section id="programs" className="bg-white py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">PROGRAMS</p>
-              <h2 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Pilih cara belajar yang paling sesuai.</h2>
-              <p className="mt-4 text-base leading-8 text-slate-600">Dua pilihan kelas dengan pengalaman belajar yang fokus dan terarah.</p>
-            </div>
-            <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-2">
-              {programs.map((program, index) => (
-                <article key={program.tag} className={`rounded-[30px] border p-8 shadow-sm sm:p-9 ${index === 1 ? 'border-[#102449] bg-[#102449] text-white shadow-xl shadow-slate-300/30' : 'border-slate-200 bg-[#f8fbff]'}`}>
-                  <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-extrabold tracking-[0.18em] ${index === 1 ? 'bg-white/10 text-blue-100' : 'bg-blue-50 text-blue-700'}`}>{program.tag}</span>
-                  <h3 className={`mt-5 text-2xl font-extrabold tracking-tight ${index === 1 ? 'text-white' : 'text-[#102449]'}`}>{program.title}</h3>
-                  <p className={`mt-3 text-sm leading-7 ${index === 1 ? 'text-slate-300' : 'text-slate-600'}`}>{program.description}</p>
-                  <div className="mt-7 space-y-3">
-                    {program.items.map((item) => (
-                      <div key={item} className="flex items-center gap-3 text-sm font-medium">
-                        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black ${index === 1 ? 'bg-white text-[#102449]' : 'bg-blue-100 text-blue-700'}`}>✓</span>
-                        <span className={index === 1 ? 'text-slate-100' : 'text-slate-700'}>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className={`mt-8 border-t pt-6 ${index === 1 ? 'border-white/10' : 'border-slate-200'}`}>
-                    <p className={`text-xs font-bold uppercase tracking-[0.18em] ${index === 1 ? 'text-slate-400' : 'text-slate-500'}`}>Mulai dari</p>
-                    <div className="mt-1 flex items-end justify-between gap-4">
-                      <p className={`text-3xl font-black ${index === 1 ? 'text-white' : 'text-[#102449]'}`}>{program.price}</p>
-                      <Link to="/register" className={`rounded-full px-5 py-2.5 text-sm font-bold ${index === 1 ? 'bg-white text-[#102449]' : 'bg-[#102449] text-white'}`}>Daftar</Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-[#f7f9fc] py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="max-w-2xl">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">STUDENT STORIES</p>
-                <h2 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Pengalaman belajar di QuickSpeak.</h2>
-              </div>
-              <span className="text-sm font-semibold text-slate-500">Apa yang mereka rasakan setelah belajar bersama QuickSpeak.</span>
-            </div>
-            <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {testimonials.map((item) => (
-                <article key={item.name} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-sm font-extrabold text-blue-700">{item.name.slice(0, 1)}</div>
-                    <div>
-                      <h3 className="font-extrabold text-[#102449]">{item.name}</h3>
-                      <p className="text-xs font-medium text-slate-500">{item.identity}</p>
-                    </div>
-                  </div>
-                  <p className="mt-5 text-sm leading-7 text-slate-600">“{item.quote}”</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-white py-20 sm:py-24">
-          <div className="mx-auto max-w-3xl px-6 sm:px-8">
+        <section id="faq" className="bg-white py-20">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">FAQ</p>
-              <h2 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Pertanyaan yang sering diajukan.</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">FAQ</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl">
+                Frequently Asked Questions
+              </h2>
             </div>
-            <div className="mt-10 space-y-3">
-              {faqs.map((faq, index) => {
-                const open = openFaq === index
-                return (
-                  <div key={faq.question} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <button type="button" onClick={() => setOpenFaq(open ? -1 : index)} className="flex w-full items-center justify-between gap-5 px-5 py-5 text-left">
-                      <span className="text-sm font-bold text-[#102449] sm:text-base">{faq.question}</span>
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-medium text-slate-700 transition ${open ? 'rotate-45' : ''}`}>+</span>
-                    </button>
-                    {open && <div className="border-t border-slate-100 px-5 pb-5 pt-4 text-sm leading-7 text-slate-600">{faq.answer}</div>}
-                  </div>
-                )
-              })}
+
+            <div className="mt-10 space-y-4">
+              {faqItems.map((item, index) => (
+                <details
+                  key={item.question}
+                  open={index === 0}
+                  className="group rounded-[24px] border border-slate-200 bg-[#f8fafc] p-5 shadow-sm"
+                >
+                  <summary className="cursor-pointer list-none text-left text-base font-bold text-[#102449] marker:content-none">
+                    <span className="flex items-center justify-between gap-6">
+                      <span>{item.question}</span>
+                      <span className="text-xl font-bold text-[#1b5dd7] transition group-open:rotate-45">+</span>
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-sm leading-7 text-slate-600">{item.answer}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
 
-        <section id="contact" className="bg-[#102449] py-20 text-white sm:py-24">
-          <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-12">
-            <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-200">READY TO START?</p>
-                <h2 className="mt-4 max-w-3xl text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">Mulai perjalanan belajar Bahasa Inggris Anda bersama QuickSpeak.</h2>
-                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">Daftar untuk memulai proses pembelajaran atau hubungi tim QuickSpeak untuk mendapatkan informasi lebih lanjut.</p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Link to="/register" className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#102449] hover:bg-slate-100">Daftar Sekarang</Link>
-                <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-7 py-3.5 text-sm font-bold text-white hover:bg-white/15">WhatsApp QuickSpeak</a>
-              </div>
+        <section className="bg-[#0f172a] py-20 text-white sm:py-24">
+          <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f5d779]">Ready to Start?</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+              Ready to Start Your English Journey?
+            </h2>
+            <p className="mt-4 text-base text-slate-300 sm:text-lg">
+              Mulai perjalanan belajar Bahasa Inggris Anda bersama QuickSpeak.
+            </p>
+            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center rounded-full bg-[#f5d779] px-8 py-4 text-base font-bold text-[#102449] transition hover:bg-[#f1cc59]"
+              >
+                Daftar Sekarang
+              </Link>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-8 py-4 text-base font-bold text-white transition hover:bg-white/10"
+              >
+                Chat Admin via WhatsApp
+              </a>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-[#0b1933] py-8 text-slate-400">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 text-sm sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-12">
-          <p>© {new Date().getFullYear()} QuickSpeak English Course. All rights reserved.</p>
-          <p>Belajar. Berlatih. Berkembang.</p>
+      <footer className="bg-[#08111e] pb-12 pt-16 text-slate-300">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1fr_1.4fr_1.4fr]">
+            <div className="lg:pr-6">
+              <div className="text-2xl font-black tracking-[-0.04em] text-white">QuickSpeak</div>
+              <div className="mt-2 text-sm font-medium text-slate-400">English Course</div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Quick Links</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-300">
+                {navItems.map((item) => (
+                  <li key={item.label}>
+                    <a href={item.href} className="transition hover:text-white">
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">For Teachers</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-300">
+                <li>
+                  <Link to="/partner" className="transition hover:text-white">
+                    Become Our Partner
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Contact</div>
+              <ul className="mt-4 space-y-5 text-base">
+                <li>
+                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">WhatsApp</div>
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 block whitespace-nowrap text-sm text-white hover:text-[#f5d779]"
+                  >
+                    0821 3813 8564
+                  </a>
+                </li>
+                <li>
+                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Address</div>
+                  <div className="mt-1 text-sm leading-7 text-white">
+                    Jl. Raya Kopo No. 433, Kota Bandung, Jawa Barat, Indonesia
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Our Social Media</div>
+              <ul className="mt-4 space-y-5 text-base">
+                <li>
+                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Instagram</div>
+                  <div className="mt-1 whitespace-nowrap text-sm text-white">@Quickspeakindonesia</div>
+                </li>
+                <li>
+                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Facebook</div>
+                  <div className="mt-1 text-sm text-white">Quickspeak</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
         </div>
       </footer>
 
-      {showStickyCta && (
-        <a href={whatsappUrl} target="_blank" rel="noreferrer" className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#102449] px-4 py-3 text-sm font-bold text-white shadow-2xl shadow-slate-900/20 ring-1 ring-white/10 transition hover:-translate-y-0.5">
-          WhatsApp QuickSpeak
-        </a>
-      )}
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Chat Admin via WhatsApp"
+        className={`fixed z-50 inline-flex items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_35px_rgba(37,211,102,0.45)] transition-all duration-300 ease-out hover:scale-105 hover:bg-[#1ebe5a] ${
+          showStickyCta
+            ? 'pointer-events-auto translate-y-0 opacity-100'
+            : 'pointer-events-none translate-y-3 opacity-0'
+        } bottom-4 right-4 h-14 w-14 sm:bottom-6 sm:right-6 sm:h-[48px] sm:w-[160px] sm:gap-2 sm:rounded-full sm:pr-5`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          className="h-6 w-6 shrink-0"
+        >
+          <path d="M20.52 3.48A11.93 11.93 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.88c0 2.09.55 4.12 1.6 5.92L0 24l6.36-1.66a11.86 11.86 0 0 0 5.68 1.45h.01c6.54 0 11.88-5.34 11.88-11.88 0-3.17-1.23-6.16-3.41-8.43Z" />
+          <path
+            d="M17.47 14.38c-.3-.15-1.77-.87-2.04-.97-.27-.15-.47.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.21 5.09 4.5.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35Z"
+            fill="#25D366"
+          />
+        </svg>
+        <span className="hidden text-sm font-semibold tracking-tight sm:inline">Chat Admin</span>
+      </a>
+
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Chat Admin via WhatsApp"
+        className="fixed bottom-5 right-5 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_35px_rgba(37,211,102,0.45)] transition hover:scale-105 md:hidden"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          className="h-7 w-7"
+        >
+          <path d="M20.52 3.48A11.93 11.93 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.88c0 2.09.55 4.12 1.6 5.92L0 24l6.36-1.66a11.86 11.86 0 0 0 5.68 1.45h.01c6.54 0 11.88-5.34 11.88-11.88 0-3.17-1.23-6.16-3.41-8.43Z" />
+          <path
+            d="M17.47 14.38c-.3-.15-1.77-.87-2.04-.97-.27-.15-.47.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.21 5.09 4.5.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35Z"
+            fill="#25D366"
+          />
+        </svg>
+      </a>
     </div>
   )
 }
