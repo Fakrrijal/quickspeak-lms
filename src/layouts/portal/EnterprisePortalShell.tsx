@@ -23,6 +23,7 @@ export function EnterprisePortalShell({
   children,
 }: EnterprisePortalShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const isStudentPortal = role === 'student'
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -55,7 +56,14 @@ export function EnterprisePortalShell({
       />
 
       <div className="flex">
-        <aside className="hidden w-[248px] shrink-0 border-r border-slate-200 bg-white lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)]">
+        <aside
+          className={[
+            'hidden w-[248px] shrink-0 border-r border-slate-200 bg-white lg:block',
+            isStudentPortal
+              ? 'self-stretch'
+              : 'lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)]',
+          ].join(' ')}
+        >
           <PortalSidebar role={role} pathname={pathname} />
         </aside>
 
