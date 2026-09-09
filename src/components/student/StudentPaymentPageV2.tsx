@@ -53,6 +53,17 @@ function ActionArrow() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 fill-none stroke-current stroke-2"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
 }
 
+function DetailIcon({ kind }: { kind: 'invoice' | 'calendar' | 'package' | 'amount' | 'method' }) {
+  const paths = {
+    invoice: <><path d="M7 3.5h8l3 3V20.5H7z" /><path d="M15 3.5v4h4M10 12h5M10 15.5h5" /></>,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M8 2.5v5M16 2.5v5M3 9.5h18" /></>,
+    package: <><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z" /><path d="M4 7.5V16l8 5 8-5V7.5M12 12v9" /></>,
+    amount: <><path d="M4 6h16v12H4z" /><path d="M8 12h.01M12 9v6M16 12h.01" /></>,
+    method: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 9h18M7 14h3" /></>,
+  }
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 fill-none stroke-current stroke-2">{paths[kind]}</svg>
+}
+
 export function StudentPaymentPageV2() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
@@ -179,11 +190,11 @@ export function StudentPaymentPageV2() {
   }
 
   if (authLoading || profileLoading) {
-    return <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-sm text-slate-600 shadow-sm">Loading payment...</div>
+    return <div className="rounded-[24px] border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">Loading payment...</div>
   }
 
   if (!isAuthenticated || !profile || profileError || status !== 'active') return null
-  if (role !== 'student') return <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-6 text-sm font-medium text-rose-800">Access denied.</div>
+  if (role !== 'student') return <div className="rounded-[20px] border border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-800">Access denied.</div>
 
   const invoice = paymentDetails?.invoice
   const payment = paymentDetails?.payment
@@ -205,88 +216,94 @@ export function StudentPaymentPageV2() {
     period: formatPeriod(invoice.created_at),
   } : null
 
+  const detailItems = invoice && payment ? [
+    { label: 'Invoice Number', value: invoice.invoice_number, icon: 'invoice' as const },
+    { label: 'Payment Date', value: formatPaymentDate(payment.created_at), icon: 'calendar' as const },
+    { label: 'Period', value: formatPeriod(invoice.created_at), icon: 'calendar' as const },
+    { label: 'Package', value: formatPackage(paymentDetails!.enrollment.package_type), icon: 'package' as const },
+    { label: 'Amount', value: `Rp${payment.amount.toLocaleString('id-ID')}`, icon: 'amount' as const },
+    { label: 'Payment Method', value: formatPaymentMethod(payment.payment_method), icon: 'method' as const },
+  ]
+
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-6">
+      <header className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-white px-5 py-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.24em] text-blue-700">Student Portal</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Payment</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">Keep your payment information clear, verified, and easy to access.</p>
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-blue-700">Student Portal</p>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-[-0.035em] text-[#102449] sm:text-3xl">Payment</h1>
+          <p className="mt-2 text-sm text-slate-600">Review your current payment and transaction history.</p>
         </div>
         <Link to="/student" className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:text-blue-800">Back to Dashboard <ActionArrow /></Link>
       </header>
 
-      {isLoading && <div className="rounded-[28px] border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">Loading current payment...</div>}
-      {error && <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700"><p className="font-bold">Unable to load payment details</p><p className="mt-1">{error}</p><button type="button" onClick={() => void loadPaymentPage()} className="mt-3 font-bold underline">Retry</button></div>}
+      {isLoading && <div className="rounded-[24px] border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">Loading current payment...</div>}
+      {error && <div className="rounded-[20px] border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700"><p className="font-bold">Unable to load payment details</p><p className="mt-1">{error}</p><button type="button" onClick={() => void loadPaymentPage()} className="mt-3 font-bold underline">Retry</button></div>}
 
       {!isLoading && !error && !paymentDetails && (
-        <section className="rounded-[30px] border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-700">Payment</p>
-          <h2 className="mt-2 text-2xl font-extrabold text-[#102449]">No enrollment found</h2>
-          <p className="mt-2 text-sm leading-7 text-slate-600">Choose a learning package before viewing payment details.</p>
-          <Link to="/student/learning" className="mt-6 inline-flex rounded-full bg-[#102449] px-5 py-3 text-sm font-bold text-white">Open My Learning</Link>
+        <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-blue-700">Payment</p>
+          <h2 className="mt-2 text-xl font-extrabold text-[#102449]">No enrollment found</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Choose a learning package before viewing payment details.</p>
+          <Link to="/student/learning" className="mt-5 inline-flex rounded-full bg-[#102449] px-5 py-2.5 text-sm font-bold text-white">Open My Learning</Link>
         </section>
       )}
 
       {!isLoading && !error && paymentDetails && !invoice && (
-        <section className="rounded-[30px] border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-2xl font-extrabold text-[#102449]">Invoice not available</h2><p className="mt-2 text-sm text-slate-600">Your enrollment exists, but its payment invoice is not available yet.</p></section>
+        <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-extrabold text-[#102449]">Invoice not available</h2><p className="mt-2 text-sm text-slate-600">Your enrollment exists, but its payment invoice is not available yet.</p></section>
       )}
 
       {!isLoading && !error && paymentDetails && invoice && !payment && (
-        <section className="rounded-[30px] border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-2xl font-extrabold text-[#102449]">Payment record not available</h2><p className="mt-2 text-sm text-slate-600">Your invoice exists, but its payment record is not available yet.</p></section>
+        <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-extrabold text-[#102449]">Payment record not available</h2><p className="mt-2 text-sm text-slate-600">Your invoice exists, but its payment record is not available yet.</p></section>
       )}
 
       {!isLoading && !error && paymentDetails && invoice && payment && (
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 bg-gradient-to-br from-[#edf4ff] via-white to-[#f8fbff] px-6 py-7 sm:px-8 sm:py-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-blue-700">Current Payment</p>
-                <h2 className="mt-2 break-all text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{invoice.invoice_number}</h2>
-                <p className="mt-1 text-sm text-slate-600">{formatPeriod(invoice.created_at)}</p>
-              </div>
-              <span className={`inline-flex w-fit rounded-full px-3.5 py-2 text-xs font-extrabold ${statusBadgeClass(payment.status)}`}>{formatPaymentStatus(payment.status)}</span>
+        <section className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-br from-[#eef5ff] via-white to-[#f8fbff] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-blue-700">Current Payment</p>
+              <h2 className="mt-1 text-xl font-extrabold tracking-[-0.025em] text-[#102449]">{invoice.invoice_number}</h2>
+              <p className="mt-1 text-sm text-slate-600">{formatPeriod(invoice.created_at)}</p>
             </div>
+            <span className={`inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-extrabold ${statusBadgeClass(payment.status)}`}>{formatPaymentStatus(payment.status)}</span>
           </div>
 
-          <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_.85fr]">
+          <div className="grid gap-5 p-5 lg:grid-cols-[1.15fr_.85fr] lg:p-6">
             <div>
-              <dl className="grid gap-5 sm:grid-cols-2">
-                {[['Invoice Number', invoice.invoice_number], ['Payment Date', formatPaymentDate(payment.created_at)], ['Period', formatPeriod(invoice.created_at)], ['Package', formatPackage(paymentDetails.enrollment.package_type)], ['Amount', `Rp${payment.amount.toLocaleString('id-ID')}`], ['Payment Method', formatPaymentMethod(payment.payment_method)]].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-slate-100 bg-[#fbfcfe] p-4">
-                    <dt className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{label}</dt>
-                    <dd className={`mt-2 break-words font-bold text-slate-950 ${label === 'Amount' ? 'text-xl' : 'text-sm'}`}>{value}</dd>
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {detailItems.map((item) => (
+                  <div key={`${item.label}-${item.value}`} className="rounded-2xl border border-slate-100 bg-[#fbfcfe] p-3.5">
+                    <dt className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500"><span className="text-slate-400"><DetailIcon kind={item.icon} /></span>{item.label}</dt>
+                    <dd className={`mt-1.5 break-words font-bold text-slate-950 ${item.label === 'Amount' ? 'text-lg' : 'text-sm'}`}>{item.value}</dd>
                   </div>
                 ))}
               </dl>
-
-              {isRejected && payment.rejection_reason && <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-bold">Payment rejected</p><p className="mt-1 leading-6">{payment.rejection_reason}</p></div>}
-              {proofMessage && <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{proofMessage}</div>}
-              {proofError && <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{proofError}</div>}
+              {isRejected && payment.rejection_reason && <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-800"><p className="font-bold">Payment rejected</p><p className="mt-1 leading-6">{payment.rejection_reason}</p></div>}
+              {proofMessage && <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm text-emerald-700">{proofMessage}</div>}
+              {proofError && <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700">{proofError}</div>}
             </div>
 
-            <aside className="rounded-[26px] border border-slate-200 bg-[#f8fafc] p-6">
+            <aside className="rounded-[22px] border border-slate-200 bg-[#f8fafc] p-5">
               {isPaid && currentReceipt ? (
                 <div>
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><span className="text-xl">✓</span></div>
-                  <p className="mt-5 text-lg font-extrabold text-[#102449]">Payment complete</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">Your payment has been approved and recorded in your payment history.</p>
-                  <button type="button" onClick={() => handleDownload(currentReceipt)} className="mt-6 inline-flex items-center justify-center rounded-full bg-[#102449] px-5 py-3 text-sm font-bold text-white hover:bg-[#16345f]">Download Receipt</button>
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><span className="text-lg">✓</span></div>
+                  <p className="mt-4 text-lg font-extrabold text-[#102449]">Payment complete</p>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-600">Your payment has been approved and recorded in your payment history.</p>
+                  <button type="button" onClick={() => handleDownload(currentReceipt)} className="mt-5 inline-flex items-center justify-center rounded-full bg-[#102449] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Download Receipt</button>
                 </div>
               ) : isProofSubmitted ? (
                 <div>
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><span className="text-lg">…</span></div>
-                  <p className="mt-5 text-lg font-extrabold text-[#102449]">Proof submitted</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">Your {formatPaymentMethod(payment.payment_method)} payment proof has been submitted and is waiting for verification.</p>
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><span className="text-lg">…</span></div>
+                  <p className="mt-4 text-lg font-extrabold text-[#102449]">Proof submitted</p>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-600">Your {formatPaymentMethod(payment.payment_method)} payment proof is waiting for verification.</p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-700">Payment</p>
-                  <h3 className="mt-2 text-xl font-extrabold text-[#102449]">Bank Transfer</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">Complete the payment, then upload your proof below.</p>
-                  {paymentSettings && <div className="mt-5 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div><span className="text-slate-500">Bank</span><p className="mt-1 font-bold text-slate-950">{paymentSettings.bank_name}</p></div><div><span className="text-slate-500">Account Number</span><p className="mt-1 font-bold text-slate-950">{paymentSettings.account_number}</p></div><div><span className="text-slate-500">Account Name</span><p className="mt-1 font-bold text-slate-950">{paymentSettings.account_name}</p></div></div>}
-                  {isRejected && <button type="button" onClick={() => void handleRetryPayment()} disabled={isRetrying} className="mt-5 inline-flex rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50">{isRetrying ? 'Creating New Payment...' : 'Pay Again'}</button>}
-                  {canUploadProof && <div className="mt-6 border-t border-slate-200 pt-6"><label className="block text-sm font-bold text-slate-800">Upload Payment Proof<input type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={handleProofSelection} disabled={isUploading} className="mt-3 block w-full text-sm text-slate-600" /></label><p className="mt-2 text-xs text-slate-500">PDF, JPG, JPEG, or PNG · maximum 5 MiB.</p>{selectedProof && <p className="mt-2 text-xs font-bold text-slate-700">Selected: {selectedProof.name}</p>}<button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || isUploading} className="mt-4 inline-flex w-full justify-center rounded-full bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button></div>}
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-700">Next step</p>
+                  <h3 className="mt-1 text-lg font-extrabold text-[#102449]">Bank Transfer</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-600">Complete the payment, then upload your proof below.</p>
+                  {paymentSettings && <div className="mt-4 space-y-2.5 rounded-2xl border border-slate-200 bg-white p-3.5 text-sm"><div><span className="text-xs text-slate-500">Bank</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.bank_name}</p></div><div><span className="text-xs text-slate-500">Account Number</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_number}</p></div><div><span className="text-xs text-slate-500">Account Name</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_name}</p></div></div>}
+                  {isRejected && <button type="button" onClick={() => void handleRetryPayment()} disabled={isRetrying} className="mt-4 inline-flex rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50">{isRetrying ? 'Creating New Payment...' : 'Pay Again'}</button>}
+                  {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5"><label className="block text-sm font-bold text-slate-800">Upload Payment Proof<input type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={handleProofSelection} disabled={isUploading} className="mt-2.5 block w-full text-xs text-slate-600" /></label><p className="mt-1.5 text-[11px] text-slate-500">PDF, JPG, JPEG, or PNG · maximum 5 MiB.</p>{selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}<button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || isUploading} className="mt-3 inline-flex w-full justify-center rounded-full bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button></div>}
                 </div>
               )}
             </aside>
@@ -295,18 +312,60 @@ export function StudentPaymentPageV2() {
       )}
 
       {!isLoading && !error && paymentDetails && (
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 px-6 py-7 sm:px-8 sm:py-8">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-blue-700">History</p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">Payment History</h2>
-            <p className="mt-1 text-sm text-slate-600">Your recorded payment transactions.</p>
+        <section className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-blue-700">History</p>
+            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-extrabold tracking-[-0.025em] text-[#102449]">Payment History</h2>
+                <p className="mt-1 text-sm text-slate-600">Your recorded payment transactions.</p>
+              </div>
+            </div>
           </div>
 
-          {paymentHistory.length === 0 ? <div className="p-8 text-center text-sm text-slate-500">No payment history yet.</div> : <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-[#f8fafc] text-[10px] uppercase tracking-[0.14em] text-slate-500"><tr><th className="px-5 py-4 font-extrabold">Invoice Number</th><th className="px-5 py-4 font-extrabold">Payment Date</th><th className="px-5 py-4 font-extrabold">Period</th><th className="px-5 py-4 font-extrabold">Amount</th><th className="px-5 py-4 font-extrabold">Payment Method</th><th className="px-5 py-4 font-extrabold">Status</th><th className="px-5 py-4 font-extrabold">Action</th></tr></thead><tbody className="divide-y divide-slate-100">{paymentHistory.map((item) => <tr key={item.id} className="hover:bg-slate-50/70"><td className="whitespace-nowrap px-5 py-4 font-bold text-slate-950">{item.invoice_number}</td><td className="whitespace-nowrap px-5 py-4 text-slate-600">{formatPaymentDate(item.created_at)}</td><td className="whitespace-nowrap px-5 py-4 text-slate-600">{item.period}</td><td className="whitespace-nowrap px-5 py-4 font-bold text-slate-950">Rp{item.amount.toLocaleString('id-ID')}</td><td className="whitespace-nowrap px-5 py-4 text-slate-600">{formatPaymentMethod(item.payment_method)}</td><td className="whitespace-nowrap px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${statusBadgeClass(item.status)}`}>{formatPaymentStatus(item.status)}</span></td><td className="whitespace-nowrap px-5 py-4"><div className="flex items-center gap-3"><button type="button" onClick={() => setSelectedHistory(item)} className="font-bold text-blue-700 hover:text-blue-800">View</button><button type="button" onClick={() => handleDownload(item)} className="font-bold text-slate-700 hover:text-slate-950">Download</button></div></td></tr>)}</tbody></table></div>}
+          {paymentHistory.length === 0 ? (
+            <div className="p-6 text-center text-sm text-slate-500">No payment history yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed text-xs">
+                <colgroup><col className="w-[22%]" /><col className="w-[15%]" /><col className="w-[14%]" /><col className="w-[13%]" /><col className="w-[15%]" /><col className="w-[10%]" /><col className="w-[11%]" /></colgroup>
+                <thead className="bg-[#f8fafc] text-[9px] uppercase tracking-[0.12em] text-slate-500"><tr><th className="px-3 py-3 text-left font-extrabold">Invoice Number</th><th className="px-3 py-3 text-left font-extrabold">Payment Date</th><th className="px-3 py-3 text-left font-extrabold">Period</th><th className="px-3 py-3 text-left font-extrabold">Amount</th><th className="px-3 py-3 text-left font-extrabold">Payment Method</th><th className="px-3 py-3 text-left font-extrabold">Status</th><th className="px-3 py-3 text-left font-extrabold">Action</th></tr></thead>
+                <tbody className="divide-y divide-slate-100">
+                  {paymentHistory.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/70">
+                      <td className="break-all px-3 py-3 font-bold text-slate-950">{item.invoice_number}</td>
+                      <td className="px-3 py-3 text-slate-600">{formatPaymentDate(item.created_at)}</td>
+                      <td className="px-3 py-3 text-slate-600">{item.period}</td>
+                      <td className="px-3 py-3 font-bold text-slate-950">Rp{item.amount.toLocaleString('id-ID')}</td>
+                      <td className="px-3 py-3 text-slate-600">{formatPaymentMethod(item.payment_method)}</td>
+                      <td className="px-3 py-3"><span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${statusBadgeClass(item.status)}`}>{formatPaymentStatus(item.status)}</span></td>
+                      <td className="px-3 py-3"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><button type="button" onClick={() => setSelectedHistory(item)} className="font-bold text-blue-700 hover:text-blue-800">View</button><button type="button" onClick={() => handleDownload(item)} className="font-bold text-slate-700 hover:text-slate-950">Download</button></div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       )}
 
-      {selectedHistory && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="payment-detail-title"><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[30px] bg-white shadow-2xl"><div className="flex items-start justify-between border-b border-slate-100 px-6 py-5 sm:px-7"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-700">Payment Detail</p><h2 id="payment-detail-title" className="mt-1 break-all text-xl font-extrabold text-[#102449]">{selectedHistory.invoice_number}</h2></div><button type="button" onClick={() => setSelectedHistory(null)} aria-label="Close payment detail" className="rounded-xl px-3 py-2 text-xl text-slate-400 hover:bg-slate-100 hover:text-slate-900">×</button></div><div className="space-y-4 px-6 py-6 sm:px-7"><dl className="grid gap-4 sm:grid-cols-2">{[['Invoice Number', selectedHistory.invoice_number], ['Payment Date', formatPaymentDate(selectedHistory.created_at)], ['Period', selectedHistory.period], ['Amount', `Rp${selectedHistory.amount.toLocaleString('id-ID')}`], ['Payment Method', formatPaymentMethod(selectedHistory.payment_method)], ['Status', formatPaymentStatus(selectedHistory.status)]].map(([label, value]) => <div key={label} className="rounded-2xl bg-slate-50 p-4"><dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</dt><dd className="mt-2 text-sm font-bold text-slate-950">{value}</dd></div>)}</dl>{selectedHistory.rejection_reason && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-bold">Rejection Reason</p><p className="mt-1 leading-6">{selectedHistory.rejection_reason}</p></div>}</div><div className="flex flex-col-reverse gap-3 border-t border-slate-100 px-6 py-5 sm:flex-row sm:justify-end sm:px-7"><button type="button" onClick={() => setSelectedHistory(null)} className="rounded-full border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">Close</button><button type="button" onClick={() => handleDownload(selectedHistory)} className="rounded-full bg-[#102449] px-5 py-3 text-sm font-bold text-white hover:bg-[#16345f]">Download Receipt</button></div></div></div>}
+      {selectedHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="payment-detail-title">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[26px] bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
+              <div><p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-700">Payment Detail</p><h2 id="payment-detail-title" className="mt-1 break-all text-lg font-extrabold text-[#102449]">{selectedHistory.invoice_number}</h2></div>
+              <button type="button" onClick={() => setSelectedHistory(null)} aria-label="Close payment detail" className="rounded-xl px-3 py-2 text-xl text-slate-400 hover:bg-slate-100 hover:text-slate-900">×</button>
+            </div>
+            <div className="space-y-3 px-5 py-5 sm:px-6">
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {[['Invoice Number', selectedHistory.invoice_number], ['Payment Date', formatPaymentDate(selectedHistory.created_at)], ['Period', selectedHistory.period], ['Amount', `Rp${selectedHistory.amount.toLocaleString('id-ID')}`], ['Payment Method', formatPaymentMethod(selectedHistory.payment_method)], ['Status', formatPaymentStatus(selectedHistory.status)]].map(([label, value]) => <div key={label} className="rounded-2xl bg-slate-50 p-3.5"><dt className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</dt><dd className="mt-1.5 break-words text-sm font-bold text-slate-950">{value}</dd></div>)}
+              </dl>
+              {selectedHistory.rejection_reason && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-800"><p className="font-bold">Rejection Reason</p><p className="mt-1 leading-6">{selectedHistory.rejection_reason}</p></div>}
+            </div>
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6"><button type="button" onClick={() => setSelectedHistory(null)} className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Close</button><button type="button" onClick={() => handleDownload(selectedHistory)} className="rounded-full bg-[#102449] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Download Receipt</button></div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -23,6 +23,7 @@ export function EnterprisePortalShell({
   children,
 }: EnterprisePortalShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const isStudentPortal = role === 'student'
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -58,7 +59,14 @@ export function EnterprisePortalShell({
       />
 
       <div className="flex">
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[248px] shrink-0 border-r border-slate-200 bg-white lg:block">
+        <aside
+          className={[
+            'hidden w-[248px] shrink-0 border-r border-slate-200 bg-white lg:block',
+            isStudentPortal
+              ? 'fixed left-0 top-16 z-20 h-[calc(100vh-4rem)]'
+              : 'sticky top-16 h-[calc(100vh-4rem)]',
+          ].join(' ')}
+        >
           <PortalSidebar role={role} pathname={pathname} />
         </aside>
 
@@ -81,7 +89,13 @@ export function EnterprisePortalShell({
           </div>
         )}
 
-        <main id="portal-content" className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <main
+          id="portal-content"
+          className={[
+            'min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8',
+            isStudentPortal ? 'lg:ml-[248px]' : '',
+          ].join(' ')}
+        >
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
