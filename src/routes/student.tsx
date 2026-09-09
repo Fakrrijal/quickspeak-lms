@@ -7,14 +7,8 @@ import {
   type StudentActiveEnrollment,
 } from '../services/student-active-enrollment.service'
 import { useStudentEbooks } from '../hooks/useStudentEbooks'
-import { useStudentAttendance } from '../hooks/useStudentAttendance'
-import {
-  getCurrentStudentPaymentDetails,
-  getMyStudentContinuationStatus,
-  type StudentContinuationStatus,
-  type StudentPaymentDetails,
-} from '../services/student-payment.service'
 import { getActivePaymentSettings, type PaymentSettings } from '../services/payment-settings.service'
+import { StudentDashboardV2 } from '../components/student/StudentDashboardV2'
 
 type PaymentInitialization = {
   invoice_number: string
@@ -39,188 +33,7 @@ export const Route = createFileRoute('/student')({
 function StudentRouteComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
 
-  return pathname === '/student' ? <StudentDashboard /> : <Outlet />
-}
-
-function StudentDashboard() {
-  const {
-    isAuthenticated,
-    loading: authLoading,
-    profile,
-    profileError,
-    profileLoading,
-    role,
-    status,
-  } = useAuthContext()
-  const navigate = useNavigate()
-  const [activeEnrollments, setActiveEnrollments] = useState<StudentActiveEnrollment[]>([])
-  const [continuationStatus, setContinuationStatus] = useState<StudentContinuationStatus | null>(null)
-  const [paymentDetails, setPaymentDetails] = useState<StudentPaymentDetails | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(false)
-  const canLoadDashboard = (
-    !authLoading
-    && !profileLoading
-    && isAuthenticated
-    && Boolean(profile)
-    && !profileError
-    && role === 'student'
-    && status === 'active'
-  )
-  const { ebooks, loading: ebooksLoading } = useStudentEbooks(canLoadDashboard)
-  const { attendance, error: attendanceError } = useStudentAttendance(canLoadDashboard)
-
-  useEffect(() => {
-    if (authLoading || profileLoading) {
-      return
-    }
-
-    if (!isAuthenticated || !profile || profileError || status === null) {
-      navigate({ to: '/login', replace: true })
-      return
-    }
-
-    if (status === 'waiting') {
-      navigate({ to: '/waiting', replace: true })
-    }
-  }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
-
-  const loadDashboard = useCallback(async () => {
-    setIsLoading(true)
-    setError(false)
-
-    try {
-      const [enrollments, continuation, payment] = await Promise.all([
-        getMyActiveEnrollments(),
-        getMyStudentContinuationStatus(),
-        getCurrentStudentPaymentDetails(),
-      ])
-      setActiveEnrollments(enrollments)
-      setContinuationStatus(continuation)
-      setPaymentDetails(payment)
-    } catch {
-      setError(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (canLoadDashboard) {
-      void loadDashboard()
-    }
-  }, [canLoadDashboard, loadDashboard])
-
-  if (authLoading || profileLoading) {
-    return <p>Loading...</p>
-  }
-
-  if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') {
-    return null
-  }
-
-  if (role !== 'student' || status !== 'active') {
-    return <p>Access denied.</p>
-  }
-
-  const currentEnrollment = activeEnrollments[0]
-  const remainingSessions = continuationStatus
-    ? Math.max(continuationStatus.session_limit - continuationStatus.valid_present_count, 0)
-    : null
-  const paymentStatus = paymentDetails?.payment?.status
-    ?.split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-  const currentAttendance = currentEnrollment
-    ? attendance.filter((record) => record.enrollment_id === currentEnrollment.enrollment_id)
-    : []
-  const presentCount = currentAttendance.filter((record) => record.teacher_status === 'present').length
-  const absentCount = currentAttendance.filter((record) => record.teacher_status === 'absent').length
-
-  return (
-    <main className="min-h-screen p-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Student Dashboard</h1>
-            <p className="mt-2 text-slate-600">A concise view of your QuickSpeak learning.</p>
-          </div>
-          <Link to="/student/learning" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-            View My Learning
-          </Link>
-        </div>
-
-        {isLoading && <p className="mt-6 text-sm text-slate-600">Loading dashboard...</p>}
-        {error && (
-          <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <p>Unable to load dashboard details.</p>
-            <button type="button" onClick={() => void loadDashboard()} className="mt-2 font-medium underline">Retry</button>
-          </div>
-        )}
-
-        {!isLoading && !error && (
-          <div className="mt-6 grid gap-6">
-            {currentEnrollment ? (
-              <section className="rounded-xl border bg-white p-6 shadow-sm" aria-labelledby="current-learning-heading">
-                <h2 id="current-learning-heading" className="text-xl font-semibold text-slate-900">Current Learning</h2>
-                <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-                  <div><dt className="font-medium text-slate-700">Current Level</dt><dd className="mt-1 text-slate-900">{currentEnrollment.level_name}</dd></div>
-                  <div><dt className="font-medium text-slate-700">Package</dt><dd className="mt-1 text-slate-900">{formatPackage(currentEnrollment.package_type)}</dd></div>
-                  <div><dt className="font-medium text-slate-700">Teaching Group</dt><dd className="mt-1 text-slate-900">{currentEnrollment.teaching_group_name}</dd></div>
-                  <div><dt className="font-medium text-slate-700">Teacher</dt><dd className="mt-1 text-slate-900">{currentEnrollment.teacher_code}</dd></div>
-                </dl>
-              </section>
-            ) : (
-              <section className="rounded-xl border bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-900">Start Learning</h2>
-                <p className="mt-2 text-sm text-slate-600">Choose a learning package to begin your enrollment.</p>
-                <Link to="/student/learning" className="mt-4 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">Choose Package</Link>
-              </section>
-            )}
-
-            {continuationStatus && (
-              <section className="rounded-xl border bg-white p-6 shadow-sm" aria-labelledby="progress-heading">
-                <h2 id="progress-heading" className="text-xl font-semibold text-slate-900">Learning Progress</h2>
-                <p className="mt-3 text-sm text-slate-700">{continuationStatus.valid_present_count} / {continuationStatus.session_limit} valid present sessions</p>
-                <p className="mt-1 text-sm text-slate-600">Remaining sessions: {remainingSessions}</p>
-              </section>
-            )}
-
-            {currentEnrollment && !attendanceError && (
-              <section className="rounded-xl border bg-white p-6 shadow-sm" aria-labelledby="attendance-heading">
-                <h2 id="attendance-heading" className="text-xl font-semibold text-slate-900">Attendance</h2>
-                {currentAttendance.length > 0 ? (
-                  <p className="mt-3 text-sm text-slate-700">Present: {presentCount} · Absent: {absentCount}</p>
-                ) : (
-                  <p className="mt-3 text-sm text-slate-600">No attendance records yet.</p>
-                )}
-                {continuationStatus && (
-                  <p className="mt-1 text-sm text-slate-600">Progress: {continuationStatus.valid_present_count} / {continuationStatus.session_limit}</p>
-                )}
-                <Link to="/student/attendance" className="mt-4 inline-flex text-sm font-medium text-slate-700 underline">View Attendance</Link>
-              </section>
-            )}
-
-            <section className="rounded-xl border bg-white p-6 shadow-sm" aria-labelledby="payment-heading">
-              <h2 id="payment-heading" className="text-xl font-semibold text-slate-900">Payment</h2>
-              {paymentStatus && (
-                <p className="mt-3 text-sm text-slate-700">Current status: {paymentStatus}</p>
-              )}
-              <Link to="/student-payment" className="mt-4 inline-flex text-sm font-medium text-slate-700 underline">View Payment</Link>
-            </section>
-
-            <section className="rounded-xl border bg-white p-6 shadow-sm" aria-labelledby="resources-heading">
-              <h2 id="resources-heading" className="text-xl font-semibold text-slate-900">Learning Resources</h2>
-              <p className="mt-3 text-sm text-slate-700">
-                {ebooksLoading ? 'Loading resources...' : `${ebooks.length} ebook${ebooks.length === 1 ? '' : 's'} available for your active level.`}
-              </p>
-              <Link to="/student/learning" className="mt-4 inline-flex text-sm font-medium text-slate-700 underline">Open My Learning</Link>
-            </section>
-          </div>
-        )}
-      </div>
-    </main>
-  )
+  return pathname === '/student' ? <StudentDashboardV2 /> : <Outlet />
 }
 
 export function StudentLearningPage() {
@@ -456,59 +269,22 @@ export function StudentLearningPage() {
           <div className="rounded-xl border bg-white p-8 shadow-sm">
             <div className="text-center">
               <div className="mb-4 text-5xl">✓</div>
-              <h2 className="text-2xl font-bold text-slate-900">
-                Enrollment Successful
-              </h2>
-
-              <div className="mt-6 rounded-lg bg-emerald-50 border border-emerald-200 p-6">
-                <h3 className="text-lg font-semibold text-emerald-900">
-                  {packageDetails.name} Package
-                </h3>
+              <h2 className="text-2xl font-bold text-slate-900">Enrollment Successful</h2>
+              <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-6">
+                <h3 className="text-lg font-semibold text-emerald-900">{packageDetails.name} Package</h3>
                 <div className="mt-4 space-y-2 text-left">
-                  <p className="text-sm text-emerald-800">
-                    <span className="font-medium">Price:</span> Rp{paymentInitialization?.payment_amount.toLocaleString('id-ID')}
-                  </p>
-                  <p className="text-sm text-emerald-800">
-                    <span className="font-medium">Sessions:</span> {packageDetails.sessions} meetings
-                  </p>
-                  <p className="text-sm text-emerald-800">
-                    <span className="font-medium">Maximum Students:</span> {packageDetails.maxStudents}
-                  </p>
-                  {paymentInitialization?.invoice_number && (
-                    <p className="text-sm text-emerald-800">
-                      <span className="font-medium">Invoice Number:</span> {paymentInitialization.invoice_number}
-                    </p>
-                  )}
-                  <p className="text-sm text-emerald-800">
-                    <span className="font-medium">Payment Amount:</span>{' '}
-                    Rp{paymentInitialization?.payment_amount.toLocaleString('id-ID')}
-                  </p>
-                  <p className="mt-4 text-sm font-semibold text-emerald-900">
-                    Status: {paymentInitialization?.payment_status ?? 'unpaid'}
-                  </p>
-                  <p className="text-sm text-emerald-700">
-                    Next step: payment. Please complete payment to activate your enrollment.
-                  </p>
+                  <p className="text-sm text-emerald-800"><span className="font-medium">Price:</span> Rp{paymentInitialization?.payment_amount.toLocaleString('id-ID')}</p>
+                  <p className="text-sm text-emerald-800"><span className="font-medium">Sessions:</span> {packageDetails.sessions} meetings</p>
+                  <p className="text-sm text-emerald-800"><span className="font-medium">Maximum Students:</span> {packageDetails.maxStudents}</p>
+                  {paymentInitialization?.invoice_number && <p className="text-sm text-emerald-800"><span className="font-medium">Invoice Number:</span> {paymentInitialization.invoice_number}</p>}
+                  <p className="text-sm text-emerald-800"><span className="font-medium">Payment Amount:</span> Rp{paymentInitialization?.payment_amount.toLocaleString('id-ID')}</p>
+                  <p className="mt-4 text-sm font-semibold text-emerald-900">Status: {paymentInitialization?.payment_status ?? 'unpaid'}</p>
+                  <p className="text-sm text-emerald-700">Next step: payment. Please complete payment to activate your enrollment.</p>
                 </div>
               </div>
-
               <div className="mt-6 flex justify-center gap-3">
-                <Link
-                  to="/student-payment"
-                  className="rounded-lg bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-800"
-                >
-                  View Payment Details
-                </Link>
-                <button
-                  onClick={() => {
-                    setEnrollmentSuccess(false)
-                    setSelectedPackage(null)
-                    setPaymentInitialization(null)
-                  }}
-                  className="rounded-lg border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Choose Another Package
-                </button>
+                <Link to="/student-payment" className="rounded-lg bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-800">View Payment Details</Link>
+                <button onClick={() => { setEnrollmentSuccess(false); setSelectedPackage(null); setPaymentInitialization(null) }} className="rounded-lg border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50">Choose Another Package</button>
               </div>
             </div>
           </div>
@@ -535,13 +311,7 @@ export function StudentLearningPage() {
           <h1 className="text-3xl font-bold text-slate-900">My Learning</h1>
           <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             <p>Unable to load active enrollment details.</p>
-            <button
-              type="button"
-              onClick={() => void loadActiveEnrollments()}
-              className="font-medium underline"
-            >
-              Retry
-            </button>
+            <button type="button" onClick={() => void loadActiveEnrollments()} className="font-medium underline">Retry</button>
           </div>
         </div>
       </main>
@@ -553,91 +323,37 @@ export function StudentLearningPage() {
       <main className="min-h-screen p-8">
         <div className="mx-auto max-w-4xl">
           <h1 className="text-3xl font-bold text-slate-900">My Learning</h1>
-
           <section className="mt-6" aria-labelledby="active-enrollments-heading">
-            <h2
-              id="active-enrollments-heading"
-              className="text-xl font-bold text-slate-900"
-            >
-              {activeEnrollments.length === 1 ? 'Active Enrollment' : 'Active Enrollments'}
-            </h2>
-
+            <h2 id="active-enrollments-heading" className="text-xl font-bold text-slate-900">{activeEnrollments.length === 1 ? 'Active Enrollment' : 'Active Enrollments'}</h2>
             <div className="mt-4 grid gap-4">
               {activeEnrollments.map((activeEnrollment) => (
-                <article
-                  key={`${activeEnrollment.enrollment_id}-${activeEnrollment.teaching_group_id}`}
-                  className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm"
-                >
-                  <h3 className="text-lg font-semibold text-emerald-900">
-                    {activeEnrollment.level_name}
-                  </h3>
-                  <p className="mt-1 text-sm font-medium text-emerald-800">
-                    {formatPackage(activeEnrollment.package_type)}
-                  </p>
-
+                <article key={`${activeEnrollment.enrollment_id}-${activeEnrollment.teaching_group_id}`} className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-emerald-900">{activeEnrollment.level_name}</h3>
+                  <p className="mt-1 text-sm font-medium text-emerald-800">{formatPackage(activeEnrollment.package_type)}</p>
                   <dl className="mt-5 space-y-3 text-sm">
-                    <div>
-                      <dt className="font-medium text-emerald-900">Teacher</dt>
-                      <dd className="mt-1 text-emerald-800">{activeEnrollment.teacher_code}</dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-emerald-900">Teaching Group</dt>
-                      <dd className="mt-1 text-emerald-800">
-                        {activeEnrollment.teaching_group_name}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-emerald-900">Status</dt>
-                      <dd className="mt-1 text-emerald-800">
-                        {formatEnrollmentStatus(activeEnrollment.enrollment_status)}
-                      </dd>
-                    </div>
+                    <div><dt className="font-medium text-emerald-900">Teacher</dt><dd className="mt-1 text-emerald-800">{activeEnrollment.teacher_code}</dd></div>
+                    <div><dt className="font-medium text-emerald-900">Teaching Group</dt><dd className="mt-1 text-emerald-800">{activeEnrollment.teaching_group_name}</dd></div>
+                    <div><dt className="font-medium text-emerald-900">Status</dt><dd className="mt-1 text-emerald-800">{formatEnrollmentStatus(activeEnrollment.enrollment_status)}</dd></div>
                   </dl>
                 </article>
               ))}
             </div>
           </section>
-
           <section className="mt-8" aria-labelledby="ebooks-heading">
-            <h2 id="ebooks-heading" className="text-xl font-bold text-slate-900">
-              Ebook
-            </h2>
-
+            <h2 id="ebooks-heading" className="text-xl font-bold text-slate-900">Ebook</h2>
             {ebooksLoading ? (
               <p className="mt-4 text-sm text-slate-600">Loading ebook...</p>
             ) : ebooksError ? (
-              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                <p>Unable to load your ebook. Please try again.</p>
-                <button
-                  type="button"
-                  onClick={() => void reloadEbooks()}
-                  className="font-medium underline"
-                >
-                  Retry
-                </button>
-              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"><p>Unable to load your ebook. Please try again.</p><button type="button" onClick={() => void reloadEbooks()} className="font-medium underline">Retry</button></div>
             ) : ebooks.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-600">
-                No ebook is currently available for your active level.
-              </p>
+              <p className="mt-4 text-sm text-slate-600">No ebook is currently available for your active level.</p>
             ) : (
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {ebooks.map((ebook) => (
-                  <article
-                    key={ebook.ebook_id}
-                    className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-                  >
+                  <article key={ebook.ebook_id} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 className="text-lg font-semibold text-slate-900">{ebook.title}</h3>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {ebook.level_name}
-                    </p>
-                    <Link
-                      to="/student/ebooks/$ebookId"
-                      params={{ ebookId: ebook.ebook_id }}
-                      className="mt-5 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                    >
-                      Open Ebook
-                    </Link>
+                    <p className="mt-1 text-sm text-slate-600">{ebook.level_name}</p>
+                    <Link to="/student/ebooks/$ebookId" params={{ ebookId: ebook.ebook_id }} className="mt-5 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">Open Ebook</Link>
                   </article>
                 ))}
               </div>
@@ -651,91 +367,27 @@ export function StudentLearningPage() {
   return (
     <main className="min-h-screen p-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Choose Learning Package
-        </h1>
-
-        <p className="mt-2 text-slate-600">
-          Welcome, {profile?.full_name ?? 'Student'}. Select your preferred learning package.
-        </p>
-
-        {error && (
-          <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-4">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
+        <h1 className="text-3xl font-bold text-slate-900">Choose Learning Package</h1>
+        <p className="mt-2 text-slate-600">Welcome, {profile?.full_name ?? 'Student'}. Select your preferred learning package.</p>
+        {error && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4"><p className="text-sm text-red-700">{error}</p></div>}
         <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {/* Private Package */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">
-                Private
-              </h2>
-              <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-medium text-violet-700">
-                1-on-1
-              </span>
-            </div>
-
+            <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-bold text-slate-900">Private</h2><span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-medium text-violet-700">1-on-1</span></div>
             <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Price</span>
-                <span className="font-semibold text-slate-900">{paymentSettings ? `Rp${paymentSettings.private_registration_fee.toLocaleString('id-ID')}` : 'Configured at checkout'}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Sessions</span>
-                <span className="font-semibold text-slate-900">8 meetings</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Maximum Students</span>
-                <span className="font-semibold text-slate-900">1 student</span>
-              </div>
+              <div className="flex justify-between text-sm"><span className="text-slate-600">Price</span><span className="font-semibold text-slate-900">{paymentSettings ? `Rp${paymentSettings.private_registration_fee.toLocaleString('id-ID')}` : 'Configured at checkout'}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-600">Sessions</span><span className="font-semibold text-slate-900">8 meetings</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-600">Maximum Students</span><span className="font-semibold text-slate-900">1 student</span></div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => handleChoosePackage('private')}
-              disabled={loading}
-              className="mt-6 w-full rounded-lg bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-            >
-              {loading && selectedPackage === 'private' ? 'Processing...' : 'Choose Package'}
-            </button>
+            <button type="button" onClick={() => handleChoosePackage('private')} disabled={loading} className="mt-6 w-full rounded-lg bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 disabled:opacity-50">{loading && selectedPackage === 'private' ? 'Processing...' : 'Choose Package'}</button>
           </div>
-
-          {/* Semi-Private Package */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">
-                Semi-Private
-              </h2>
-              <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-medium text-sky-700">
-                Small Group
-              </span>
-            </div>
-
+            <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-bold text-slate-900">Semi-Private</h2><span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-medium text-sky-700">Small Group</span></div>
             <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Price</span>
-                <span className="font-semibold text-slate-900">{paymentSettings ? `Rp${paymentSettings.semi_private_registration_fee.toLocaleString('id-ID')}` : 'Configured at checkout'}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Sessions</span>
-                <span className="font-semibold text-slate-900">8 meetings</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Maximum Students</span>
-                <span className="font-semibold text-slate-900">4 students</span>
-              </div>
+              <div className="flex justify-between text-sm"><span className="text-slate-600">Price</span><span className="font-semibold text-slate-900">{paymentSettings ? `Rp${paymentSettings.semi_private_registration_fee.toLocaleString('id-ID')}` : 'Configured at checkout'}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-600">Sessions</span><span className="font-semibold text-slate-900">8 meetings</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-600">Maximum Students</span><span className="font-semibold text-slate-900">4 students</span></div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => handleChoosePackage('semi_private')}
-              disabled={loading}
-              className="mt-6 w-full rounded-lg bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-            >
-              {loading && selectedPackage === 'semi_private' ? 'Processing...' : 'Choose Package'}
-            </button>
+            <button type="button" onClick={() => handleChoosePackage('semi_private')} disabled={loading} className="mt-6 w-full rounded-lg bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-800 disabled:opacity-50">{loading && selectedPackage === 'semi_private' ? 'Processing...' : 'Choose Package'}</button>
           </div>
         </div>
       </div>
