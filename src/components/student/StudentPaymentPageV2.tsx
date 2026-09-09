@@ -169,7 +169,7 @@ export function StudentPaymentPageV2() {
   const makeReceiptData = (item: StudentPaymentHistoryItem) => ({
     ...item,
     studentName: profile?.full_name || 'QuickSpeak Student',
-    studentEmail: profile?.email,
+    studentEmail: profile?.email || 'No email on file',
     packageLabel: paymentDetails ? formatPackage(paymentDetails.enrollment.package_type) : '—',
   })
 
