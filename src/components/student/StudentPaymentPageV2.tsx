@@ -223,7 +223,7 @@ export function StudentPaymentPageV2() {
     { label: 'Package', value: formatPackage(paymentDetails!.enrollment.package_type), icon: 'package' as const },
     { label: 'Amount', value: `Rp${payment.amount.toLocaleString('id-ID')}`, icon: 'amount' as const },
     { label: 'Payment Method', value: formatPaymentMethod(payment.payment_method), icon: 'method' as const },
-  ]
+  ] : []
 
   return (
     <div className="space-y-6">
