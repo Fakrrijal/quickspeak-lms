@@ -13,13 +13,16 @@ export type StudentInvoice = {
   invoice_number: string
   amount: number
   status: string
+  created_at: string
 }
 
 export type StudentPayment = {
   id: string
   amount: number
   status: string
+  payment_method: string | null
   rejection_reason: string | null
+  created_at: string
 }
 
 export type StudentPaymentDetails = {
@@ -36,8 +39,10 @@ export type StudentPaymentHistoryItem = {
   invoice_status: string
   amount: number
   status: string
+  payment_method: string | null
   rejection_reason: string | null
   created_at: string
+  period: string
 }
 
 export type StudentContinuationStatus = {
@@ -100,6 +105,13 @@ const relevantEnrollmentStatuses = [
   'active',
 ]
 
+function formatPeriod(value: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(value))
+}
+
 export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentDetails | null> {
   const { data: enrollment, error: enrollmentError } = await supabase
     .from('enrollments')
@@ -119,7 +131,7 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
 
   const { data: invoice, error: invoiceError } = await supabase
     .from('invoices')
-    .select('id, invoice_number, amount, status')
+    .select('id, invoice_number, amount, status, created_at')
     .eq('enrollment_id', enrollment.id)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -139,7 +151,7 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
 
   const { data: payment, error: paymentError } = await supabase
     .from('payments')
-    .select('id, amount, status, rejection_reason')
+    .select('id, amount, status, payment_method, rejection_reason, created_at')
     .eq('invoice_id', invoice.id)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -161,8 +173,9 @@ export async function getStudentPaymentHistory(
 ): Promise<StudentPaymentHistoryItem[]> {
   const { data: invoices, error: invoiceError } = await supabase
     .from('invoices')
-    .select('id, invoice_number, amount, status')
+    .select('id, invoice_number, amount, status, created_at')
     .eq('enrollment_id', enrollmentId)
+    .order('created_at', { ascending: false })
 
   if (invoiceError) {
     throw invoiceError
@@ -177,7 +190,7 @@ export async function getStudentPaymentHistory(
 
   const { data: payments, error: paymentError } = await supabase
     .from('payments')
-    .select('id, invoice_id, amount, status, rejection_reason, created_at')
+    .select('id, invoice_id, amount, status, payment_method, rejection_reason, created_at')
     .in('invoice_id', invoiceIds)
     .order('created_at', { ascending: false })
 
@@ -200,8 +213,10 @@ export async function getStudentPaymentHistory(
       invoice_status: invoice.status,
       amount: payment.amount,
       status: payment.status,
+      payment_method: payment.payment_method,
       rejection_reason: payment.rejection_reason,
       created_at: payment.created_at,
+      period: formatPeriod(invoice.created_at),
     }]
   })
 }
