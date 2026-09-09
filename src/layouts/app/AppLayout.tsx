@@ -4,6 +4,7 @@ import { useAuthContext } from '../../providers/AuthProvider'
 import { useState } from 'react'
 import { EnterprisePortalShell } from '../portal/EnterprisePortalShell'
 import { isPortalPath, type PortalRole } from '../portal/portal-navigation'
+import { StudentDashboardV2 } from '../../components/student/StudentDashboardV2'
 
 export function AppLayout() {
   const { isAuthenticated, profile, role } = useAuthContext()
@@ -41,7 +42,7 @@ export function AppLayout() {
         logoutError={logoutError}
         onLogout={() => void handleLogout()}
       >
-        <Outlet />
+        {pathname === '/student' ? <StudentDashboardV2 /> : <Outlet />}
       </EnterprisePortalShell>
     )
   }
