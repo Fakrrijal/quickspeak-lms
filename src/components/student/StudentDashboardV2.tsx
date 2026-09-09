@@ -1,9 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
-import { getMyActiveEnrollments, type StudentActiveEnrollment } from '../../services/student-active-enrollment.service'
 import { useStudentAttendance } from '../../hooks/useStudentAttendance'
-import { useQuery } from '@tanstack/react-query'
+import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 
 function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'arrow' }) {
   const common = 'size-5 fill-none stroke-current stroke-2'
@@ -13,7 +12,7 @@ function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'arrow' }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>
 }
 
-function formatPackage(packageType: StudentActiveEnrollment['package_type']) {
+function formatPackage(packageType: StudentLearningState['package_type']) {
   return packageType === 'private' ? 'Private' : 'Semi-Private'
 }
 
@@ -28,6 +27,9 @@ export function StudentDashboardV2() {
     status,
   } = useAuthContext()
   const navigate = useNavigate()
+  const [learningState, setLearningState] = useState<StudentLearningState | null>(null)
+  const [learningStateLoading, setLearningStateLoading] = useState(true)
+  const [learningStateError, setLearningStateError] = useState(false)
 
   const canLoad = !authLoading
     && !profileLoading
@@ -37,17 +39,31 @@ export function StudentDashboardV2() {
     && role === 'student'
     && status === 'active'
 
-  const enrollmentQuery = useQuery({
-    queryKey: ['student-dashboard', 'active-enrollments'],
-    queryFn: getMyActiveEnrollments,
-    enabled: canLoad,
-  })
-
   const {
     attendance,
     loading: attendanceLoading,
     error: attendanceError,
   } = useStudentAttendance(canLoad)
+
+  useEffect(() => {
+    if (!canLoad) return
+    let cancelled = false
+    setLearningStateLoading(true)
+    setLearningStateError(false)
+
+    getMyLearningState()
+      .then((nextState) => {
+        if (!cancelled) setLearningState(nextState)
+      })
+      .catch(() => {
+        if (!cancelled) setLearningStateError(true)
+      })
+      .finally(() => {
+        if (!cancelled) setLearningStateLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [canLoad])
 
   useEffect(() => {
     if (authLoading || profileLoading) return
@@ -62,7 +78,7 @@ export function StudentDashboardV2() {
     }
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
 
-  if (authLoading || profileLoading || enrollmentQuery.isLoading) {
+  if (authLoading || profileLoading || learningStateLoading) {
     return (
       <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-medium text-slate-600">Loading your dashboard...</p>
@@ -76,7 +92,15 @@ export function StudentDashboardV2() {
     return <div className="rounded-[20px] border border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-800">Access denied.</div>
   }
 
-  const currentEnrollment = enrollmentQuery.data?.[0] ?? null
+  const completed = Boolean(
+    learningState
+    && (
+      learningState.enrollment_status === 'completed'
+      || learningState.completed_at
+      || learningState.completed_sessions >= learningState.session_limit
+    ),
+  )
+  const assigned = Boolean(learningState?.teaching_group_id && learningState?.teacher_id)
   const present = attendance.filter((item) => item.teacher_status === 'present').length
   const absent = attendance.filter((item) => item.teacher_status === 'absent').length
   const total = attendance.length
@@ -111,39 +135,51 @@ export function StudentDashboardV2() {
             <span className="inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-blue-700">My Class</span>
           </div>
 
-          {currentEnrollment ? (
-            <div className="mt-6 flex flex-1 flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Current Level</p>
-              <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <h2 className="text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">Level {currentEnrollment.level_number}</h2>
-                  <p className="mt-1 text-sm font-semibold text-blue-700">{currentEnrollment.level_name}</p>
+          <div className="mt-6 flex flex-1 flex-col">
+            {learningStateError ? (
+              <div className="flex flex-1 items-center">
+                <div className="w-full rounded-2xl border border-rose-200 bg-rose-50 p-5">
+                  <p className="font-bold text-rose-800">Unable to load class status</p>
+                  <p className="mt-1 text-sm leading-6 text-rose-700">Open My Learning to retry and view your current learning stage.</p>
+                  <Link to="/student/learning" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-700">Open My Learning <Icon name="arrow" /></Link>
                 </div>
-                <span className="rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700">{formatPackage(currentEnrollment.package_type)}</span>
               </div>
-              <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-3.5">
-                  <dt className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Teaching Group</dt>
-                  <dd className="mt-1.5 truncate text-sm font-bold text-slate-900">{currentEnrollment.teaching_group_name}</dd>
+            ) : learningState ? (
+              <>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Current Level</p>
+                <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">Level {learningState.level_number}</h2>
+                    <p className="mt-1 text-sm font-semibold text-blue-700">{learningState.level_name}</p>
+                  </div>
+                  <span className="rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700">{formatPackage(learningState.package_type)}</span>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-3.5">
-                  <dt className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Teacher</dt>
-                  <dd className="mt-1.5 truncate text-sm font-bold text-slate-900">{currentEnrollment.teacher_code}</dd>
+                <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50 p-3.5">
+                    <dt className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Teaching Group</dt>
+                    <dd className="mt-1.5 truncate text-sm font-bold text-slate-900">{learningState.teaching_group_name ?? 'Not assigned yet'}</dd>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-3.5">
+                    <dt className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Teacher</dt>
+                    <dd className="mt-1.5 truncate text-sm font-bold text-slate-900">{learningState.teacher_code ?? 'Not assigned yet'}</dd>
+                  </div>
+                </dl>
+                {!completed && !assigned && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-sm leading-6 text-amber-900">Payment approved. Your teaching group and teacher will appear here after administrator assignment.</div>}
+                {completed && <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm leading-6 text-emerald-800">You have completed this 8-session stage. Continue to the next stage from My Learning.</div>}
+                <Link to="/student/learning" className="mt-auto inline-flex w-fit items-center gap-2 pt-5 text-sm font-bold text-blue-700 hover:text-blue-800">
+                  {completed ? 'Continue to Next Stage' : 'Open My Learning'} <Icon name="arrow" />
+                </Link>
+              </>
+            ) : (
+              <div className="flex flex-1 items-center">
+                <div className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-5">
+                  <p className="font-bold text-slate-900">No learning package yet</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">Choose a learning package to start your next stage.</p>
+                  <Link to="/student/learning" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-700">Choose Package <Icon name="arrow" /></Link>
                 </div>
-              </dl>
-              <Link to="/student/learning" className="mt-auto inline-flex w-fit items-center gap-2 pt-5 text-sm font-bold text-blue-700 hover:text-blue-800">
-                Open My Learning <Icon name="arrow" />
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-6 flex flex-1 items-center">
-              <div className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-5">
-                <p className="font-bold text-slate-900">No active class</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">Your active class will appear here once it is assigned.</p>
-                <Link to="/student/learning" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-700">Open My Learning <Icon name="arrow" /></Link>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </article>
 
         <article className="flex min-h-[300px] flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
