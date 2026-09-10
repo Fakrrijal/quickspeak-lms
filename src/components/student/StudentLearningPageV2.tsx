@@ -44,7 +44,7 @@ export function StudentLearningPageV2() {
   const [paymentInitialization, setPaymentInitialization] = useState<PaymentInitialization | null>(null)
   const [success, setSuccess] = useState(false)
   const canLoadEbooks = Boolean(!authLoading && !profileLoading && isAuthenticated && profile && !profileError && role === 'student' && status === 'active')
-  const { ebooks, catalog, loading: ebooksLoading, error: ebooksError, reload: reloadEbooks } = useStudentEbooks(canLoadEbooks)
+  const { catalog, loading: ebooksLoading, error: ebooksError, reload: reloadEbooks } = useStudentEbooks(canLoadEbooks)
 
   useEffect(() => {
     if (authLoading || profileLoading) return
