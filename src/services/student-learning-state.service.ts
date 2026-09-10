@@ -21,5 +21,14 @@ export type StudentLearningState = {
 export async function getMyLearningState(): Promise<StudentLearningState | null> {
   const { data, error } = await supabase.rpc('get_my_learning_state')
   if (error) throw error
-  return (Array.isArray(data) ? data[0] : data) as StudentLearningState | null
+
+  const row = (Array.isArray(data) ? data[0] : data) as StudentLearningState | null
+  if (!row) return null
+
+  return {
+    ...row,
+    teacher_code: row.teacher_name && row.teacher_code
+      ? `${row.teacher_name.trim()} - ${row.teacher_code.replace(/^TCH-/i, '')}`
+      : row.teacher_code,
+  }
 }
