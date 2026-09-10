@@ -7,6 +7,7 @@ type Profile = {
   id: string
   full_name: string
   email: string
+  avatar_url: string | null
   role: string
   status: string
 }
@@ -81,7 +82,7 @@ export function useAuth() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role, status')
+        .select('id, full_name, email, avatar_url, role, status')
         .eq('id', userId)
         .single()
 
