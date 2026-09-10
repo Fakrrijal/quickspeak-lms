@@ -72,7 +72,7 @@ export function StudentDashboardV2() {
       <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Dashboard</p>
-          <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.03em] text-[#102449] sm:text-[34px]">Welcome back, {profile.full_name}.</h1>
+          <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.03em] text-[#102449] sm:text-[32px]">Welcome back, {profile.full_name}.</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Here is your current learning overview and attendance status.</p>
         </div>
         <Link to="/student/profile" className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">
@@ -92,7 +92,7 @@ export function StudentDashboardV2() {
                   <h2 id="current-learning-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449] sm:text-[21px]">Current learning stage</h2>
                 </div>
               </div>
-              <Link to="/student/learning" className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">
+              <Link to="/student/learning" className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-bold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">
                 View details <Icon name="arrow" />
               </Link>
             </div>
@@ -162,7 +162,7 @@ export function StudentDashboardV2() {
                   <h2 id="attendance-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449]">Attendance summary</h2>
                 </div>
               </div>
-              <Link to="/student/attendance" className="text-sm font-bold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">View all</Link>
+              <Link to="/student/attendance" className="whitespace-nowrap text-sm font-bold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">View all</Link>
             </div>
           </div>
 
