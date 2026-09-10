@@ -6,6 +6,7 @@ import type { PortalRole } from './portal-navigation'
 type EnterprisePortalShellProps = {
   role: PortalRole
   userName: string
+  avatarUrl: string | null
   pathname: string
   isLoggingOut: boolean
   logoutError: string | null
@@ -16,6 +17,7 @@ type EnterprisePortalShellProps = {
 export function EnterprisePortalShell({
   role,
   userName,
+  avatarUrl,
   pathname,
   isLoggingOut,
   logoutError,
@@ -64,7 +66,7 @@ export function EnterprisePortalShell({
               : 'lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)]',
           ].join(' ')}
         >
-          <PortalSidebar role={role} pathname={pathname} />
+          <PortalSidebar role={role} pathname={pathname} userName={userName} avatarUrl={avatarUrl} />
         </aside>
 
         {isMenuOpen && (
@@ -80,6 +82,8 @@ export function EnterprisePortalShell({
                 id="portal-navigation-mobile"
                 role={role}
                 pathname={pathname}
+                userName={userName}
+                avatarUrl={avatarUrl}
                 onNavigate={() => setIsMenuOpen(false)}
               />
             </aside>
