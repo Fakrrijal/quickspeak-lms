@@ -104,7 +104,7 @@ function ReaderShell({ children }: { children: ReactNode }) {
   return (
     <main className="min-h-screen overflow-x-hidden p-4 sm:p-8">
       <div className="mx-auto max-w-6xl">
-        <Link to="/student" className="text-sm font-medium text-slate-700 underline hover:text-slate-900">
+        <Link to="/student/learning" className="text-sm font-medium text-slate-700 underline hover:text-slate-900">
           Back to My Learning
         </Link>
         <div className="mt-6">{children}</div>
