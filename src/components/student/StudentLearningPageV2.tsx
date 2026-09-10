@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useAuthContext } from '../../providers/AuthProvider'
 import { useStudentEbooks } from '../../hooks/useStudentEbooks'
 import { supabase } from '../../lib/supabase'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
