@@ -16,8 +16,14 @@ export function PortalSidebar({ id, role, pathname, onNavigate }: PortalSidebarP
   return (
     <nav id={id} aria-label="Portal navigation" className="flex h-full flex-col overflow-y-auto p-4">
       <div className="px-3 pb-5 pt-1">
-        <p className="text-sm font-semibold text-slate-900">{role.charAt(0).toUpperCase()}{role.slice(1)}</p>
-        <p className="mt-1 text-xs text-slate-500">QuickSpeak</p>
+        {role === 'student' ? (
+          <p className="text-sm font-semibold text-slate-900">QuickSpeak</p>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-slate-900">{role.charAt(0).toUpperCase()}{role.slice(1)}</p>
+            <p className="mt-1 text-xs text-slate-500">QuickSpeak</p>
+          </>
+        )}
       </div>
 
       <div className="space-y-6">
