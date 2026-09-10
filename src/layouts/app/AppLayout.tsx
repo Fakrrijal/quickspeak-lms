@@ -5,13 +5,21 @@ import { useState } from 'react'
 import { EnterprisePortalShell } from '../portal/EnterprisePortalShell'
 import { isPortalPath, type PortalRole } from '../portal/portal-navigation'
 import { StudentDashboardV2 } from '../../components/student/StudentDashboardV2'
+import { useProfile } from '../../hooks/useProfile'
 
 export function AppLayout() {
-  const { isAuthenticated, profile, role } = useAuthContext()
+  const { isAuthenticated, profile, role, user } = useAuthContext()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
+  const portalRole: PortalRole | null = (
+    role === 'student' || role === 'teacher' || role === 'admin'
+  ) ? role : null
+  const { avatarUrl } = useProfile(
+    user?.id ?? null,
+    Boolean(isAuthenticated && profile && role === 'student'),
+  )
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -28,16 +36,12 @@ export function AppLayout() {
     }
   }
 
-  const portalRole: PortalRole | null = (
-    role === 'student' || role === 'teacher' || role === 'admin'
-  ) ? role : null
-
   if (isAuthenticated && profile && portalRole && isPortalPath(pathname)) {
     return (
       <EnterprisePortalShell
         role={portalRole}
         userName={profile.full_name || 'QuickSpeak user'}
-        avatarUrl={profile.avatar_url}
+        avatarUrl={portalRole === 'student' ? avatarUrl : null}
         pathname={pathname}
         isLoggingOut={isLoggingOut}
         logoutError={logoutError}
