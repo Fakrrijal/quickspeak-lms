@@ -15,6 +15,7 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile) return
@@ -23,12 +24,23 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
     setAddress(profile.address ?? '')
   }, [profile])
 
+  useEffect(() => {
+    const newPreviewUrl = avatarFile ? URL.createObjectURL(avatarFile) : null
+    setPreviewUrl(newPreviewUrl)
+    return () => {
+      if (newPreviewUrl) {
+        URL.revokeObjectURL(newPreviewUrl)
+      }
+    }
+  }, [avatarFile])
+
   const initials = profile?.full_name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase() || '?'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     await onSave({ fullName: fullName.trim(), phone: phone.trim(), address: address.trim() }, avatarFile)
     setAvatarFile(null)
+    setPreviewUrl(null)
   }
 
   return (
@@ -37,7 +49,7 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-xl font-bold text-slate-600 ring-1 ring-slate-200">
-              {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : initials}
+              {previewUrl || avatarUrl ? <img src={previewUrl || avatarUrl || undefined} alt="Profile avatar" className="h-full w-full object-cover" /> : initials}
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Profile photo</p>

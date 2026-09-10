@@ -1,5 +1,4 @@
 import type { PortalRole } from './portal-navigation'
-import { getPortalRoleLabel } from './portal-navigation'
 import { NotificationCenter } from '../../components/NotificationCenter'
 
 type PortalHeaderProps = {
@@ -38,8 +37,7 @@ export function PortalHeader({
         </button>
 
         <div className="min-w-0">
-          <p className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">QuickSpeak</p>
-          <p className="hidden text-xs font-medium text-slate-500 sm:block">{getPortalRoleLabel(role)}</p>
+          <img src="/branding/quickspeak-logo.png" alt="QuickSpeak" className="h-8 w-auto object-contain sm:h-9" />
         </div>
 
         <div className="ml-auto flex min-w-0 items-center gap-3">
