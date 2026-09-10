@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import type { MyProfile } from '../services/profile.service'
 
 type ProfileFormProps = {
@@ -25,7 +25,7 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
 
   const initials = profile?.full_name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase() || '?'
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     await onSave({ fullName: fullName.trim(), phone: phone.trim(), address: address.trim() }, avatarFile)
     setAvatarFile(null)
