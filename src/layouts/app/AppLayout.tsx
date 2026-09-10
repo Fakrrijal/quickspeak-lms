@@ -37,6 +37,7 @@ export function AppLayout() {
       <EnterprisePortalShell
         role={portalRole}
         userName={profile.full_name || 'QuickSpeak user'}
+        avatarUrl={profile.avatar_url}
         pathname={pathname}
         isLoggingOut={isLoggingOut}
         logoutError={logoutError}
