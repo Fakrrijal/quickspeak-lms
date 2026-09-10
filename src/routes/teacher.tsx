@@ -70,16 +70,86 @@ function TeacherDashboard() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
-        <p className="mt-2 text-slate-600">Welcome, {profile.full_name || 'Teacher'}.</p>
-        <section className="mt-6 rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Attendance</h2>
-          <p className="mt-2 text-sm text-slate-600">Record attendance for your teaching groups.</p>
-          <Link to="/teacher/attendance" className="mt-4 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-            Attendance
-          </Link>
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <header className="mb-8">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Teacher Dashboard</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Welcome back, {profile.full_name || 'Teacher'}.</p>
+        </header>
+
+        <section className="mb-8 rounded-[24px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Teaching Workspace</h2>
+              <p className="mt-1 text-sm text-slate-600">Manage your assigned teaching groups and attendance.</p>
+            </div>
+            <Link
+              to="/teacher/attendance"
+              className="inline-flex items-center rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]"
+            >
+              Attendance
+            </Link>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-4 text-lg font-bold text-slate-900">Quick Actions</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              to="/teacher/attendance"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex size-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-2">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012 2h2a2 2 0 012-2m-6 6l2 2 4-4" />
+                  </svg>
+                </div>
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 text-slate-400 transition group-hover:text-slate-600">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+              </div>
+              <h3 className="mt-4 text-base font-bold text-slate-900">Attendance</h3>
+              <p className="mt-1 text-sm text-slate-600">Record and manage student attendance</p>
+            </Link>
+
+            <Link
+              to="/teacher/fee"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex size-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-2">
+                    <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 text-slate-400 transition group-hover:text-slate-600">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+              </div>
+              <h3 className="mt-4 text-base font-bold text-slate-900">Fee</h3>
+              <p className="mt-1 text-sm text-slate-600">View your teacher fee reports</p>
+            </Link>
+
+            <Link
+              to="/teacher/profile"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-2">
+                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 text-slate-400 transition group-hover:text-slate-600">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+              </div>
+              <h3 className="mt-4 text-base font-bold text-slate-900">Profile</h3>
+              <p className="mt-1 text-sm text-slate-600">Manage your teacher profile</p>
+            </Link>
+          </div>
         </section>
       </div>
     </main>
