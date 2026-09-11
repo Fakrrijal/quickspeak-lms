@@ -28,14 +28,49 @@ function TeacherProfilePage() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   return (
-    <div className="p-8">
-      <section>
-    <h2 className="text-3xl font-bold text-slate-900">Profile</h2>
-    <p className="mt-2 text-slate-600">Manage your contact details and profile photo.</p>
-    {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" onClick={() => void reload()} className="font-medium underline">Retry</button></p>}
-    {success && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
-    <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Teaching Level" levelLabel={teachingLevels.join(', ') || 'No active teaching groups'} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
-    </section>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <header className="border-b border-slate-200 pb-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-[-0.03em] text-[#102449]">Profile</h1>
+            <p className="mt-1.5 text-sm leading-6 text-slate-600">Manage your contact details, profile photo, and teaching information.</p>
+          </div>
+          <span className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
+            Teacher
+          </span>
+        </div>
+      </header>
+
+      {error && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {error}
+          <button type="button" onClick={() => void reload()} className="ml-2 font-bold underline">Retry</button>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {success}
+        </div>
+      )}
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-5 sm:px-7">
+          <h2 className="text-lg font-bold text-[#102449]">Personal Information</h2>
+          <p className="mt-1 text-sm text-slate-600">Keep your teacher profile information up to date.</p>
+        </div>
+        <div className="px-6 py-6 sm:px-7 sm:py-7">
+          <ProfileForm
+            avatarUrl={avatarUrl}
+            profile={profile}
+            saving={saving}
+            levelTitle="Teaching Level"
+            levelLabel={teachingLevels.join(', ') || 'No active teaching groups'}
+            onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })}
+          />
+        </div>
+      </section>
     </div>
   )
 }
