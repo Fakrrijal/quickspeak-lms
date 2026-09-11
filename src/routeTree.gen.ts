@@ -40,8 +40,11 @@ import { Route as StudentAttendanceRouteImport } from './routes/student/attendan
 import { Route as StudentLearningRouteImport } from './routes/student/learning'
 import { Route as StudentProfileRouteImport } from './routes/student/profile'
 import { Route as TeacherAttendanceRouteImport } from './routes/teacher/attendance'
+import { Route as TeacherBooksRouteImport } from './routes/teacher/books'
 import { Route as TeacherFeeRouteImport } from './routes/teacher/fee'
+import { Route as TeacherOverviewRouteImport } from './routes/teacher/overview'
 import { Route as TeacherProfileRouteImport } from './routes/teacher/profile'
+import { Route as TeacherTeachingGroupsRouteImport } from './routes/teacher/teaching-groups'
 import { Route as StudentEbooksEbookIdRouteImport } from './routes/student/ebooks/$ebookId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -201,14 +204,29 @@ const TeacherAttendanceRoute = TeacherAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherBooksRoute = TeacherBooksRouteImport.update({
+  id: '/books',
+  path: '/books',
+  getParentRoute: () => TeacherRoute,
+} as any)
 const TeacherFeeRoute = TeacherFeeRouteImport.update({
   id: '/fee',
   path: '/fee',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherOverviewRoute = TeacherOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => TeacherRoute,
+} as any)
 const TeacherProfileRoute = TeacherProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherTeachingGroupsRoute = TeacherTeachingGroupsRouteImport.update({
+  id: '/teaching-groups',
+  path: '/teaching-groups',
   getParentRoute: () => TeacherRoute,
 } as any)
 const StudentEbooksEbookIdRoute = StudentEbooksEbookIdRouteImport.update({
@@ -248,8 +266,11 @@ export interface FileRoutesByFullPath {
   '/student/learning': typeof StudentLearningRoute
   '/student/profile': typeof StudentProfileRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/books': typeof TeacherBooksRoute
   '/teacher/fee': typeof TeacherFeeRoute
+  '/teacher/overview': typeof TeacherOverviewRoute
   '/teacher/profile': typeof TeacherProfileRoute
+  '/teacher/teaching-groups': typeof TeacherTeachingGroupsRoute
   '/admin/': typeof AdminIndexRoute
   '/student/ebooks/$ebookId': typeof StudentEbooksEbookIdRoute
 }
@@ -284,8 +305,11 @@ export interface FileRoutesByTo {
   '/student/learning': typeof StudentLearningRoute
   '/student/profile': typeof StudentProfileRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/books': typeof TeacherBooksRoute
   '/teacher/fee': typeof TeacherFeeRoute
+  '/teacher/overview': typeof TeacherOverviewRoute
   '/teacher/profile': typeof TeacherProfileRoute
+  '/teacher/teaching-groups': typeof TeacherTeachingGroupsRoute
   '/admin': typeof AdminIndexRoute
   '/student/ebooks/$ebookId': typeof StudentEbooksEbookIdRoute
 }
@@ -321,8 +345,11 @@ export interface FileRoutesById {
   '/student/learning': typeof StudentLearningRoute
   '/student/profile': typeof StudentProfileRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/books': typeof TeacherBooksRoute
   '/teacher/fee': typeof TeacherFeeRoute
+  '/teacher/overview': typeof TeacherOverviewRoute
   '/teacher/profile': typeof TeacherProfileRoute
+  '/teacher/teaching-groups': typeof TeacherTeachingGroupsRoute
   '/admin/': typeof AdminIndexRoute
   '/student/ebooks/$ebookId': typeof StudentEbooksEbookIdRoute
 }
@@ -359,8 +386,11 @@ export interface FileRouteTypes {
     | '/student/learning'
     | '/student/profile'
     | '/teacher/attendance'
+    | '/teacher/books'
     | '/teacher/fee'
+    | '/teacher/overview'
     | '/teacher/profile'
+    | '/teacher/teaching-groups'
     | '/admin/'
     | '/student/ebooks/$ebookId'
   fileRoutesByTo: FileRoutesByTo
@@ -395,8 +425,11 @@ export interface FileRouteTypes {
     | '/student/learning'
     | '/student/profile'
     | '/teacher/attendance'
+    | '/teacher/books'
     | '/teacher/fee'
+    | '/teacher/overview'
     | '/teacher/profile'
+    | '/teacher/teaching-groups'
     | '/admin'
     | '/student/ebooks/$ebookId'
   id:
@@ -431,8 +464,11 @@ export interface FileRouteTypes {
     | '/student/learning'
     | '/student/profile'
     | '/teacher/attendance'
+    | '/teacher/books'
     | '/teacher/fee'
+    | '/teacher/overview'
     | '/teacher/profile'
+    | '/teacher/teaching-groups'
     | '/admin/'
     | '/student/ebooks/$ebookId'
   fileRoutesById: FileRoutesById
@@ -686,6 +722,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherAttendanceRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/books': {
+      id: '/teacher/books'
+      path: '/books'
+      fullPath: '/teacher/books'
+      preLoaderRoute: typeof TeacherBooksRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/fee': {
       id: '/teacher/fee'
       path: '/fee'
@@ -693,11 +736,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherFeeRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/overview': {
+      id: '/teacher/overview'
+      path: '/overview'
+      fullPath: '/teacher/overview'
+      preLoaderRoute: typeof TeacherOverviewRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/profile': {
       id: '/teacher/profile'
       path: '/profile'
       fullPath: '/teacher/profile'
       preLoaderRoute: typeof TeacherProfileRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/teaching-groups': {
+      id: '/teacher/teaching-groups'
+      path: '/teaching-groups'
+      fullPath: '/teacher/teaching-groups'
+      preLoaderRoute: typeof TeacherTeachingGroupsRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/student/ebooks/$ebookId': {
@@ -729,14 +786,20 @@ const StudentRouteWithChildren =
 
 interface TeacherRouteChildren {
   TeacherAttendanceRoute: typeof TeacherAttendanceRoute
+  TeacherBooksRoute: typeof TeacherBooksRoute
   TeacherFeeRoute: typeof TeacherFeeRoute
+  TeacherOverviewRoute: typeof TeacherOverviewRoute
   TeacherProfileRoute: typeof TeacherProfileRoute
+  TeacherTeachingGroupsRoute: typeof TeacherTeachingGroupsRoute
 }
 
 const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherAttendanceRoute: TeacherAttendanceRoute,
+  TeacherBooksRoute: TeacherBooksRoute,
   TeacherFeeRoute: TeacherFeeRoute,
+  TeacherOverviewRoute: TeacherOverviewRoute,
   TeacherProfileRoute: TeacherProfileRoute,
+  TeacherTeachingGroupsRoute: TeacherTeachingGroupsRoute,
 }
 
 const TeacherRouteWithChildren =
