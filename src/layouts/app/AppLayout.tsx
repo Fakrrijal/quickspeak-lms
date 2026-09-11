@@ -16,10 +16,10 @@ export function AppLayout() {
   const portalRole: PortalRole | null = (
     role === 'student' || role === 'teacher' || role === 'admin'
   ) ? role : null
-  const { avatarUrl } = useProfile(
-    user?.id ?? null,
-    Boolean(isAuthenticated && profile && role === 'student'),
+  const shouldLoadPortalProfile = Boolean(
+    isAuthenticated && profile && (role === 'student' || role === 'teacher'),
   )
+  const { avatarUrl } = useProfile(user?.id ?? null, shouldLoadPortalProfile)
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -41,7 +41,7 @@ export function AppLayout() {
       <EnterprisePortalShell
         role={portalRole}
         userName={profile.full_name || 'QuickSpeak user'}
-        avatarUrl={portalRole === 'student' ? avatarUrl : null}
+        avatarUrl={portalRole === 'student' || portalRole === 'teacher' ? avatarUrl : null}
         pathname={pathname}
         isLoggingOut={isLoggingOut}
         logoutError={logoutError}
