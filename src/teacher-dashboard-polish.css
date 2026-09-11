@@ -1,0 +1,8 @@
+/* Teacher dashboard visual polish: scoped to the active Teacher Dashboard route. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) section[class~="xl:grid-cols-4"] > article:nth-child(-n+2) > div > span {
+  display: none;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) div[class*="lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]"] > section:first-child > div:last-child > article {
+  padding: 1.25rem 1.5rem;
+}
