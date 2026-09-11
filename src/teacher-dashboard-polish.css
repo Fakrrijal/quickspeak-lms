@@ -1,8 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
 /* Teacher dashboard visual polish: scoped to the active Teacher Dashboard route. */
+.teacher-dashboard-v2,
+.teacher-dashboard-v2 input {
+  font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+}
+
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) section[class~="xl:grid-cols-4"] > article:nth-child(-n+2) > div > span {
   display: none;
 }
 
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) div[class*="lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]"] > section:first-child > div:last-child > article {
   padding: 1.25rem 1.5rem;
+}
+
+.teacher-dashboard-v2 .qs-date-input {
+  font-variant-numeric: tabular-nums;
 }
