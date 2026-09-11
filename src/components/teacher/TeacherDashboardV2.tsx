@@ -126,18 +126,23 @@ export function TeacherDashboardV2() {
     <div className="teacher-dashboard-v2 mx-auto max-w-7xl space-y-5">
       <header className="border-b border-slate-200 pb-5">
         <div>
-          <p className="text-[18px] font-semibold leading-6 text-slate-500">Teacher Portal</p>
-          <h1 className="mt-1 text-[30px] font-bold leading-tight tracking-[-0.02em] text-[#102449] sm:text-[31px]">Welcome back, {profile.full_name || 'Teacher'}.</h1>
-          <p className="mt-2 max-w-2xl text-[15px] leading-6 text-slate-600">Here is your current teaching operations overview.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">Teacher Portal</p>
+          <h1 className="mt-1 text-[30px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449] sm:text-[31px]">Welcome back, {profile.full_name || 'Teacher'}.</h1>
+          <p className="mt-2 text-[16px] leading-6 text-slate-600">Here is your current teaching operations overview.</p>
         </div>
-        <div className="mt-5 flex justify-end">
-          <div className="flex flex-wrap items-center gap-2">
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {dateRange.from <= dateRange.to ? (
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Reporting period · {rangeLabel}</p>
+          ) : (
+            <p className="text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <DatePicker ariaLabel="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
             <DatePicker ariaLabel="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
           </div>
         </div>
-        {dateRange.from > dateRange.to && <p className="mt-3 text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>}
-        {dateRange.from <= dateRange.to && <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Reporting period · {rangeLabel}</p>}
       </header>
 
       {loading ? (
@@ -155,8 +160,8 @@ export function TeacherDashboardV2() {
             ].map((card) => (
               <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-slate-50"><span className={card.color}><Icon name={card.icon} /></span></div>
-                <p className="mt-5 text-[15px] font-bold text-slate-600">{card.label}</p>
-                <p className="mt-1 text-[27px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449]">{card.value}</p>
+                <p className="mt-5 text-[16px] font-bold text-slate-600">{card.label}</p>
+                <p className="mt-1 text-[28px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449]">{card.value}</p>
               </article>
             ))}
           </section>
@@ -170,10 +175,10 @@ export function TeacherDashboardV2() {
               <p className="text-[15px] font-semibold text-slate-500">{rangeLabel}</p>
             </div>
             <dl className="mt-6 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-xl bg-slate-50 p-4"><dt className="text-[13px] font-semibold text-slate-500">Sessions</dt><dd className="mt-1 text-[22px] font-extrabold text-[#102449]">{attendanceCount}</dd></div>
-              <div className="rounded-xl bg-emerald-50 p-4"><dt className="text-[13px] font-semibold text-emerald-700">Present</dt><dd className="mt-1 text-[22px] font-extrabold text-emerald-800">{presentCount}</dd></div>
-              <div className="rounded-xl bg-rose-50 p-4"><dt className="text-[13px] font-semibold text-rose-700">Absent</dt><dd className="mt-1 text-[22px] font-extrabold text-rose-800">{absentCount}</dd></div>
-              <div className="rounded-xl bg-amber-50 p-4"><dt className="text-[13px] font-semibold text-amber-800">Earned Fee</dt><dd className="mt-1 text-[22px] font-extrabold text-amber-900">{formatRupiah(earnedFee)}</dd></div>
+              <div className="rounded-xl bg-slate-50 p-4"><dt className="text-[14px] font-semibold text-slate-500">Sessions</dt><dd className="mt-1 text-[22px] font-extrabold text-[#102449]">{attendanceCount}</dd></div>
+              <div className="rounded-xl bg-emerald-50 p-4"><dt className="text-[14px] font-semibold text-emerald-700">Present</dt><dd className="mt-1 text-[22px] font-extrabold text-emerald-800">{presentCount}</dd></div>
+              <div className="rounded-xl bg-rose-50 p-4"><dt className="text-[14px] font-semibold text-rose-700">Absent</dt><dd className="mt-1 text-[22px] font-extrabold text-rose-800">{absentCount}</dd></div>
+              <div className="rounded-xl bg-amber-50 p-4"><dt className="text-[14px] font-semibold text-amber-800">Earned Fee</dt><dd className="mt-1 text-[22px] font-extrabold text-amber-900">{formatRupiah(earnedFee)}</dd></div>
             </dl>
             <p className="mt-5 border-t border-slate-200 pt-5 text-[15px] leading-6 text-slate-600">Metrics update from teaching activity inside the selected date range.</p>
           </section>
