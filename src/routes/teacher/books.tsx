@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getTeacherPublishedEbooks, type TeacherEbook } from '../../services/teacher-ebook.service'
 
@@ -94,7 +94,7 @@ function TeacherBooksPage() {
         </section>
       )}
 
-      <div className="text-sm text-slate-500"><Link to="/teacher/overview" className="font-semibold text-blue-700 hover:text-blue-800">← Back to Dashboard</Link></div>
+      <div className="text-sm text-slate-500"><a href="/teacher/overview" className="font-semibold text-blue-700 hover:text-blue-800">← Back to Dashboard</a></div>
     </div>
   )
 }
