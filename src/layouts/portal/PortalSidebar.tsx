@@ -25,34 +25,43 @@ function getInitials(userName: string) {
     .toUpperCase()
 }
 
+function ProfileIdentity({ role, userName, avatarUrl }: { role: 'student' | 'teacher'; userName: string; avatarUrl?: string | null }) {
+  const roleLabel = role === 'student' ? 'Student' : 'Teacher'
+  const heading = role === 'student' ? 'Profil' : 'Teacher'
+
+  return (
+    <>
+      <p className="text-sm font-semibold text-slate-900">{heading}</p>
+      <div className="mt-4 flex items-center gap-3">
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            className="size-11 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600 ring-1 ring-slate-200"
+          >
+            {getInitials(userName)}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{roleLabel}</p>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export function PortalSidebar({ id, role, pathname, userName = 'QuickSpeak user', avatarUrl, onNavigate }: PortalSidebarProps) {
   return (
     <nav id={id} aria-label="Portal navigation" className="flex h-full flex-col overflow-y-auto p-4">
       <div className="px-3 pb-5 pt-1">
-        {role === 'student' ? (
-          <>
-            <p className="text-sm font-semibold text-slate-900">Profil</p>
-            <div className="mt-4 flex items-center gap-3">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="size-11 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
-                />
-              ) : (
-                <div
-                  aria-hidden="true"
-                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600 ring-1 ring-slate-200"
-                >
-                  {getInitials(userName)}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-                <p className="mt-0.5 text-xs text-slate-500">Student</p>
-              </div>
-            </div>
-          </>
+        {role === 'student' || role === 'teacher' ? (
+          <ProfileIdentity role={role} userName={userName} avatarUrl={avatarUrl} />
         ) : (
           <>
             <p className="text-sm font-semibold text-slate-900">{role.charAt(0).toUpperCase()}{role.slice(1)}</p>
