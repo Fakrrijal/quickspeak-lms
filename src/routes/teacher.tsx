@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthContext } from '../providers/AuthProvider'
 import { useTeacherGroupAttendance } from '../hooks/useTeacherGroupAttendance'
 import { useTeacherAttendance } from '../hooks/useTeacherAttendance'
-import { type TeacherAttendanceMeeting, type TeacherAttendancePeriod } from '../services/teacher-attendance.service'
+import { type TeacherAttendanceGroup, type TeacherAttendanceMeeting, type TeacherAttendancePeriod, getMyTeacherAttendance, getMyTeacherAttendanceGroups } from '../services/teacher-attendance.service'
 import { downloadAdminAttendancePdf } from '../utils/admin-attendance-pdf'
 import { summarizeAdminAttendanceOverall, summarizeAdminAttendanceStudents, type AdminAttendanceRecord } from '../services/admin-attendance.service'
+import { getMyTeacherFeeReport, type MyTeacherFeeReport } from '../services/teacher-fee.service'
 
 export const Route = createFileRoute('/teacher')({
   component: TeacherRouteComponent,
@@ -55,6 +56,14 @@ function TeacherRouteComponent() {
 function TeacherDashboard() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
+  const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
+
+  const [groups, setGroups] = useState<TeacherAttendanceGroup[]>([])
+  const [meetings, setMeetings] = useState<TeacherAttendanceMeeting[]>([])
+  const [feeReport, setFeeReport] = useState<MyTeacherFeeReport | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(true)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (authLoading || profileLoading) return
@@ -65,94 +74,141 @@ function TeacherDashboard() {
     }
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
 
+  useEffect(() => {
+    if (!canLoad) return
+    let cancelled = false
+    setSummaryLoading(true)
+    setSummaryError(null)
+
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const year = now.getFullYear()
+    const referenceDate = `${year}-${String(month).padStart(2, '0')}-01`
+
+    Promise.all([
+      getMyTeacherAttendanceGroups(),
+      getMyTeacherAttendance('month', referenceDate),
+      getMyTeacherFeeReport(month, year),
+    ])
+      .then(([groupsData, meetingsData, feeReportData]) => {
+        if (!cancelled) {
+          setGroups(groupsData)
+          setMeetings(meetingsData)
+          setFeeReport(feeReportData)
+          setSummaryLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setSummaryError(err instanceof Error ? err.message : 'Unable to load dashboard summary')
+          setSummaryLoading(false)
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [canLoad, retryCount])
+
   if (authLoading || profileLoading) return <p>Loading...</p>
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
+  const classCount = groups.length
+  const activeStudentCount = new Set(groups.flatMap((group) => group.students.map((student) => student.student_id))).size
+  const feeAmount = feeReport?.period_summary.earned_amount ?? 0
+  const attendanceCount = meetings.filter((meeting) => meeting.teacher_status !== null && meeting.teacher_recorded_at !== null).length
+
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Teacher Dashboard</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Welcome back, {profile.full_name || 'Teacher'}.</p>
-        </header>
+    <div className="mx-auto max-w-6xl">
+      <header className="mb-8">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449] sm:text-4xl">Teacher Dashboard</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Welcome back, {profile.full_name || 'Teacher'}.</p>
+      </header>
 
-        <section className="mb-8 rounded-[24px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Teaching Workspace</h2>
-              <p className="mt-1 text-sm text-slate-600">Manage your assigned teaching groups and attendance.</p>
-            </div>
-            <Link
-              to="/teacher/attendance"
-              className="inline-flex items-center rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]"
-            >
-              Attendance
-            </Link>
+      <section className="mb-8 rounded-[24px] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+        <div>
+          <h2 className="text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Teaching Workspace</h2>
+          <p className="mt-1 text-sm text-slate-600">Manage your assigned teaching groups and attendance.</p>
+        </div>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-4 text-lg font-bold text-slate-900">Dashboard Summary</h2>
+        {summaryLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                <div className="mt-4 h-8 w-16 animate-pulse rounded bg-slate-200" />
+              </div>
+            ))}
           </div>
-        </section>
-
-        <section>
-          <h2 className="mb-4 text-lg font-bold text-slate-900">Quick Actions</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
-              to="/teacher/attendance"
-              className="group overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex size-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-2">
-                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012 2h2a2 2 0 012-2m-6 6l2 2 4-4" />
+        ) : summaryError ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+            <p>{summaryError}</p>
+            <button type="button" onClick={() => setRetryCount((count) => count + 1)} className="mt-3 font-medium underline">Retry</button>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
+                    <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h-1m2-4v4m0 0V8" />
                   </svg>
                 </div>
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 text-slate-400 transition group-hover:text-slate-600">
-                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" />
-                </svg>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Classes</p>
+                  <p className="mt-1 text-2xl font-extrabold text-[#102449]">{classCount}</p>
+                </div>
               </div>
-              <h3 className="mt-4 text-base font-bold text-slate-900">Attendance</h3>
-              <p className="mt-1 text-sm text-slate-600">Record and manage student attendance</p>
-            </Link>
+            </div>
 
-            <Link
-              to="/teacher/fee"
-              className="group overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex size-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-2">
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
+                    <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1a6 6 0 0112 0v-1M12 15a3 3 0 100-6M15 12a3 3 0 11-6 0m3 0a3 3 0 100-6" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Active Students</p>
+                  <p className="mt-1 text-2xl font-extrabold text-[#102449]">{activeStudentCount}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
                     <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 text-slate-400 transition group-hover:text-slate-600">
-                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" />
-                </svg>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Fee (This Month)</p>
+                  <p className="mt-1 text-2xl font-extrabold text-[#102449]">Rp{feeAmount.toLocaleString('id-ID')}</p>
+                </div>
               </div>
-              <h3 className="mt-4 text-base font-bold text-slate-900">Fee</h3>
-              <p className="mt-1 text-sm text-slate-600">View your teacher fee reports</p>
-            </Link>
+            </div>
 
-            <Link
-              to="/teacher/profile"
-              className="group overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-2">
-                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-purple-50 text-purple-700">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012 2h2a2 2 0 012-2m-6 6l2 2 4-4" />
                   </svg>
                 </div>
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 text-slate-400 transition group-hover:text-slate-600">
-                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" />
-                </svg>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Attendance (This Month)</p>
+                  <p className="mt-1 text-2xl font-extrabold text-[#102449]">{attendanceCount}</p>
+                </div>
               </div>
-              <h3 className="mt-4 text-base font-bold text-slate-900">Profile</h3>
-              <p className="mt-1 text-sm text-slate-600">Manage your teacher profile</p>
-            </Link>
+            </div>
           </div>
-        </section>
-      </div>
-    </main>
+        )}
+      </section>
+    </div>
   )
 }
 
@@ -212,11 +268,11 @@ export function TeacherAttendancePage() {
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
 
   if (authLoading || profileLoading) {
-    return <main className="min-h-screen p-8"><p>Loading...</p></main>
+    return <div className="mx-auto max-w-3xl p-8"><p>Loading...</p></div>
   }
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') {
-    return <main className="min-h-screen p-8"><p>Access denied.</p></main>
+    return <div className="mx-auto max-w-3xl p-8"><p>Access denied.</p></div>
   }
 
   const selectGroup = (groupId: string) => {
@@ -271,7 +327,7 @@ export function TeacherAttendancePage() {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <div className="mx-auto max-w-3xl p-8">
       <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-bold text-slate-900">Attendance</h1>
         <p className="mt-2 text-slate-600">Welcome, {profile.full_name || 'Teacher'}. Record today’s attendance for a teaching group.</p>
@@ -373,6 +429,6 @@ export function TeacherAttendancePage() {
         </section>
         {detailStudent && <TeacherAttendanceDetailModal student={detailStudent} records={detailRecords} period={period} referenceDate={referenceDate} onClose={() => setDetailStudentKey(null)} />}
       </div>
-    </main>
+    </div>
   )
 }

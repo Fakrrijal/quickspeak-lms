@@ -27,11 +27,15 @@ function TeacherProfilePage() {
   if (!isAuthenticated || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
-  return <section>
+  return (
+    <div className="p-8">
+      <section>
     <h2 className="text-3xl font-bold text-slate-900">Profile</h2>
     <p className="mt-2 text-slate-600">Manage your contact details and profile photo.</p>
     {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" onClick={() => void reload()} className="font-medium underline">Retry</button></p>}
     {success && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
     <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Teaching Level" levelLabel={teachingLevels.join(', ') || 'No active teaching groups'} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
-  </section>
+    </section>
+    </div>
+  )
 }
