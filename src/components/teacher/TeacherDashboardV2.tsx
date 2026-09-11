@@ -131,18 +131,13 @@ export function TeacherDashboardV2() {
           <p className="mt-2 text-[16px] leading-6 text-slate-600">Here is your current teaching operations overview.</p>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {dateRange.from <= dateRange.to ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Reporting period · {rangeLabel}</p>
-          ) : (
-            <p className="text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        <div className="mt-5 flex justify-end">
+          <div className="flex flex-wrap items-center gap-2">
             <DatePicker ariaLabel="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
             <DatePicker ariaLabel="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
           </div>
         </div>
+        {dateRange.from > dateRange.to && <p className="mt-3 text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>}
       </header>
 
       {loading ? (
