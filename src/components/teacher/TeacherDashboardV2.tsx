@@ -46,12 +46,17 @@ function Icon({ name }: { name: 'group' | 'users' | 'wallet' | 'calendar' }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18" /></svg>
 }
 
-function DatePicker({ label, value, onChange, min, max }: { label: string; value: string; onChange: (value: string) => void; min?: string; max?: string }) {
+function DatePicker({ value, onChange, min, max, ariaLabel }: { value: string; onChange: (value: string) => void; min?: string; max?: string; ariaLabel: string }) {
   return (
-    <label className="block min-w-[170px] text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-      {label}
-      <input type="date" value={value} min={min} max={max} onChange={(event) => onChange(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-semibold normal-case tracking-normal text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-    </label>
+    <input
+      aria-label={ariaLabel}
+      type="date"
+      value={value}
+      min={min}
+      max={max}
+      onChange={(event) => onChange(event.target.value)}
+      className="qs-date-input h-11 w-[174px] rounded-lg border border-slate-300 bg-white px-3 text-[15px] font-medium text-slate-700 shadow-none outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+    />
   )
 }
 
@@ -118,21 +123,21 @@ export function TeacherDashboardV2() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="teacher-dashboard-v2 mx-auto max-w-7xl space-y-6">
       <header className="border-b border-slate-200 pb-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
-            <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#102449] sm:text-4xl">Welcome back, {profile.full_name || 'Teacher'}.</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Here is your current teaching operations overview.</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">Teacher Portal</p>
+            <h1 className="mt-1 text-[31px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449] sm:text-[32px]">Welcome back, {profile.full_name || 'Teacher'}.</h1>
+            <p className="mt-2 max-w-2xl text-[15px] leading-6 text-slate-600">Here is your current teaching operations overview.</p>
           </div>
-          <div className="flex flex-wrap gap-3 lg:justify-end">
-            <DatePicker label="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
-            <DatePicker label="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <DatePicker ariaLabel="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
+            <DatePicker ariaLabel="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
           </div>
         </div>
         {dateRange.from > dateRange.to && <p className="mt-3 text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>}
-        {dateRange.from <= dateRange.to && <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Reporting period · {rangeLabel}</p>}
+        {dateRange.from <= dateRange.to && <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Reporting period · {rangeLabel}</p>}
       </header>
 
       {loading ? (
@@ -150,8 +155,8 @@ export function TeacherDashboardV2() {
             ].map((card) => (
               <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-slate-50"><span className={card.color}><Icon name={card.icon} /></span></div>
-                <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.13em] text-slate-500">{card.label}</p>
-                <p className="mt-1 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{card.value}</p>
+                <p className="mt-5 text-[15px] font-bold text-slate-600">{card.label}</p>
+                <p className="mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449]">{card.value}</p>
               </article>
             ))}
           </section>
@@ -159,18 +164,18 @@ export function TeacherDashboardV2() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
             <div className="flex flex-col gap-2 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Period Overview</p>
-                <h2 className="mt-1 text-xl font-bold text-[#102449]">Teaching activity</h2>
+                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">Period Overview</p>
+                <h2 className="mt-1 text-[21px] font-bold text-[#102449]">Teaching activity</h2>
               </div>
-              <p className="text-sm font-semibold text-slate-500">{rangeLabel}</p>
+              <p className="text-[15px] font-semibold text-slate-500">{rangeLabel}</p>
             </div>
             <dl className="mt-6 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-xl bg-slate-50 p-4"><dt className="text-xs font-semibold text-slate-500">Sessions</dt><dd className="mt-1 text-xl font-extrabold text-[#102449]">{attendanceCount}</dd></div>
-              <div className="rounded-xl bg-emerald-50 p-4"><dt className="text-xs font-semibold text-emerald-700">Present</dt><dd className="mt-1 text-xl font-extrabold text-emerald-800">{presentCount}</dd></div>
-              <div className="rounded-xl bg-rose-50 p-4"><dt className="text-xs font-semibold text-rose-700">Absent</dt><dd className="mt-1 text-xl font-extrabold text-rose-800">{absentCount}</dd></div>
-              <div className="rounded-xl bg-amber-50 p-4"><dt className="text-xs font-semibold text-amber-800">Earned Fee</dt><dd className="mt-1 text-xl font-extrabold text-amber-900">{formatRupiah(earnedFee)}</dd></div>
+              <div className="rounded-xl bg-slate-50 p-4"><dt className="text-[13px] font-semibold text-slate-500">Sessions</dt><dd className="mt-1 text-xl font-extrabold text-[#102449]">{attendanceCount}</dd></div>
+              <div className="rounded-xl bg-emerald-50 p-4"><dt className="text-[13px] font-semibold text-emerald-700">Present</dt><dd className="mt-1 text-xl font-extrabold text-emerald-800">{presentCount}</dd></div>
+              <div className="rounded-xl bg-rose-50 p-4"><dt className="text-[13px] font-semibold text-rose-700">Absent</dt><dd className="mt-1 text-xl font-extrabold text-rose-800">{absentCount}</dd></div>
+              <div className="rounded-xl bg-amber-50 p-4"><dt className="text-[13px] font-semibold text-amber-800">Earned Fee</dt><dd className="mt-1 text-xl font-extrabold text-amber-900">{formatRupiah(earnedFee)}</dd></div>
             </dl>
-            <p className="mt-5 border-t border-slate-200 pt-5 text-sm leading-6 text-slate-600">Metrics update from teaching activity inside the selected date range.</p>
+            <p className="mt-5 border-t border-slate-200 pt-5 text-[15px] leading-6 text-slate-600">Metrics update from teaching activity inside the selected date range.</p>
           </section>
         </>
       )}
