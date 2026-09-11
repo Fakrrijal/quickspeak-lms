@@ -94,7 +94,7 @@ function TeacherBooksPage() {
         </section>
       )}
 
-      <div className="text-sm text-slate-500"><Link to="/teacher" className="font-semibold text-blue-700 hover:text-blue-800">← Back to Dashboard</Link></div>
+      <div className="text-sm text-slate-500"><Link to="/teacher/overview" className="font-semibold text-blue-700 hover:text-blue-800">← Back to Dashboard</Link></div>
     </div>
   )
 }
