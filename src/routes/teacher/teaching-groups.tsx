@@ -44,13 +44,13 @@ function TeacherTeachingGroupsPage() {
   }, [canLoad])
 
   const grouped = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; level: string; packageType: string; students: Array<{ id: string; name: string }> }>()
-    for (const row of groups) {
-      const current = map.get(row.teaching_group_id) ?? { id: row.teaching_group_id, name: row.teaching_group_name, level: row.level_name, packageType: row.package_type, students: [] }
-      if (!current.students.some((student) => student.id === row.student_id)) current.students.push({ id: row.student_id, name: row.student_display_name })
-      map.set(row.teaching_group_id, current)
-    }
-    return [...map.values()]
+    return groups.map((group) => ({
+      id: group.teaching_group_id,
+      name: group.teaching_group_name,
+      level: group.level_name,
+      packageType: group.package_type,
+      students: group.students.map((student) => ({ id: student.student_id, name: student.student_display_name })),
+    }))
   }, [groups])
 
   if (authLoading || profileLoading) return <p>Loading...</p>
