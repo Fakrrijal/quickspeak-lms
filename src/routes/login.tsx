@@ -51,7 +51,7 @@ function LoginPage() {
     }
 
     if (role === 'teacher') {
-      navigate({ to: '/teacher', replace: true })
+      navigate({ to: '/teacher/overview', replace: true })
       return
     }
 

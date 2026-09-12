@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
+import { TeacherLevelAssessmentPanel } from '../../components/teacher/TeacherLevelAssessmentPanel'
 import {
   getMyTeacherLearningProgress,
   markTeacherChapterCompleted,
@@ -29,6 +30,7 @@ type Chapter = {
 }
 
 type LevelSection = {
+  levelId: string | null
   levelNumber: number
   levelName: string
   ebookTitle: string | null
@@ -81,6 +83,7 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
 
   for (const row of selectedRows) {
     const level = levelMap.get(row.level_number) ?? {
+      levelId: row.level_id ?? null,
       levelNumber: row.level_number,
       levelName: row.level_name,
       ebookTitle: row.ebook_title,
@@ -104,6 +107,7 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
 
   return [1, 2, 3, 4]
     .map((levelNumber) => levelMap.get(levelNumber) ?? {
+      levelId: null,
       levelNumber,
       levelName: `Level ${levelNumber}`,
       ebookTitle: null,
@@ -432,6 +436,17 @@ function TeacherLearningProgressPage() {
                   )
                 })}
               </div>
+            )}
+
+            {activeLevel?.levelId && (
+              <TeacherLevelAssessmentPanel
+                studentId={selectedStudent.studentId}
+                levelId={activeLevel.levelId}
+                levelNumber={activeLevel.levelNumber}
+                levelName={activeLevel.levelName}
+                isCurrentLevel={activeLevel.levelNumber === selectedStudent.currentLevelNumber}
+                onCompleted={refresh}
+              />
             )}
           </div>
         </section>
