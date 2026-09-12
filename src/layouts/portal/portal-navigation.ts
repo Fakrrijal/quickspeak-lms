@@ -16,19 +16,12 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
     {
       label: 'Learning',
       items: [
-        {
-          label: 'Dashboard',
-          to: '/student',
-        },
-        {
-          label: 'My Learning',
-          to: '/student/learning',
-          activePrefixes: ['/student/learning', '/student/ebooks/'],
-        },
-        {
-          label: 'Attendance',
-          to: '/student/attendance',
-        },
+        { label: 'Dashboard', to: '/student' },
+        { label: 'My Learning', to: '/student/learning' },
+        { label: 'Books', to: '/student/books', activePrefixes: ['/student/ebooks/'] },
+        { label: 'Assessment', to: '/student/assessment' },
+        { label: 'History', to: '/student/history' },
+        { label: 'Attendance', to: '/student/attendance' },
         { label: 'Profile', to: '/student/profile' },
       ],
     },
@@ -96,6 +89,9 @@ export function isPortalPath(pathname: string) {
   return (
     pathname === '/student'
     || pathname === '/student/learning'
+    || pathname === '/student/books'
+    || pathname === '/student/assessment'
+    || pathname === '/student/history'
     || pathname === '/student/attendance'
     || pathname === '/student/profile'
     || pathname === '/student-payment'
