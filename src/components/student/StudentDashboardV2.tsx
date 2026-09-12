@@ -30,6 +30,7 @@ export function StudentDashboardV2() {
   const [progressRows, setProgressRows] = useState<StudentLearningProgressRow[]>([])
   const [progressLoading, setProgressLoading] = useState(true)
   const [progressError, setProgressError] = useState(false)
+  const [chaptersExpanded, setChaptersExpanded] = useState(false)
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'student' && status === 'active'
   const { attendance, loading: attendanceLoading, error: attendanceError } = useStudentAttendance(canLoad)
 
@@ -131,16 +132,40 @@ export function StudentDashboardV2() {
               </div>
               <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${currentProgressPercent}%` }} /></div>
               {latestAchievement && <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Latest achievement</p><p className="mt-1.5 text-sm font-bold text-emerald-800">✓ Chapter {latestAchievement.chapter_number} — {latestAchievement.chapter_title}</p></div>}
-              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {currentLevelRows.slice(0, 6).map((row) => (
-                  <div key={row.chapter_id} className={`rounded-xl border px-3.5 py-3 ${row.completed_at ? 'border-emerald-100 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/60'}`}>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {row.chapter_number}</p>
-                    <p className="mt-1 text-sm font-bold text-[#102449]">{row.chapter_title}</p>
-                    <p className={`mt-1 text-xs font-bold ${row.completed_at ? 'text-emerald-700' : 'text-slate-500'}`}>{row.completed_at ? '✓ Completed' : 'Not completed yet'}</p>
+
+              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/40">
+                <button
+                  type="button"
+                  onClick={() => setChaptersExpanded((current) => !current)}
+                  aria-expanded={chaptersExpanded}
+                  className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-white sm:px-5"
+                >
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Current Level Chapters</p>
+                    <p className="mt-1 text-sm font-bold text-[#102449]">{currentLevelRows.length} chapters · {currentCompletedRows.length} completed</p>
                   </div>
-                ))}
+                  <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-blue-700">
+                    {chaptersExpanded ? 'Collapse' : 'View chapters'}
+                    <span className={`text-lg transition-transform ${chaptersExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
+                  </span>
+                </button>
+
+                {chaptersExpanded && (
+                  <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
+                    <div className="max-h-[250px] overflow-y-auto pr-1">
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {currentLevelRows.map((row) => (
+                          <div key={row.chapter_id} className={`rounded-xl border px-3.5 py-3 ${row.completed_at ? 'border-emerald-100 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/60'}`}>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {row.chapter_number}</p>
+                            <p className="mt-1 text-sm font-bold text-[#102449]">{row.chapter_title}</p>
+                            <p className={`mt-1 text-xs font-bold ${row.completed_at ? 'text-emerald-700' : 'text-slate-500'}`}>{row.completed_at ? '✓ Completed' : 'Not completed yet'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              {currentLevelRows.length > 6 && <p className="mt-4 text-xs font-semibold text-slate-500">Open My Learning to view all chapters.</p>}
             </div>
           )}
         </div>
