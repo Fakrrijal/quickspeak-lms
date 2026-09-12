@@ -100,7 +100,6 @@ BEGIN
             UPDATE public.enrollments
             SET
                 status = 'payment_pending',
-                payment_rejected_reason = NULL,
                 updated_at = now()
             WHERE id = v_existing.id;
 
