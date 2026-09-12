@@ -16,11 +16,15 @@ function getErrorMessage(error: unknown) {
   }
 
   if (message.includes('already been recorded')) {
-    return 'Attendance has already been saved for this teaching group today.'
+    return 'Attendance has already been saved for this student today.'
   }
 
   if (message.includes('every current active student')) {
     return 'The group changed. Please review the student list and try again.'
+  }
+
+  if (message.includes('exactly one student')) {
+    return 'Please select one student before saving attendance.'
   }
 
   return 'Unable to save attendance. No attendance was recorded.'
