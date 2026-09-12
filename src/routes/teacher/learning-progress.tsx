@@ -91,7 +91,6 @@ function TeacherLearningProgressPage() {
   const [activeSearch, setActiveSearch] = useState('')
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [selectedLevelNumber, setSelectedLevelNumber] = useState<number | null>(null)
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [savingChapterId, setSavingChapterId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -115,7 +114,6 @@ function TeacherLearningProgressPage() {
         setRows(data)
         setSelectedStudentId((current) => current && data.some((row) => row.student_id === current) ? current : null)
         setSelectedLevelNumber(null)
-        setSelectedChapterId(null)
         setLoading(false)
       })
       .catch((loadError) => {
@@ -135,9 +133,6 @@ function TeacherLearningProgressPage() {
   }, [activeSearch, search, students])
   const levels = useMemo(() => buildLevels(rows, selectedStudentId), [rows, selectedStudentId])
   const activeLevel = levels.find((level) => level.levelNumber === selectedLevelNumber) ?? null
-  const activeChapter = activeLevel?.chapters.find((chapter) => chapter.id === selectedChapterId) ?? null
-  const activeChapterIndex = activeLevel?.chapters.findIndex((chapter) => chapter.id === selectedChapterId) ?? -1
-  const nextChapter = activeLevel && activeChapterIndex >= 0 ? activeLevel.chapters[activeChapterIndex + 1] ?? null : null
 
   async function refresh() {
     const refreshed = await getMyTeacherLearningProgress(activeSearch)
@@ -176,7 +171,6 @@ function TeacherLearningProgressPage() {
     setActiveSearch(nextSearch)
     setSelectedStudentId(null)
     setSelectedLevelNumber(null)
-    setSelectedChapterId(null)
     setError(null)
   }
 
@@ -185,51 +179,29 @@ function TeacherLearningProgressPage() {
     setActiveSearch('')
     setSelectedStudentId(null)
     setSelectedLevelNumber(null)
-    setSelectedChapterId(null)
     setError(null)
   }
 
   function selectStudent(studentId: string) {
     setSelectedStudentId(studentId)
     setSelectedLevelNumber(null)
-    setSelectedChapterId(null)
     setError(null)
   }
 
   function selectLevel(levelNumber: number) {
     setSelectedLevelNumber(levelNumber)
-    setSelectedChapterId(null)
-    setError(null)
-  }
-
-  function selectChapter(chapterId: string) {
-    setSelectedChapterId(chapterId)
     setError(null)
   }
 
   function backToStudents() {
     setSelectedStudentId(null)
     setSelectedLevelNumber(null)
-    setSelectedChapterId(null)
     setError(null)
   }
 
   function backToLevels() {
     setSelectedLevelNumber(null)
-    setSelectedChapterId(null)
     setError(null)
-  }
-
-  function backToChapters() {
-    setSelectedChapterId(null)
-    setError(null)
-  }
-
-  function goToNextChapter() {
-    if (!nextChapter) return
-    setSelectedChapterId(nextChapter.id)
-    setError(null)
-    window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0)
   }
 
   if (authLoading || profileLoading) return <p>Loading...</p>
@@ -241,7 +213,7 @@ function TeacherLearningProgressPage() {
       <header className="border-b border-slate-200 pb-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Learning Progress</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Select a student, open the level, then choose the chapter and save the completed learning.</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Select a student, open the level, then save each completed chapter.</p>
       </header>
 
       <form onSubmit={submitSearch} className="sticky top-0 z-20 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center">
@@ -344,7 +316,7 @@ function TeacherLearningProgressPage() {
             </div>
           </div>
         </section>
-      ) : !selectedChapterId ? (
+      ) : (
         <section className="space-y-5">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
@@ -360,80 +332,45 @@ function TeacherLearningProgressPage() {
               <p className="mt-5 text-sm text-slate-600">No chapters configured for this level.</p>
             ) : (
               <div className="mt-5 max-h-[560px] space-y-3 overflow-y-auto pr-2">
-                {activeLevel.chapters.map((chapter) => (
-                  <button
-                    key={chapter.id}
-                    type="button"
-                    onClick={() => selectChapter(chapter.id)}
-                    className="flex w-full items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-left transition hover:border-blue-200 hover:bg-blue-50/50"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {chapter.number}</p>
-                      <p className="mt-1 text-base font-bold text-[#102449]">{chapter.title}</p>
+                {activeLevel.chapters.map((chapter) => {
+                  const saving = savingChapterId === chapter.id
+                  return (
+                    <div
+                      key={chapter.id}
+                      className={`flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${chapter.completedAt ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/60'}`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {chapter.number}</p>
+                        <p className="mt-1 text-base font-bold text-[#102449]">{chapter.title}</p>
+                      </div>
+
+                      {chapter.completedAt ? (
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700">✓ Saved</span>
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => undoChapter(selectedStudent.studentId, chapter.id)}
+                            className="rounded-lg border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {saving ? 'Saving...' : 'Undo'}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => saveChapter(selectedStudent.studentId, chapter.id)}
+                          className="shrink-0 rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {saving ? 'Saving...' : 'Save'}
+                        </button>
+                      )}
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {chapter.completedAt ? <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">✓ Saved</span> : <span className="text-sm font-bold text-blue-700">Open →</span>}
-                    </div>
-                  </button>
-                ))}
+                  )
+                })}
               </div>
             )}
-          </div>
-        </section>
-      ) : (
-        <section className="space-y-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {activeChapter?.number}</p>
-                <h3 className="mt-1 text-2xl font-extrabold text-[#102449]">{activeChapter?.title}</h3>
-                <p className="mt-1 text-sm text-slate-500">{selectedStudent.studentName} · Level {activeLevel?.levelNumber}</p>
-              </div>
-              <button type="button" onClick={backToChapters} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to chapters</button>
-            </div>
-
-            <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Pembelajaran</p>
-              <p className="mt-2 text-lg font-bold text-[#102449]">{activeChapter?.title}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Tandai pembelajaran ini setelah siswa menyelesaikannya.</p>
-            </div>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                {activeChapter?.completedAt ? <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">✓ Saved</span> : <span className="text-sm text-slate-500">Belum disimpan</span>}
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {activeChapter?.completedAt ? (
-                  <button
-                    type="button"
-                    disabled={savingChapterId === activeChapter.id}
-                    onClick={() => undoChapter(selectedStudent.studentId, activeChapter.id)}
-                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {savingChapterId === activeChapter.id ? 'Saving...' : 'Undo Save'}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={savingChapterId === activeChapter.id}
-                    onClick={() => saveChapter(selectedStudent.studentId, activeChapter.id)}
-                    className="rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {savingChapterId === activeChapter.id ? 'Saving...' : 'Save'}
-                  </button>
-                )}
-
-                {activeChapter?.completedAt && nextChapter ? (
-                  <button type="button" onClick={goToNextChapter} className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700">
-                    Pembelajaran Selanjutnya →
-                  </button>
-                ) : activeChapter?.completedAt && !nextChapter ? (
-                  <button type="button" onClick={backToChapters} className="rounded-lg border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100">
-                    Kembali ke daftar chapter
-                  </button>
-                ) : null}
-              </div>
-            </div>
           </div>
         </section>
       )}
