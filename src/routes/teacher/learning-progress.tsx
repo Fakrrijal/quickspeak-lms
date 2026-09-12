@@ -17,6 +17,8 @@ type StudentSummary = {
   studentName: string
   currentLevelNumber: number
   currentLevelName: string
+  latestChapterNumber: number | null
+  latestChapterTitle: string | null
 }
 
 type Chapter = {
@@ -35,16 +37,38 @@ type LevelSection = {
 
 function buildStudentSummaries(rows: TeacherLearningProgressRow[]) {
   const students = new Map<string, StudentSummary>()
+
   for (const row of rows) {
-    if (!students.has(row.student_id)) {
+    const existing = students.get(row.student_id)
+
+    if (!existing) {
       students.set(row.student_id, {
         studentId: row.student_id,
         studentName: row.student_name,
         currentLevelNumber: row.current_level_number,
         currentLevelName: row.current_level_name,
+        latestChapterNumber: row.completed_at && row.chapter_number !== null ? row.chapter_number : null,
+        latestChapterTitle: row.completed_at && row.chapter_title ? row.chapter_title : null,
       })
+      continue
+    }
+
+    if (row.completed_at && row.chapter_number !== null && row.chapter_title) {
+      const existingCompletion = rows.find(
+        (candidate) =>
+          candidate.student_id === existing.studentId &&
+          candidate.chapter_number === existing.latestChapterNumber &&
+          candidate.chapter_title === existing.latestChapterTitle &&
+          candidate.completed_at,
+      )?.completed_at
+
+      if (!existingCompletion || String(row.completed_at) > String(existingCompletion)) {
+        existing.latestChapterNumber = row.chapter_number
+        existing.latestChapterTitle = row.chapter_title
+      }
     }
   }
+
   return [...students.values()].sort((a, b) => a.studentName.localeCompare(b.studentName))
 }
 
@@ -59,6 +83,7 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
       ebookTitle: row.ebook_title,
       chapters: [],
     }
+
     if (row.chapter_id && row.chapter_number !== null && row.chapter_title) {
       level.chapters.push({
         id: row.chapter_id,
@@ -67,6 +92,7 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
         completedAt: row.completed_at,
       })
     }
+
     levelMap.set(row.level_number, level)
   }
 
@@ -108,6 +134,7 @@ function TeacherLearningProgressPage() {
     let cancelled = false
     setLoading(true)
     setError(null)
+
     getMyTeacherLearningProgress(activeSearch)
       .then((data) => {
         if (cancelled) return
@@ -121,6 +148,7 @@ function TeacherLearningProgressPage() {
         setError(loadError instanceof Error ? loadError.message : 'Unable to load learning progress')
         setLoading(false)
       })
+
     return () => { cancelled = true }
   }, [activeSearch, canLoad])
 
@@ -275,7 +303,11 @@ function TeacherLearningProgressPage() {
                       <span className="truncate text-base font-bold text-[#102449]">{student.studentName}</span>
                       <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Level {student.currentLevelNumber}</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-500">{student.currentLevelName}</p>
+                    {student.latestChapterTitle ? (
+                      <p className="mt-2 truncate text-sm font-bold text-emerald-700">✓ Chapter {student.latestChapterNumber} — {student.latestChapterTitle}</p>
+                    ) : (
+                      <p className="mt-2 text-sm text-slate-500">Belum ada chapter yang disimpan</p>
+                    )}
                   </button>
                 ))}
               </div>
