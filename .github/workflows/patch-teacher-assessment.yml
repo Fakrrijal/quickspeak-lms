@@ -1,0 +1,71 @@
+name: Patch teacher assessment UI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch teacher learning progress
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/teacher/learning-progress.tsx')
+          text = path.read_text()
+
+          old_import = "import { useAuthContext } from '../../providers/AuthProvider'\n"
+          new_import = old_import + "import { TeacherLevelAssessmentPanel } from '../../components/teacher/TeacherLevelAssessmentPanel'\n"
+          if "TeacherLevelAssessmentPanel" not in text:
+              text = text.replace(old_import, new_import, 1)
+
+          old_level_type = "type LevelSection = {\n  levelNumber: number\n  levelName: string\n"
+          new_level_type = "type LevelSection = {\n  levelId: string | null\n  levelNumber: number\n  levelName: string\n"
+          if old_level_type in text:
+              text = text.replace(old_level_type, new_level_type, 1)
+
+          old_level_init = "const level = levelMap.get(row.level_number) ?? {\n      levelNumber: row.level_number,\n"
+          new_level_init = "const level = levelMap.get(row.level_number) ?? {\n      levelId: row.level_id ?? null,\n      levelNumber: row.level_number,\n"
+          if old_level_init in text:
+              text = text.replace(old_level_init, new_level_init, 1)
+
+          old_level_fallback = "levelMap.get(levelNumber) ?? {\n      levelNumber,\n      levelName: `Level ${levelNumber}`,\n"
+          new_level_fallback = "levelMap.get(levelNumber) ?? {\n      levelId: null,\n      levelNumber,\n      levelName: `Level ${levelNumber}`,\n"
+          if old_level_fallback in text:
+              text = text.replace(old_level_fallback, new_level_fallback, 1)
+
+          old_select_level = "                {activeLevel.chapters.map((chapter) => {\n                  const saving = savingChapterId === chapter.id\n"
+          # Keep chapter UI intact; assessment panel is inserted after the chapter list.
+          if old_select_level not in text:
+              raise SystemExit('Expected chapter list anchor not found')
+
+          old_tail = "              </div>\n            )}\n          </div>\n        </section>\n      )}\n    </div>\n  )\n}"
+          new_tail = "              </div>\n            )}\n\n            {activeLevel?.levelId && (\n              <TeacherLevelAssessmentPanel\n                studentId={selectedStudent.studentId}\n                levelId={activeLevel.levelId}\n                levelNumber={activeLevel.levelNumber}\n                levelName={activeLevel.levelName}\n                isCurrentLevel={activeLevel.levelNumber === selectedStudent.currentLevelNumber}\n                onCompleted={refresh}\n              />\n            )}\n          </div>\n        </section>\n      )}\n    </div>\n  )\n}"
+          if old_tail not in text:
+              raise SystemExit('Expected component tail not found')
+          text = text.replace(old_tail, new_tail, 1)
+
+          path.write_text(text)
+          PY
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet -- src/routes/teacher/learning-progress.tsx; then
+            echo "No patch required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/teacher/learning-progress.tsx
+          git commit -m "feat: add teacher level completion assessment UI"
+          git push
