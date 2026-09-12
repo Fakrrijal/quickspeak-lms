@@ -263,7 +263,7 @@ export function StudentLearningPageV2() {
             <>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-500">Level {state.level_number} — {state.level_name}</p>
+                  <p className="text-sm font-semibold text-slate-500">{profile.full_name} — Level {state.level_number}</p>
                   <p className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{currentCompletedCount} / {currentLevelRows.length} chapters completed</p>
                 </div>
                 <p className="text-sm font-extrabold text-blue-700">{currentProgressPercent}%</p>
