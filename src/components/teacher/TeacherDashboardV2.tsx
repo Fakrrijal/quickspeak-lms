@@ -38,11 +38,14 @@ function getRangeMonths(range: DateRange) {
   return months
 }
 
-function Icon({ name }: { name: 'group' | 'users' | 'wallet' | 'calendar' }) {
+function Icon({ name }: { name: 'group' | 'users' | 'wallet' | 'calendar' | 'help' | 'mail' | 'whatsapp' }) {
   const common = 'size-5 fill-none stroke-current stroke-2'
   if (name === 'group') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 9h8M8 13h5M8 17h3" /></svg>
-  if (name === 'users') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0-8 0 4 4 0 0 0 0 8Zm9 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+  if (name === 'users') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm9 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
   if (name === 'wallet') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 13h.01" /></svg>
+  if (name === 'help') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><circle cx="12" cy="12" r="9" /><path d="M9.75 9a2.35 2.35 0 1 1 3.62 1.98c-.9.55-1.37 1-1.37 2.02M12 16.8h.01" /></svg>
+  if (name === 'mail') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3.5" y="5" width="17" height="14" rx="2" /><path d="m4.5 7 7.5 6 7.5-6" /></svg>
+  if (name === 'whatsapp') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 11.6a8.1 8.1 0 0 1-12 7l-4 1.1 1.1-3.9a8.1 8.1 0 1 1 14.9-4.2Z" /><path d="M8.5 8.2c.2-.4.4-.4.7.4l.7 1.7c.1.2.1.4 0 .5l.6.7c.5 1 1.2 1.7 2.2 2.2l.7-.6c.2-.1.4-.1.6 0l1.6.8c.3.1.4.3.3.6-.2.8-.9 1.3-1.7 1.3-1.1 0-2.5-.6-3.8-1.8-1.1-1-2.1-2.3-2.4-3.3-.3-.8-.2-1.6-.2-2.1Z" /></svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18" /></svg>
 }
 
@@ -176,6 +179,32 @@ export function TeacherDashboardV2() {
               <div className="rounded-xl bg-amber-50 p-4"><dt className="text-[14px] font-semibold text-amber-800">Unpaid Fee</dt><dd className="mt-1 text-[22px] font-extrabold text-amber-900">{formatRupiah(unpaidFee)}</dd></div>
             </dl>
             <p className="mt-5 border-t border-slate-200 pt-5 text-[15px] leading-6 text-slate-600">Metrics update from teaching activity inside the selected date range.</p>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="teacher-support-title">
+            <div className="grid gap-0 px-6 py-5 sm:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,auto)] xl:items-center">
+              <div className="flex items-start gap-3.5 pb-5 xl:pb-0">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><Icon name="help" /></div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Need Help?</p>
+                  <h2 id="teacher-support-title" className="mt-1 text-lg font-bold tracking-[-0.015em] text-[#102449]">Contact QuickSpeak Admin</h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">Learning, payment, or account questions.</p>
+                </div>
+              </div>
+              <div className="border-t border-slate-200 pt-4 xl:border-l xl:border-t-0 xl:px-6 xl:py-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Support channels</p>
+                <p className="mt-1.5 text-sm font-semibold text-slate-700">Quick assistance for teacher portal questions.</p>
+              </div>
+              <div className="border-t border-slate-200 pt-4 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-1">
+                <div className="flex flex-wrap gap-2">
+                  <a href="mailto:quicspeaklms@gmail.com" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]" aria-label="Email QuickSpeak Admin">
+                    <Icon name="mail" />
+                    <span>Email Admin</span>
+                  </a>
+                  <a href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%20Admin%2C%20saya%20membutuhkan%20bantuan%20terkait%20teacher%20portal." target="_blank" rel="noreferrer" title="WhatsApp Admin" aria-label="WhatsApp Admin" className="inline-flex size-11 items-center justify-center rounded-lg bg-[#102449] text-white transition hover:bg-[#17325f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"><Icon name="whatsapp" /></a>
+                </div>
+              </div>
+            </div>
           </section>
         </>
       )}
