@@ -5,6 +5,12 @@ import { useStudentEbooks } from '../../hooks/useStudentEbooks'
 import { supabase } from '../../lib/supabase'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
+import {
+  getStudentLevelPackageStatus,
+  requestCurrentLevelPackageRenewal,
+  requestNextLevelEnrollmentFromResult,
+  type StudentLevelPackageStatus,
+} from '../../services/level-completion.service'
 
 type PaymentInitialization = {
   invoice_number: string
@@ -33,6 +39,10 @@ function ArrowIcon() {
   )
 }
 
+function formatRupiah(value: number | null | undefined) {
+  return value == null ? '—' : `Rp${value.toLocaleString('id-ID')}`
+}
+
 export function StudentLearningPageV2() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
@@ -42,7 +52,10 @@ export function StudentLearningPageV2() {
   const [progressRows, setProgressRows] = useState<StudentLearningProgressRow[]>([])
   const [progressLoading, setProgressLoading] = useState(true)
   const [progressError, setProgressError] = useState(false)
+  const [packageStatus, setPackageStatus] = useState<StudentLevelPackageStatus | null>(null)
+  const [packageStatusLoading, setPackageStatusLoading] = useState(true)
   const [showPackageSelection, setShowPackageSelection] = useState(false)
+  const [packageAction, setPackageAction] = useState<'renew' | 'next' | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<'private' | 'semi_private' | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [paymentInitialization, setPaymentInitialization] = useState<PaymentInitialization | null>(null)
@@ -64,16 +77,27 @@ export function StudentLearningPageV2() {
 
     let cancelled = false
     setLoading(true)
+    setPackageStatusLoading(true)
     setError(null)
-    getMyLearningState()
-      .then((nextState) => {
-        if (!cancelled) setState(nextState)
-      })
-      .catch((loadError) => {
-        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Unable to load your learning status.')
+
+    Promise.allSettled([getMyLearningState(), getStudentLevelPackageStatus()])
+      .then(([learningResult, packageResult]) => {
+        if (cancelled) return
+
+        if (learningResult.status === 'fulfilled') {
+          setState(learningResult.value)
+        } else {
+          setError(learningResult.reason instanceof Error ? learningResult.reason.message : 'Unable to load your learning status.')
+        }
+
+        if (packageResult.status === 'fulfilled') {
+          setPackageStatus(packageResult.value)
+        }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (cancelled) return
+        setLoading(false)
+        setPackageStatusLoading(false)
       })
 
     return () => { cancelled = true }
@@ -91,7 +115,10 @@ export function StudentLearningPageV2() {
     return () => { cancelled = true }
   }, [canLoadEbooks])
 
-  const completed = Boolean(state && (state.enrollment_status === 'completed' || state.completed_at || state.completed_sessions >= state.session_limit))
+  const packageCompleted = Boolean(packageStatus?.current_package_session_count >= packageStatus.session_limit)
+  const levelCompleted = Boolean(packageStatus?.level_completed)
+  const legacyCompleted = Boolean(state && (state.enrollment_status === 'completed' || state.completed_at || state.completed_sessions >= state.session_limit))
+  const completed = levelCompleted || (packageStatus ? packageCompleted && levelCompleted : legacyCompleted)
   const assigned = Boolean(state?.teaching_group_id && state?.teacher_id)
   const currentLevelRows = useMemo(() => state ? progressRows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [progressRows, state])
   const historicalLevels = useMemo(() => {
@@ -107,22 +134,43 @@ export function StudentLearningPageV2() {
   const currentCompletedCount = currentLevelRows.filter((row) => row.completed_at).length
   const currentProgressPercent = currentLevelRows.length ? Math.round((currentCompletedCount / currentLevelRows.length) * 100) : 0
 
+  const initializeEnrollmentPayment = async (enrollmentId: string) => {
+    const { data: paymentData, error: paymentError } = await supabase.rpc('initialize_enrollment_payment', { p_enrollment_id: enrollmentId })
+    if (paymentError) throw paymentError
+    const payment = Array.isArray(paymentData) ? paymentData[0] : paymentData
+    if (!payment) throw new Error('Payment initialization did not return payment details')
+    setPaymentInitialization({
+      invoice_number: payment.invoice_number,
+      payment_amount: payment.payment_amount,
+      payment_status: payment.payment_status,
+    })
+  }
+
   const handleChoosePackage = async (packageType: 'private' | 'semi_private') => {
     setSubmitting(true)
     setError(null)
     setSelectedPackage(packageType)
     try {
-      const { data: enrollment, error: enrollmentError } = await supabase.rpc('create_student_enrollment', { p_package_type: packageType })
-      if (enrollmentError) throw enrollmentError
-      const enrollmentId = enrollment?.id
+      let enrollmentId: string | undefined
+
+      if (packageAction === 'renew') {
+        const enrollment = await requestCurrentLevelPackageRenewal()
+        enrollmentId = enrollment.enrollment_id
+      } else if (packageAction === 'next') {
+        const enrollment = await requestNextLevelEnrollmentFromResult(packageType)
+        enrollmentId = enrollment.enrollment_id
+      } else {
+        const { data: enrollment, error: enrollmentError } = await supabase.rpc('create_student_enrollment', { p_package_type: packageType })
+        if (enrollmentError) throw enrollmentError
+        enrollmentId = enrollment?.id
+      }
+
       if (!enrollmentId) throw new Error('Enrollment creation did not return an enrollment ID')
-      const { data: paymentData, error: paymentError } = await supabase.rpc('initialize_enrollment_payment', { p_enrollment_id: enrollmentId })
-      if (paymentError) throw paymentError
-      const payment = Array.isArray(paymentData) ? paymentData[0] : paymentData
-      if (!payment) throw new Error('Payment initialization did not return payment details')
-      setPaymentInitialization({ invoice_number: payment.invoice_number, payment_amount: payment.payment_amount, payment_status: payment.payment_status })
+      await initializeEnrollmentPayment(enrollmentId)
       setSuccess(true)
+      setShowPackageSelection(false)
       setState(null)
+      setPackageStatus(null)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to start the selected package.')
     } finally {
@@ -153,7 +201,7 @@ export function StudentLearningPageV2() {
         </header>
         <section className="border border-emerald-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-slate-900">Payment amount</p>
-          <p className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">Rp{paymentInitialization?.payment_amount.toLocaleString('id-ID')}</p>
+          <p className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{formatRupiah(paymentInitialization?.payment_amount)}</p>
           <Link to="/student-payment" className="mt-5 inline-flex items-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">View Payment</Link>
         </section>
       </section>
@@ -165,12 +213,17 @@ export function StudentLearningPageV2() {
   }
 
   if (!state || (completed && showPackageSelection)) {
+    const isRenewal = packageAction === 'renew'
     return (
       <section className="space-y-6">
         <header className="border-b border-slate-200 pb-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Learning</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">Choose Learning Package</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Select your package for the next learning stage.</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">{isRenewal ? 'Perpanjang Paket' : 'Choose Learning Package'}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            {isRenewal
+              ? `Paket Level ${packageStatus?.current_level_number ?? state?.level_number ?? ''} sudah 8/8 sesi. Pilih jenis paket yang sama untuk melanjutkan level ini.`
+              : 'Select your package for the next learning stage.'}
+          </p>
         </header>
         <div className="grid gap-4 md:grid-cols-2">
           {([['private', 'Private', 'One-to-one learning'], ['semi_private', 'Semi-Private', 'Small-group learning']] as const).map(([value, name, description]) => (
@@ -178,7 +231,12 @@ export function StudentLearningPageV2() {
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Package</p>
               <h2 className="mt-2 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{name}</h2>
               <p className="mt-1.5 text-sm leading-6 text-slate-600">{description}</p>
-              <span className="mt-5 inline-flex text-sm font-bold text-blue-700">Choose package <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
+              {isRenewal && (
+                <p className="mt-3 text-sm font-bold text-slate-900">
+                  {packageStatus?.current_package_type === value ? `Continue at ${formatRupiah(packageStatus.current_package_price)}` : 'Choose package type'}
+                </p>
+              )}
+              <span className="mt-5 inline-flex text-sm font-bold text-blue-700">{isRenewal ? 'Perpanjang paket' : 'Choose package'} <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
             </button>
           ))}
         </div>
@@ -187,20 +245,8 @@ export function StudentLearningPageV2() {
     )
   }
 
-  if (completed) {
-    return (
-      <section className="space-y-6">
-        <header className="border-b border-slate-200 pb-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">Stage Completed</p>
-          <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">Level {state.level_number} completed</h1>
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">You have completed {state.session_limit} sessions. Continue to the next stage when you are ready.</p>
-        </header>
-        <section className="border border-slate-200 bg-white p-6 shadow-sm">
-          <button type="button" onClick={() => setShowPackageSelection(true)} className="inline-flex items-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">Continue to Next Stage <span className="ml-2">→</span></button>
-        </section>
-      </section>
-    )
-  }
+  const needsRenewal = Boolean(packageStatus && packageStatus.renewal_available)
+  const canChooseNextLevel = Boolean(packageStatus && packageStatus.level_completed && packageStatus.next_level_available)
 
   const ebookSlots = [1, 2, 3, 4].map((levelNumber) => ({
     levelNumber,
@@ -231,7 +277,7 @@ export function StudentLearningPageV2() {
           <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ['Package', formatPackage(state.package_type)],
-              ['Sessions', `${state.completed_sessions}/${state.session_limit}`],
+              ['Sessions', packageStatus ? `${packageStatus.current_package_session_count}/${packageStatus.session_limit}` : `${state.completed_sessions}/${state.session_limit}`],
               ['Teaching Group', state.teaching_group_name ?? 'Not assigned yet'],
               ['Teacher', state.teacher_code ?? 'Not assigned yet'],
             ].map(([label, value], index) => (
@@ -243,6 +289,27 @@ export function StudentLearningPageV2() {
           </div>
 
           {!assigned && <div className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3"><p className="text-sm leading-6 text-amber-900">Your payment has been approved. The administrator will assign your teaching group and teacher.</p></div>}
+
+          {!packageStatusLoading && needsRenewal && !levelCompleted && (
+            <div className="mt-5 flex flex-col gap-4 border border-blue-200 bg-blue-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-extrabold text-[#102449]">Paket selesai 8/8</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">Level masih berjalan. Perpanjang paket dengan jenis paket yang sama.</p>
+                <p className="mt-1 text-xs font-bold text-blue-700">Sesi kumulatif Level {packageStatus?.current_level_number}: {packageStatus?.cumulative_level_session_count}</p>
+              </div>
+              <button type="button" onClick={() => { setPackageAction('renew'); setShowPackageSelection(true) }} className="inline-flex items-center justify-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">Perpanjang Paket <span className="ml-2">→</span></button>
+            </div>
+          )}
+
+          {!packageStatusLoading && levelCompleted && canChooseNextLevel && (
+            <div className="mt-5 flex flex-col gap-4 border border-emerald-200 bg-emerald-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-extrabold text-emerald-900">Level {packageStatus?.current_level_number} selesai</p>
+                <p className="mt-1 text-sm leading-6 text-emerald-800">Teacher sudah menyelesaikan level. Anda dapat memilih paket untuk Level {packageStatus?.next_level_number}.</p>
+              </div>
+              <button type="button" onClick={() => { setPackageAction('next'); setShowPackageSelection(true) }} className="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-800">Pilih Paket Level Berikutnya <span className="ml-2">→</span></button>
+            </div>
+          )}
         </div>
       </section>
 
