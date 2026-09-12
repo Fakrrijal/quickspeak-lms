@@ -18,6 +18,11 @@ export type TeacherLearningProgressRow = {
   material_number: number | null
   material_title: string | null
   completed_at: string | null
+  teaching_group_id: string | null
+  teaching_group_name: string | null
+  teacher_id: string | null
+  teacher_name: string | null
+  teacher_code: string | null
 }
 
 export async function getMyTeacherLearningProgress(search?: string) {
