@@ -127,7 +127,7 @@ export async function recordTeacherGroupAttendance({
   teachingGroupId,
   attendance,
 }: RecordTeacherGroupAttendanceInput) {
-  const { data, error } = await supabase.rpc('record_my_teacher_group_attendance', {
+  const { data, error } = await supabase.rpc('record_my_teacher_group_attendance_v2', {
     p_teaching_group_id: teachingGroupId,
     p_attendance: attendance.map((entry) => ({
       student_id: entry.studentId,
