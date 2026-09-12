@@ -32,6 +32,9 @@ type LevelSection = {
   levelNumber: number
   levelName: string
   ebookTitle: string | null
+  teachingGroupName: string | null
+  teacherName: string | null
+  teacherCode: string | null
   chapters: Chapter[]
 }
 
@@ -81,6 +84,9 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
       levelNumber: row.level_number,
       levelName: row.level_name,
       ebookTitle: row.ebook_title,
+      teachingGroupName: row.teaching_group_name,
+      teacherName: row.teacher_name,
+      teacherCode: row.teacher_code,
       chapters: [],
     }
 
@@ -101,6 +107,9 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
       levelNumber,
       levelName: `Level ${levelNumber}`,
       ebookTitle: null,
+      teachingGroupName: null,
+      teacherName: null,
+      teacherCode: null,
       chapters: [],
     })
     .map((level) => ({
@@ -334,6 +343,9 @@ function TeacherLearningProgressPage() {
                 </div>
                 <p className="mt-2 text-sm text-slate-600">Chapter {latestSavedAchievement.chapter_number} — {latestSavedAchievement.chapter_title}</p>
                 <p className="mt-1 text-sm font-bold text-emerald-700">✓ {latestSavedAchievement.material_title}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">
+                  {latestSavedAchievement.teaching_group_name ?? 'Group not available'} · {latestSavedAchievement.teacher_name ?? latestSavedAchievement.teacher_code ?? 'Teacher not available'}
+                </p>
               </div>
             )}
 
@@ -357,7 +369,8 @@ function TeacherLearningProgressPage() {
                       <span className="text-lg" aria-hidden="true">{unlocked ? '→' : '🔒'}</span>
                     </div>
                     <p className="mt-2 text-base font-extrabold text-[#102449]">{level.levelName}</p>
-                    {unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">{level.chapters.length} chapters</p>}
+                    {unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">{level.teachingGroupName ?? 'Group not available'} · {level.teacherName ?? level.teacherCode ?? 'Teacher not available'}</p>}
+                    {unlocked && <p className="mt-1 text-xs font-semibold text-slate-500">{level.chapters.length} chapters</p>}
                     {!unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">Not taken yet</p>}
                   </button>
                 )
@@ -370,8 +383,8 @@ function TeacherLearningProgressPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Level {activeLevel?.levelNumber}</p>
-                <h3 className="mt-1 text-xl font-extrabold text-[#102449]">{activeLevel?.levelName}</h3>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{activeLevel?.teachingGroupName ?? 'Group not available'} · {activeLevel?.teacherName ?? activeLevel?.teacherCode ?? 'Teacher not available'}</p>
+                <h3 className="mt-1 text-xl font-extrabold text-[#102449]">Level {activeLevel?.levelNumber} · {activeLevel?.levelName}</h3>
                 {activeLevel?.ebookTitle && <p className="mt-1 text-sm text-slate-500">{activeLevel.ebookTitle}</p>}
               </div>
               <button type="button" onClick={backToLevels} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to levels</button>
