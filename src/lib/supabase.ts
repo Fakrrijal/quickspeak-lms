@@ -7,10 +7,10 @@ import { createClient } from '@supabase/supabase-js'
 // database access remains protected by Supabase RLS.
 const supabaseUrl =
   import.meta.env.VITE_SUPABASE_URL ||
-  'https://qqexvikrcztgctlcivajf.supabase.co'
+  'https://qqexvikrcztgtclivajf.supabase.co'
 const supabasePublishableKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  'sb_publishable_bg-WP3ZzYp09Vkv5LbK3YA_04Dzi2QN'
+  'sb_publishable_bg-WP3ZzYp09Vkv5Lbk3YA_O4Dzi2QN'
 
 type EmailConfirmationCallback = {
   accessToken: string | null
