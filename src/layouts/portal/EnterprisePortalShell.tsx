@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { PortalHeader } from './PortalHeader'
 import { PortalSidebar } from './PortalSidebar'
 import type { PortalRole } from './portal-navigation'
+import { PortalFooter } from '../../components/portal/PortalFooter'
 
 type EnterprisePortalShellProps = {
   role: PortalRole
@@ -26,6 +27,7 @@ export function EnterprisePortalShell({
 }: EnterprisePortalShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isStudentPortal = role === 'student'
+  const isSupportPortal = role === 'student' || role === 'teacher'
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -94,6 +96,8 @@ export function EnterprisePortalShell({
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
+
+      {isSupportPortal && <PortalFooter role={role} />}
     </div>
   )
 }
