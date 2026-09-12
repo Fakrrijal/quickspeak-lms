@@ -3,7 +3,6 @@ import { useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendance, type TeacherAttendanceMeeting } from '../../services/teacher-attendance.service'
 import { getMyTeacherFeeReport, type MyTeacherFeeReport } from '../../services/teacher-fee.service'
-import { getMyTeacherLearningProgress, type TeacherLearningProgressRow } from '../../services/teacher-learning-progress.service'
 
 type DateRange = { from: string; to: string }
 
@@ -42,7 +41,7 @@ function getRangeMonths(range: DateRange) {
 function Icon({ name }: { name: 'group' | 'users' | 'wallet' | 'calendar' }) {
   const common = 'size-5 fill-none stroke-current stroke-2'
   if (name === 'group') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 9h8M8 13h5M8 17h3" /></svg>
-  if (name === 'users') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm9 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+  if (name === 'users') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0-8 0 4 4 0 0 0 0 8Zm9 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
   if (name === 'wallet') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 13h.01" /></svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18" /></svg>
 }
@@ -72,11 +71,8 @@ export function TeacherDashboardV2() {
   })
   const [meetings, setMeetings] = useState<TeacherAttendanceMeeting[]>([])
   const [feeReports, setFeeReports] = useState<MyTeacherFeeReport[]>([])
-  const [learningRows, setLearningRows] = useState<TeacherLearningProgressRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [learningLoading, setLearningLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [learningError, setLearningError] = useState<string | null>(null)
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
 
   useEffect(() => {
@@ -84,25 +80,6 @@ export function TeacherDashboardV2() {
     if (!isAuthenticated || !profile || profileError || status === null) navigate({ to: '/login', replace: true })
     else if (status === 'waiting') navigate({ to: '/waiting', replace: true })
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
-
-  useEffect(() => {
-    if (!canLoad) return
-    let cancelled = false
-    setLearningLoading(true)
-    setLearningError(null)
-    getMyTeacherLearningProgress()
-      .then((data) => {
-        if (cancelled) return
-        setLearningRows(data)
-        setLearningLoading(false)
-      })
-      .catch((loadError) => {
-        if (cancelled) return
-        setLearningError(loadError instanceof Error ? loadError.message : 'Unable to load learning progress')
-        setLearningLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [canLoad])
 
   useEffect(() => {
     if (!canLoad || dateRange.from > dateRange.to) return
@@ -139,15 +116,6 @@ export function TeacherDashboardV2() {
   const presentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'present').length
   const absentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'absent').length
   const unpaidFee = useMemo(() => feeReports.reduce((total, report) => total + Math.max(report.period_summary.outstanding_amount, 0), 0), [feeReports])
-  const latestAchievements = useMemo(() => {
-    const latest = new Map<string, TeacherLearningProgressRow>()
-    for (const row of learningRows) {
-      if (!row.material_id || !row.completed_at) continue
-      const current = latest.get(row.student_id)
-      if (!current || String(row.completed_at) > String(current.completed_at)) latest.set(row.student_id, row)
-    }
-    return [...latest.values()].sort((a, b) => a.student_name.localeCompare(b.student_name))
-  }, [learningRows])
   const rangeLabel = `${formatDate(dateRange.from)} – ${formatDate(dateRange.to)}`
 
   if (authLoading || profileLoading) return <p>Loading...</p>
@@ -208,34 +176,6 @@ export function TeacherDashboardV2() {
               <div className="rounded-xl bg-amber-50 p-4"><dt className="text-[14px] font-semibold text-amber-800">Unpaid Fee</dt><dd className="mt-1 text-[22px] font-extrabold text-amber-900">{formatRupiah(unpaidFee)}</dd></div>
             </dl>
             <p className="mt-5 border-t border-slate-200 pt-5 text-[15px] leading-6 text-slate-600">Metrics update from teaching activity inside the selected date range.</p>
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-            <div className="border-b border-slate-200 pb-5">
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">Learning Progress</p>
-              <h2 className="mt-1 text-[21px] font-bold text-[#102449]">Latest achievement</h2>
-            </div>
-
-            {learningError ? (
-              <p className="mt-5 text-sm text-rose-700">{learningError}</p>
-            ) : learningLoading ? (
-              <div className="mt-5 space-y-3">{[1, 2].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-50" />)}</div>
-            ) : latestAchievements.length === 0 ? (
-              <p className="mt-5 text-sm text-slate-600">No completed learning material yet.</p>
-            ) : (
-              <div className="mt-5 space-y-3">
-                {latestAchievements.map((achievement) => (
-                  <div key={achievement.student_id} className="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-bold text-[#102449]">{achievement.student_name}</p>
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">{achievement.level_name}</span>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600">Chapter {achievement.chapter_number} — {achievement.chapter_title}</p>
-                    <p className="mt-1 text-sm font-bold text-emerald-700">✓ {achievement.material_title}</p>
-                  </div>
-                ))}
-              </div>
-            )}
           </section>
         </>
       )}
