@@ -17,6 +17,51 @@
   }
 }
 
+/* QuickSpeak portal sidebar — Option B: navy identity header + clean white menu. */
+@media (min-width: 768px) {
+  aside > div:first-child {
+    position: relative;
+    overflow: hidden;
+    background: #102449 !important;
+    color: #ffffff !important;
+  }
+
+  aside > div:first-child::after {
+    content: '';
+    position: absolute;
+    right: -34px;
+    bottom: -58px;
+    width: 150px;
+    height: 150px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    pointer-events: none;
+  }
+
+  aside > div:first-child * {
+    color: #ffffff !important;
+  }
+
+  aside > div:first-child img {
+    position: relative;
+    z-index: 1;
+  }
+
+  aside a:hover {
+    background: #f3f7ff;
+  }
+
+  aside a[class*='bg-slate-100'] {
+    background: #eaf2ff !important;
+    color: #155eef !important;
+    box-shadow: inset 3px 0 0 #155eef;
+  }
+
+  aside a[class*='bg-slate-100'] * {
+    color: #155eef !important;
+  }
+}
+
 .hero {
   position: relative;
 
