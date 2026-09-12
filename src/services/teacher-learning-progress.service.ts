@@ -14,6 +14,9 @@ export type TeacherLearningProgressRow = {
   chapter_id: string | null
   chapter_number: number | null
   chapter_title: string | null
+  material_id: string | null
+  material_number: number | null
+  material_title: string | null
   completed_at: string | null
 }
 
