@@ -5,6 +5,7 @@ import { useStudentEbooks } from '../../hooks/useStudentEbooks'
 import { supabase } from '../../lib/supabase'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
+import { StudentLevelAssessmentHistory } from './StudentLevelAssessmentHistory'
 import {
   getStudentLevelPackageStatus,
   requestCurrentLevelPackageRenewal,
@@ -364,6 +365,8 @@ export function StudentLearningPageV2() {
           )}
         </div>
       </section>
+
+      <StudentLevelAssessmentHistory />
 
       <section className="border border-slate-200 bg-white shadow-sm" aria-labelledby="learning-materials-title">
         <div className="flex flex-col gap-2 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
