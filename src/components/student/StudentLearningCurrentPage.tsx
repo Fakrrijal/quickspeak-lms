@@ -9,12 +9,8 @@ import { StudentAssessmentPage } from './StudentAssessmentPage'
 import { StudentBooksPage } from './StudentBooksPage'
 import { StudentHistoryPage } from './StudentHistoryPage'
 
-function formatPackage(value: StudentLearningState['package_type']) {
-  return value === 'private' ? 'Private' : 'Semi-Private'
-}
-function rupiah(value: number | null | undefined) {
-  return value == null ? '—' : `Rp${value.toLocaleString('id-ID')}`
-}
+function formatPackage(value: StudentLearningState['package_type']) { return value === 'private' ? 'Private' : 'Semi-Private' }
+function rupiah(value: number | null | undefined) { return value == null ? '—' : `Rp${value.toLocaleString('id-ID')}` }
 
 export function StudentLearningCurrentPage() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
@@ -29,6 +25,7 @@ export function StudentLearningCurrentPage() {
   const [submitting, setSubmitting] = useState(false)
   const [payment, setPayment] = useState<{ invoice_number: string; payment_amount: number } | null>(null)
   const view = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('view') : null
+  const currentRows = useMemo(() => state ? rows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [rows, state])
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'student' && status === 'active'
   useEffect(() => {
@@ -61,7 +58,6 @@ export function StudentLearningCurrentPage() {
   if (view === 'history') return <StudentHistoryPage />
   if (loading) return <section className="border border-slate-200 bg-white p-6 shadow-sm"><div className="h-3 w-28 animate-pulse rounded bg-slate-200" /><div className="mt-4 h-8 w-72 animate-pulse rounded bg-slate-100" /></section>
 
-  const currentRows = useMemo(() => state ? rows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [rows, state])
   const completedCount = currentRows.filter((row) => row.completed_at).length
   const progressPercent = currentRows.length ? Math.round((completedCount / currentRows.length) * 100) : 0
   const assigned = Boolean(state?.teaching_group_id && state?.teacher_id)
