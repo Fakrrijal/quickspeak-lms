@@ -50,6 +50,22 @@ export type StudentLevelPackageStatus = {
   next_level_available: boolean
 }
 
+export type TeacherLevelPackageStatus = {
+  student_id: string
+  level_id: string
+  level_name: string
+  level_number: number
+  level_completed: boolean
+  current_enrollment_id: string | null
+  current_package_type: 'private' | 'semi_private' | null
+  current_package_price: number | null
+  current_package_status: string | null
+  current_package_session_count: number
+  session_limit: number
+  cumulative_level_session_count: number
+  renewal_available: boolean
+}
+
 export type RenewalEnrollmentRequest = {
   enrollment_id: string
   level_id: string
@@ -94,6 +110,19 @@ export async function getTeacherLevelResult(
 
   if (error) throw error
   return firstRow(data) as LevelResult | null
+}
+
+export async function getTeacherLevelPackageStatus(
+  studentId: string,
+  levelId: string,
+): Promise<TeacherLevelPackageStatus | null> {
+  const { data, error } = await supabase.rpc('get_my_teacher_student_level_package_status', {
+    p_student_id: studentId,
+    p_level_id: levelId,
+  })
+
+  if (error) throw error
+  return firstRow(data) as TeacherLevelPackageStatus | null
 }
 
 export async function getStudentLevelResults(levelId?: string): Promise<LevelResult[]> {
