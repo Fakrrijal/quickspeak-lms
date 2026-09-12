@@ -1,5 +1,7 @@
--- Allow a rejected next-level payment to be retried without returning
--- an enrollment state that initialize_enrollment_payment cannot accept.
+-- Rejected next-level payments remain historical records.
+-- A new request creates a fresh payment_pending enrollment using the
+-- package type selected by the student, so package choice and price remain
+-- consistent with the new invoice.
 -- Feature branch only; not applied to production yet.
 
 CREATE OR REPLACE FUNCTION public.request_next_level_enrollment(
@@ -88,32 +90,13 @@ BEGIN
           'payment_submitted',
           'payment_approved',
           'teacher_assignment',
-          'active',
-          'payment_rejected'
+          'active'
       )
     ORDER BY e.created_at DESC, e.id DESC
     LIMIT 1
     FOR UPDATE;
 
     IF FOUND THEN
-        IF v_existing.status = 'payment_rejected' THEN
-            UPDATE public.enrollments
-            SET
-                status = 'payment_pending',
-                updated_at = now()
-            WHERE id = v_existing.id;
-
-            RETURN QUERY
-            SELECT
-                v_existing.id,
-                v_existing.level_id,
-                v_existing.package_type,
-                v_existing.price,
-                v_existing.session_limit,
-                'payment_pending'::text;
-            RETURN;
-        END IF;
-
         RAISE EXCEPTION 'Student already has an enrollment in progress for the next level'
             USING ERRCODE = 'P0001';
     END IF;
