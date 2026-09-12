@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+// Vite injects VITE_* values at build time. Cloudflare's current build
+// configuration has not been reliably exposing them to every preview build,
+// so keep a public-client fallback here to prevent a blank SPA when the build
+// environment is missing. The publishable key is intended for browser use;
+// database access remains protected by Supabase RLS.
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://qqexvikrcztgctlcivajf.supabase.co'
 const supabasePublishableKey =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-
-if (!supabaseUrl) {
-  throw new Error('Missing VITE_SUPABASE_URL')
-}
-
-if (!supabasePublishableKey) {
-  throw new Error('Missing VITE_SUPABASE_PUBLISHABLE_KEY')
-}
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  'sb_publishable_bg-WP3ZzYp09Vkv5LbK3YA_04Dzi2QN'
 
 type EmailConfirmationCallback = {
   accessToken: string | null
