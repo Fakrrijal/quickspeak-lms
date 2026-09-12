@@ -12,10 +12,10 @@ type GuideItem = { title: string; steps: string[] }
 
 function WhatsAppIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 32 32" className="size-7" role="img">
-      <circle cx="16" cy="16" r="15" fill="#25D366" />
+    <svg aria-hidden="true" viewBox="0 0 48 48" className="size-9" role="img">
+      <circle cx="24" cy="24" r="23" fill="#25D366" />
       <path
-        d="M11.1 22.7 12.3 19a7.9 7.9 0 1 1 3.2 3.1l-4.4 1.6Zm4.3-4.2c.8.4 1.7.6 2.7.6 2.8 0 5-2.2 5-5s-2.2-5-5-5-5 2.2-5 5c0 1 .3 2 .9 2.8l-.7 2.1 2.1-.5Zm-.4-6.1c.2-.4.4-.5.7-.1l.8.8c.2.2.2.4.1.6l-.4.6c-.1.2-.1.4 0 .6.5.9 1.2 1.6 2.1 2.1.2.1.4.1.6 0l.5-.4c.2-.2.4-.2.6 0l.8.8c.3.3.2.5-.1.7-.3.2-.7.4-1.1.4-.8 0-1.8-.5-2.8-1.3-1-.8-1.8-1.8-2.2-2.7-.3-.6-.2-1.3.4-2.1Z"
+        d="M14.8 35.1 16.9 29a11.9 11.9 0 1 1 4.8 4.7l-6.9 2.4Zm6.4-6.7c1.2.6 2.7.9 4.3.9 4.4 0 8-3.6 8-8s-3.6-8-8-8-8 3.6-8 8c0 1.6.5 3.1 1.4 4.3l-1.1 3.6 3.4-.8Zm-.6-9.2c.3-.7.7-.8 1.1-.2l1.4 1.3c.3.3.4.7.1 1.1l-.7 1c-.2.3-.2.6 0 .9.8 1.4 1.8 2.5 3.3 3.3.3.2.6.2.9 0l1-.7c.4-.3.8-.2 1.1.1l1.4 1.4c.5.5.4.9-.2 1.3-.5.4-1.1.6-1.8.6-1.3 0-2.9-.8-4.4-2-1.7-1.3-3-3-3.7-4.5-.5-1-.3-2.2.5-3.6Z"
         fill="#fff"
       />
     </svg>
@@ -170,9 +170,38 @@ export function PortalFooter({ role }: PortalFooterProps) {
               )}
 
               {section === 'contact' && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <a href="mailto:quickspeaklms@gmail.com" className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"><MailIcon />Email Admin</a>
-                  <a href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%20Admin%2C%20saya%20membutuhkan%20bantuan%20terkait%20portal." target="_blank" rel="noreferrer" aria-label="WhatsApp Admin" title="WhatsApp Admin — 082138138564" className="inline-flex items-center justify-center rounded-lg border border-[#25D366] bg-white px-4 py-3 transition hover:bg-emerald-50"><WhatsAppIcon /></a>
+                <div className="space-y-5">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Email Admin</p>
+                      <p className="mt-1.5 break-all text-sm font-bold text-[#102449]">quickspeaklms@gmail.com</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">WhatsApp Admin</p>
+                      <p className="mt-1.5 text-sm font-bold text-[#102449]">082138138564</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <a
+                      href="mailto:quickspeaklms@gmail.com"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                    >
+                      <MailIcon />
+                      Kirim Email
+                    </a>
+                    <a
+                      href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%20Admin%2C%20saya%20membutuhkan%20bantuan%20terkait%20portal."
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="WhatsApp Admin"
+                      title="WhatsApp Admin — 082138138564"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#20bd5a]"
+                    >
+                      <WhatsAppIcon />
+                      WhatsApp Admin
+                    </a>
+                  </div>
                 </div>
               )}
 
