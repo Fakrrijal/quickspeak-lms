@@ -22,5 +22,12 @@ export async function getMyStudentLearningProgress(): Promise<StudentLearningPro
     throw error
   }
 
-  return (data ?? []) as StudentLearningProgressRow[]
+  const rows = (data ?? []) as StudentLearningProgressRow[]
+  const currentLevelNumber = rows[0]?.current_level_number
+
+  if (currentLevelNumber == null) {
+    return []
+  }
+
+  return rows.filter((row) => row.level_number === currentLevelNumber)
 }
