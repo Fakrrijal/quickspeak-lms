@@ -97,7 +97,7 @@ export function EnterprisePortalShell({
         </main>
       </div>
 
-      {isSupportPortal && <PortalFooter role={role} />}
+      {isSupportPortal && <PortalFooter role={role === 'student' ? 'student' : 'teacher'} />}
     </div>
   )
 }
