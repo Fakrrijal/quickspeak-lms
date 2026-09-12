@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { useStudentEbooks } from '../../hooks/useStudentEbooks'
 import { supabase } from '../../lib/supabase'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
+import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
 
 type PaymentInitialization = {
   invoice_number: string
@@ -38,6 +39,9 @@ export function StudentLearningPageV2() {
   const [state, setState] = useState<StudentLearningState | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [progressRows, setProgressRows] = useState<StudentLearningProgressRow[]>([])
+  const [progressLoading, setProgressLoading] = useState(true)
+  const [progressError, setProgressError] = useState(false)
   const [showPackageSelection, setShowPackageSelection] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<'private' | 'semi_private' | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -75,8 +79,33 @@ export function StudentLearningPageV2() {
     return () => { cancelled = true }
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, role, status])
 
+  useEffect(() => {
+    if (!canLoadEbooks) return
+    let cancelled = false
+    setProgressLoading(true)
+    setProgressError(false)
+    getMyStudentLearningProgress()
+      .then((rows) => { if (!cancelled) setProgressRows(rows) })
+      .catch(() => { if (!cancelled) setProgressError(true) })
+      .finally(() => { if (!cancelled) setProgressLoading(false) })
+    return () => { cancelled = true }
+  }, [canLoadEbooks])
+
   const completed = Boolean(state && (state.enrollment_status === 'completed' || state.completed_at || state.completed_sessions >= state.session_limit))
   const assigned = Boolean(state?.teaching_group_id && state?.teacher_id)
+  const currentLevelRows = useMemo(() => state ? progressRows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [progressRows, state])
+  const historicalLevels = useMemo(() => {
+    const levels = new Map<number, { levelNumber: number; levelName: string; rows: StudentLearningProgressRow[] }>()
+    for (const row of progressRows) {
+      if (!row.chapter_id) continue
+      const level = levels.get(row.level_number) ?? { levelNumber: row.level_number, levelName: row.level_name, rows: [] }
+      level.rows.push(row)
+      levels.set(row.level_number, level)
+    }
+    return [...levels.values()].sort((a, b) => a.levelNumber - b.levelNumber)
+  }, [progressRows])
+  const currentCompletedCount = currentLevelRows.filter((row) => row.completed_at).length
+  const currentProgressPercent = currentLevelRows.length ? Math.round((currentCompletedCount / currentLevelRows.length) * 100) : 0
 
   const handleChoosePackage = async (packageType: 'private' | 'semi_private') => {
     setSubmitting(true)
@@ -183,7 +212,7 @@ export function StudentLearningPageV2() {
       <header className="border-b border-slate-200 pb-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Learning</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">My Learning</h1>
-        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">Your current learning stage and class assignment.</p>
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">Your current learning stage, class assignment, and learning progress.</p>
       </header>
 
       <section className="border border-slate-200 bg-white shadow-sm">
@@ -214,6 +243,58 @@ export function StudentLearningPageV2() {
           </div>
 
           {!assigned && <div className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3"><p className="text-sm leading-6 text-amber-900">Your payment has been approved. The administrator will assign your teaching group and teacher.</p></div>}
+        </div>
+      </section>
+
+      <section className="border border-slate-200 bg-white shadow-sm" aria-labelledby="student-progress-title">
+        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-700">Learning Progress</p>
+          <h2 id="student-progress-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Your chapter progress</h2>
+          <p className="mt-1 text-sm text-slate-500">Completed chapters are recorded by your teacher and stay available as you move through levels.</p>
+        </div>
+        <div className="p-6 sm:p-7">
+          {progressLoading ? (
+            <div className="space-y-3"><div className="h-5 w-48 animate-pulse rounded bg-slate-100" /><div className="h-2.5 w-full animate-pulse rounded bg-slate-100" /><div className="h-20 w-full animate-pulse rounded-xl bg-slate-50" /></div>
+          ) : progressError ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4"><p className="text-sm font-bold text-rose-800">Unable to load your learning progress.</p><p className="mt-1 text-sm text-rose-700">Please refresh this page and try again.</p></div>
+          ) : currentLevelRows.length === 0 ? (
+            <p className="text-sm leading-6 text-slate-600">No chapter progress has been recorded for this level yet.</p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-500">Level {state.level_number} — {state.level_name}</p>
+                  <p className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{currentCompletedCount} / {currentLevelRows.length} chapters completed</p>
+                </div>
+                <p className="text-sm font-extrabold text-blue-700">{currentProgressPercent}%</p>
+              </div>
+              <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${currentProgressPercent}%` }} /></div>
+
+              <div className="mt-6 max-h-[560px] space-y-6 overflow-y-auto pr-2">
+                {historicalLevels.map((level) => {
+                  const completedCount = level.rows.filter((row) => row.completed_at).length
+                  const percent = level.rows.length ? Math.round((completedCount / level.rows.length) * 100) : 0
+                  return (
+                    <section key={level.levelNumber} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Level {level.levelNumber}</p><h3 className="mt-1 text-base font-extrabold text-[#102449]">{level.levelName}</h3></div>
+                        <p className="text-xs font-extrabold text-blue-700">{completedCount}/{level.rows.length} completed · {percent}%</p>
+                      </div>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {level.rows.map((row) => (
+                          <div key={row.chapter_id} className={`rounded-xl border px-3.5 py-3 ${row.completed_at ? 'border-emerald-100 bg-emerald-50/60' : 'border-slate-200 bg-white'}`}>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {row.chapter_number}</p>
+                            <p className="mt-1 text-sm font-bold text-[#102449]">{row.chapter_title}</p>
+                            <p className={`mt-1 text-xs font-bold ${row.completed_at ? 'text-emerald-700' : 'text-slate-500'}`}>{row.completed_at ? '✓ Completed' : 'Not completed yet'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
