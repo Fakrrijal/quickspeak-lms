@@ -3,60 +3,84 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
-import { getMyTeacherLearningProgress, markTeacherMaterialCompleted, type TeacherLearningProgressRow } from '../../services/teacher-learning-progress.service'
+import {
+  getMyTeacherLearningProgress,
+  markTeacherChapterCompleted,
+  unmarkTeacherChapterCompleted,
+  type TeacherLearningProgressRow,
+} from '../../services/teacher-learning-progress.service'
 
 export const Route = createFileRoute('/teacher/learning-progress')({ component: TeacherLearningProgressPage })
 
-type StudentGroup = {
+type StudentSummary = {
   studentId: string
   studentName: string
-  levelName: string
-  ebookTitle: string | null
-  chapters: Map<string, {
-    id: string
-    number: number
-    title: string
-    materials: Array<{
-      id: string
-      number: number
-      title: string
-      completedAt: string | null
-    }>
-  }>
+  currentLevelNumber: number
+  currentLevelName: string
 }
 
-function buildStudents(rows: TeacherLearningProgressRow[]) {
-  const students = new Map<string, StudentGroup>()
+type Chapter = {
+  id: string
+  number: number
+  title: string
+  completedAt: string | null
+}
+
+type LevelSection = {
+  levelNumber: number
+  levelName: string
+  ebookTitle: string | null
+  chapters: Chapter[]
+}
+
+function buildStudentSummaries(rows: TeacherLearningProgressRow[]) {
+  const students = new Map<string, StudentSummary>()
   for (const row of rows) {
-    const student = students.get(row.student_id) ?? {
-      studentId: row.student_id,
-      studentName: row.student_name,
+    if (!students.has(row.student_id)) {
+      students.set(row.student_id, {
+        studentId: row.student_id,
+        studentName: row.student_name,
+        currentLevelNumber: row.current_level_number,
+        currentLevelName: row.current_level_name,
+      })
+    }
+  }
+  return [...students.values()].sort((a, b) => a.studentName.localeCompare(b.studentName))
+}
+
+function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | null) {
+  const selectedRows = rows.filter((row) => row.student_id === studentId)
+  const levelMap = new Map<number, LevelSection>()
+
+  for (const row of selectedRows) {
+    const level = levelMap.get(row.level_number) ?? {
+      levelNumber: row.level_number,
       levelName: row.level_name,
       ebookTitle: row.ebook_title,
-      chapters: new Map(),
+      chapters: [],
     }
     if (row.chapter_id && row.chapter_number !== null && row.chapter_title) {
-      const chapter = student.chapters.get(row.chapter_id) ?? {
+      level.chapters.push({
         id: row.chapter_id,
         number: row.chapter_number,
         title: row.chapter_title,
-        materials: [],
-      }
-      if (row.material_id && row.material_number !== null && row.material_title) {
-        chapter.materials.push({
-          id: row.material_id,
-          number: row.material_number,
-          title: row.material_title,
-          completedAt: row.completed_at,
-        })
-      }
-      student.chapters.set(row.chapter_id, chapter)
+        completedAt: row.completed_at,
+      })
     }
-    students.set(row.student_id, student)
+    levelMap.set(row.level_number, level)
   }
-  return [...students.values()].map((student) => ({
-    ...student,
-    chapters: [...student.chapters.values()].sort((a, b) => a.number - b.number),
+
+  return [1, 2, 3, 4].map((levelNumber) => {
+    const existing = levelMap.get(levelNumber)
+    return existing ?? {
+      levelNumber,
+      levelName: `Level ${levelNumber}`,
+      ebookTitle: null,
+      chapters: [],
+    }
+  }).map((level) => ({
+    ...level,
+    chapters: [...new Map(level.chapters.map((chapter) => [chapter.id, chapter])).values()].sort((a, b) => a.number - b.number),
   }))
 }
 
@@ -66,9 +90,10 @@ function TeacherLearningProgressPage() {
   const [rows, setRows] = useState<TeacherLearningProgressRow[]>([])
   const [search, setSearch] = useState('')
   const [activeSearch, setActiveSearch] = useState('')
-  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null)
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [selectedLevelNumber, setSelectedLevelNumber] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-  const [savingMaterialId, setSavingMaterialId] = useState<string | null>(null)
+  const [savingChapterId, setSavingChapterId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
@@ -88,6 +113,8 @@ function TeacherLearningProgressPage() {
       .then((data) => {
         if (cancelled) return
         setRows(data)
+        setSelectedStudentId((current) => current && data.some((row) => row.student_id === current) ? current : null)
+        setSelectedLevelNumber((current) => current ?? null)
         setLoading(false)
       })
       .catch((loadError) => {
@@ -98,26 +125,53 @@ function TeacherLearningProgressPage() {
     return () => { cancelled = true }
   }, [activeSearch, canLoad])
 
-  const students = useMemo(() => buildStudents(rows), [rows])
+  const students = useMemo(() => buildStudentSummaries(rows), [rows])
+  const selectedStudent = students.find((student) => student.studentId === selectedStudentId) ?? null
+  const levels = useMemo(() => buildLevels(rows, selectedStudentId), [rows, selectedStudentId])
+  const activeLevel = levels.find((level) => level.levelNumber === selectedLevelNumber) ?? null
 
-  async function completeMaterial(studentId: string, materialId: string) {
-    setSavingMaterialId(materialId)
+  async function refresh() {
+    const refreshed = await getMyTeacherLearningProgress(activeSearch)
+    setRows(refreshed)
+  }
+
+  async function saveChapter(studentId: string, chapterId: string) {
+    setSavingChapterId(chapterId)
     setError(null)
     try {
-      await markTeacherMaterialCompleted(studentId, materialId)
-      const refreshed = await getMyTeacherLearningProgress(activeSearch)
-      setRows(refreshed)
+      await markTeacherChapterCompleted(studentId, chapterId)
+      await refresh()
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to mark material as completed')
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save learning progress')
     } finally {
-      setSavingMaterialId(null)
+      setSavingChapterId(null)
+    }
+  }
+
+  async function undoChapter(studentId: string, chapterId: string) {
+    setSavingChapterId(chapterId)
+    setError(null)
+    try {
+      await unmarkTeacherChapterCompleted(studentId, chapterId)
+      await refresh()
+    } catch (undoError) {
+      setError(undoError instanceof Error ? undoError.message : 'Unable to undo learning progress')
+    } finally {
+      setSavingChapterId(null)
     }
   }
 
   function submitSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setActiveSearch(search)
-    setExpandedStudentId(null)
+    setActiveSearch(search.trim())
+    setSelectedStudentId(null)
+    setSelectedLevelNumber(null)
+  }
+
+  function selectStudent(studentId: string) {
+    setSelectedStudentId(studentId)
+    setSelectedLevelNumber(null)
+    setError(null)
   }
 
   if (authLoading || profileLoading) return <p>Loading...</p>
@@ -129,7 +183,7 @@ function TeacherLearningProgressPage() {
       <header className="border-b border-slate-200 pb-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Learning Progress</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Track completed learning materials for each student in your assigned teaching groups.</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Select a student from your active teaching groups, then open the level and save each completed chapter.</p>
       </header>
 
       <form onSubmit={submitSearch} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
@@ -142,76 +196,140 @@ function TeacherLearningProgressPage() {
           className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
         <button type="submit" className="h-11 rounded-xl bg-[#102449] px-5 text-sm font-bold text-white transition hover:bg-[#17325f]">Search</button>
-        {activeSearch && <button type="button" onClick={() => { setSearch(''); setActiveSearch('') }} className="h-11 rounded-xl border border-slate-300 px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Clear</button>}
+        {activeSearch && <button type="button" onClick={() => { setSearch(''); setActiveSearch(''); setSelectedStudentId(null); setSelectedLevelNumber(null) }} className="h-11 rounded-xl border border-slate-300 px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Clear</button>}
       </form>
 
       {loading ? (
-        <div className="space-y-4">{[1, 2].map((item) => <div key={item} className="h-44 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />)}</div>
+        <div className="space-y-4">{[1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />)}</div>
       ) : error ? (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900">{error}</div>
       ) : students.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-[#102449]">No learning progress found</h2>
-          <p className="mt-2 text-sm text-slate-600">Learning content will appear here when chapters and materials are configured for the student&apos;s book.</p>
+          <h2 className="text-lg font-bold text-[#102449]">No students found</h2>
+          <p className="mt-2 text-sm text-slate-600">Only students in your active teaching groups are shown.</p>
         </section>
       ) : (
-        <section className="space-y-4">
-          {students.map((student) => {
-            const expanded = expandedStudentId === student.studentId
-            return (
-              <article key={student.studentId} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <button type="button" onClick={() => setExpandedStudentId(expanded ? null : student.studentId)} className="flex w-full items-center justify-between gap-4 p-5 text-left sm:p-6">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-xl font-bold tracking-[-0.02em] text-[#102449]">{student.studentName}</h2>
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{student.levelName}</span>
+        <>
+          <section>
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Student</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {students.map((student) => {
+                const active = student.studentId === selectedStudentId
+                return (
+                  <button
+                    key={student.studentId}
+                    type="button"
+                    onClick={() => selectStudent(student.studentId)}
+                    className={`rounded-2xl border p-5 text-left shadow-sm transition ${active ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="truncate text-base font-bold text-[#102449]">{student.studentName}</span>
+                      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Level {student.currentLevelNumber}</span>
                     </div>
-                    <p className="mt-1 text-sm text-slate-500">{student.ebookTitle ?? 'Book content not configured'}</p>
-                  </div>
-                  <span className="shrink-0 text-lg font-bold text-slate-400" aria-hidden="true">{expanded ? '⌃' : '⌄'}</span>
-                </button>
+                    <p className="mt-2 text-sm text-slate-500">{student.currentLevelName}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
 
-                {expanded && (
-                  <div className="border-t border-slate-100 p-5 sm:p-6">
-                    {student.chapters.length === 0 ? (
-                      <p className="text-sm text-slate-600">No chapters or materials have been configured for this book yet.</p>
-                    ) : (
-                      <div className="space-y-3">
-                        {student.chapters.map((chapter) => (
-                          <div key={chapter.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                            <div className="flex items-center justify-between gap-4">
-                              <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Chapter {chapter.number}</p>
-                                <h3 className="mt-1 text-base font-bold text-[#102449]">{chapter.title}</h3>
-                              </div>
-                              <span className="text-xs font-semibold text-slate-500">{chapter.materials.filter((material) => material.completedAt).length}/{chapter.materials.length} completed</span>
-                            </div>
-                            <div className="mt-4 space-y-2">
-                              {chapter.materials.map((material) => (
-                                <div key={material.id} className="flex items-center justify-between gap-4 rounded-xl border border-white bg-white px-4 py-3 shadow-sm">
-                                  <div className="min-w-0">
-                                    <p className="truncate text-sm font-semibold text-slate-800">{material.number}. {material.title}</p>
-                                  </div>
-                                  {material.completedAt ? (
-                                    <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">✓ Completed</span>
-                                  ) : (
-                                    <button type="button" disabled={savingMaterialId === material.id} onClick={() => completeMaterial(student.studentId, material.id)} className="shrink-0 rounded-lg bg-[#102449] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60">
-                                      {savingMaterialId === material.id ? 'Saving...' : 'Mark Completed'}
-                                    </button>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+          {!selectedStudent ? (
+            <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+              <h2 className="text-lg font-bold text-[#102449]">Select a student</h2>
+              <p className="mt-2 text-sm text-slate-600">Choose a student above to view Level 1–4 learning progress.</p>
+            </section>
+          ) : (
+            <section className="space-y-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Learning Progress</p>
+                    <h2 className="mt-1 text-2xl font-extrabold text-[#102449]">{selectedStudent.studentName}</h2>
+                    <p className="mt-1 text-sm text-slate-500">Current level: {selectedStudent.currentLevelName}</p>
                   </div>
-                )}
-              </article>
-            )
-          })}
-        </section>
+                </div>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {levels.map((level) => {
+                    const unlocked = level.levelNumber <= selectedStudent.currentLevelNumber
+                    const active = selectedLevelNumber === level.levelNumber
+                    return (
+                      <button
+                        key={level.levelNumber}
+                        type="button"
+                        disabled={!unlocked}
+                        onClick={() => unlocked && setSelectedLevelNumber(active ? null : level.levelNumber)}
+                        className={`rounded-2xl border p-5 text-left transition ${
+                          !unlocked
+                            ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60'
+                            : active
+                              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
+                              : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-bold text-slate-500">Level {level.levelNumber}</span>
+                          <span className="text-lg" aria-hidden="true">{unlocked ? '→' : '🔒'}</span>
+                        </div>
+                        <p className="mt-2 text-base font-extrabold text-[#102449]">{level.levelName}</p>
+                        {unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">{level.chapters.length} chapters</p>}
+                        {!unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">Not taken yet</p>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {activeLevel && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                  <div className="border-b border-slate-200 pb-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Level {activeLevel.levelNumber}</p>
+                    <h3 className="mt-1 text-xl font-extrabold text-[#102449]">{activeLevel.levelName}</h3>
+                    {activeLevel.ebookTitle && <p className="mt-1 text-sm text-slate-500">{activeLevel.ebookTitle}</p>}
+                  </div>
+
+                  {activeLevel.chapters.length === 0 ? (
+                    <p className="mt-5 text-sm text-slate-600">No chapters configured for this level.</p>
+                  ) : (
+                    <div className="mt-5 space-y-3">
+                      {activeLevel.chapters.map((chapter) => {
+                        const saving = savingChapterId === chapter.id
+                        return (
+                          <div key={chapter.id} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {chapter.number}</p>
+                              <p className="mt-1 text-base font-bold text-[#102449]">{chapter.title}</p>
+                              <p className="mt-1 text-xs text-slate-500">Materi: {chapter.title}</p>
+                            </div>
+                            {chapter.completedAt ? (
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => undoChapter(selectedStudent.studentId, chapter.id)}
+                                className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60"
+                              >
+                                {saving ? 'Saving...' : '✓ Saved — Undo'}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => saveChapter(selectedStudent.studentId, chapter.id)}
+                                className="shrink-0 rounded-lg bg-[#102449] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60"
+                              >
+                                {saving ? 'Saving...' : 'Save'}
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+        </>
       )}
     </div>
   )
