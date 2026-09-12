@@ -133,6 +133,12 @@ function TeacherLearningProgressPage() {
   }, [activeSearch, search, students])
   const levels = useMemo(() => buildLevels(rows, selectedStudentId), [rows, selectedStudentId])
   const activeLevel = levels.find((level) => level.levelNumber === selectedLevelNumber) ?? null
+  const latestSavedAchievement = useMemo(() => {
+    const completed = rows
+      .filter((row) => row.student_id === selectedStudentId && row.material_id && row.completed_at)
+      .sort((a, b) => String(b.completed_at).localeCompare(String(a.completed_at)))
+    return completed[0] ?? null
+  }, [rows, selectedStudentId])
 
   async function refresh() {
     const refreshed = await getMyTeacherLearningProgress(activeSearch)
@@ -287,6 +293,17 @@ function TeacherLearningProgressPage() {
               </div>
               <button type="button" onClick={backToStudents} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to students</button>
             </div>
+
+            {latestSavedAchievement && (
+              <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-bold text-[#102449]">{latestSavedAchievement.student_name}</p>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">{latestSavedAchievement.level_name}</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-600">Chapter {latestSavedAchievement.chapter_number} — {latestSavedAchievement.chapter_title}</p>
+                <p className="mt-1 text-sm font-bold text-emerald-700">✓ {latestSavedAchievement.material_title}</p>
+              </div>
+            )}
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {levels.map((level) => {
