@@ -110,8 +110,7 @@ as $$
     on smp.student_id = s.id
    and smp.material_id = lm.id
   where t.profile_id = auth.uid()
-    and p_search is not null
-    and (btrim(p_search) = '' or p.full_name ilike '%' || btrim(p_search) || '%')
+    and (p_search is null or btrim(p_search) = '' or p.full_name ilike '%' || btrim(p_search) || '%')
   order by p.full_name asc, lc.chapter_number asc nulls last, lm.material_number asc nulls last;
 $$;
 
@@ -162,51 +161,8 @@ $$;
 
 grant execute on function public.mark_teacher_material_completed(uuid, uuid) to authenticated;
 
+-- Keep learning-content tables private. Teacher access is exposed only through
+-- the scoped security-definer RPCs above, which prevents arbitrary direct reads.
 alter table public.learning_chapters enable row level security;
 alter table public.learning_materials enable row level security;
 alter table public.student_material_progress enable row level security;
-
-create policy learning_chapters_teacher_read
-  on public.learning_chapters
-  for select to authenticated
-  using (
-    exists (
-      select 1
-      from public.teachers t
-      join public.profiles p on p.id = t.profile_id
-      join public.teaching_groups tg on tg.teacher_id = t.id and tg.is_active
-      join public.students s on s.level_id = (
-        select e.level_id from public.ebooks e
-        join public.learning_chapters lc2 on lc2.ebook_id = e.id
-        where lc2.id = learning_chapters.id
-      )
-      join public.teaching_group_students tgs on tgs.teaching_group_id = tg.id and tgs.student_id = s.id
-      where t.profile_id = auth.uid()
-        and t.is_active
-        and p.role = 'teacher'::public.user_role
-        and p.status = 'active'::public.user_status
-    )
-  );
-
-create policy learning_materials_teacher_read
-  on public.learning_materials
-  for select to authenticated
-  using (
-    exists (
-      select 1
-      from public.learning_chapters lc
-      join public.ebooks eb on eb.id = lc.ebook_id
-      join public.teaching_groups tg on tg.level_id = eb.level_id and tg.is_active
-      join public.teachers t on t.id = tg.teacher_id and t.is_active
-      join public.profiles p on p.id = t.profile_id
-      where lc.id = learning_materials.chapter_id
-        and t.profile_id = auth.uid()
-        and p.role = 'teacher'::public.user_role
-        and p.status = 'active'::public.user_status
-    )
-  );
-
-create policy student_material_progress_teacher_read
-  on public.student_material_progress
-  for select to authenticated
-  using (public.teacher_has_student_access(student_id));
