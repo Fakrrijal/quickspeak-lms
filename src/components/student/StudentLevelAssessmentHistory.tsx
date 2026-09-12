@@ -51,44 +51,56 @@ export function StudentLevelAssessmentHistory() {
 
       <div className="p-6 sm:p-7">
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2].map((item) => <div key={item} className="h-28 animate-pulse rounded-2xl bg-slate-100" />)}
+          <div className="space-y-2">
+            {[1, 2].map((item) => <div key={item} className="h-20 animate-pulse rounded-xl bg-slate-100" />)}
           </div>
         ) : error ? (
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Unable to load assessment history.</div>
         ) : results.length === 0 ? (
           <p className="text-sm leading-6 text-slate-600">Belum ada level yang diselesaikan.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {results.map((item) => (
-              <article key={item.result_id} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Level {item.level_number}</p>
-                    <h3 className="mt-1 text-lg font-extrabold text-[#102449]">{item.level_name ?? `Level ${item.level_number}`}</h3>
+              <details key={item.result_id} className="group rounded-xl border border-slate-200 bg-slate-50/50">
+                <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 sm:px-5 [&::-webkit-details-marker]:hidden">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Level {item.level_number}</p>
+                      <span className="text-xs text-slate-300">•</span>
+                      <p className="truncate text-sm font-extrabold text-[#102449]">{item.level_name ?? `Level ${item.level_number}`}</p>
+                    </div>
                     <p className="mt-1 text-xs font-semibold text-slate-500">Selesai {formatDate(item.completed_at)}</p>
                   </div>
-                  <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 sm:text-right">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">Final Score</p>
-                    <p className="mt-1 text-2xl font-extrabold text-[#102449]">{item.final_score}</p>
-                    <p className="mt-1 text-xs font-bold text-blue-700">{item.result}</p>
+
+                  <div className="flex shrink-0 items-center gap-2.5">
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-right">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-blue-700">Score</p>
+                      <p className="text-lg font-extrabold leading-none text-[#102449]">{item.final_score}</p>
+                    </div>
+                    <span className="hidden rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-bold text-emerald-700 sm:inline-flex">{item.result}</span>
+                    <span className="text-slate-400 transition-transform group-open:rotate-180">⌄</span>
+                  </div>
+                </summary>
+
+                <div className="border-t border-slate-200 px-4 pb-4 pt-3.5 sm:px-5">
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                    {scoreFields.map(([key, label]) => (
+                      <div key={key} className="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-500">{label}</p>
+                        <p className="mt-1 text-sm font-extrabold text-[#102449]">{item[key]}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-500">Teacher Feedback</p>
+                      <span className="rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">{item.result}</span>
+                    </div>
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-slate-700">{item.feedback || 'Tidak ada feedback.'}</p>
                   </div>
                 </div>
-
-                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-                  {scoreFields.map(([key, label]) => (
-                    <div key={key} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.11em] text-slate-500">{label}</p>
-                      <p className="mt-1 text-base font-extrabold text-[#102449]">{item[key]}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.11em] text-slate-500">Teacher Feedback</p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{item.feedback || 'Tidak ada feedback.'}</p>
-                </div>
-              </article>
+              </details>
             ))}
           </div>
         )}
