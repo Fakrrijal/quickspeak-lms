@@ -13,7 +13,7 @@ function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'arrow' | 'check'
   if (name === 'check') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="m5 12 4 4L19 6" /></svg>
   if (name === 'help') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><circle cx="12" cy="12" r="9" /><path d="M9.75 9a2.35 2.35 0 1 1 3.62 1.98c-.9.55-1.37 1-1.37 2.02M12 16.8h.01" /></svg>
   if (name === 'mail') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3.5" y="5" width="17" height="14" rx="2" /><path d="m4.5 7 7.5 6 7.5-6" /></svg>
-  if (name === 'whatsapp') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 11.6a8.1 8.1 0 0 1-12 7l-4 1.1 1.1-3.9a8.1 8.1 0 1 1 14.9-4.2Z" /><path d="M8.5 8.2c.2-.4.4-.4.7.4l.7 1.7c.1.2.1.4 0 .5l.6.7c.5 1 1.2 1.7 2.2 2.2l.7-.6c.2-.1.4-.1.6 0l1.6.8c.3.1.4.3.3.6-.2.8-.9 1.3-1.7 1.3-1.1 0-2.5-.6-3.8-1.8-1.1-1-2.1-2.3-2.4-3.3-.3-.8-.2-1.6.2-2.1Z" /></svg>
+  if (name === 'whatsapp') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 11.6a8.1 8.1 0 0 1-12 7l-4 1.1 1.1-3.9a8.1 8.1 0 1 1 14.9-4.2Z" /><path d="M8.5 8.2c.2-.4.4-.4.7.4l.7 1.7c.1.2.1.4 0 .5l.6.7c.5 1 1.2 1.7 2.2 2.2l.7-.6c.2-.1.4-.1.6 0l1.6.8c.3.1.4.3.3.6-.2.8-.9 1.3-1.7 1.3-1.1 0-2.5-.6-3.8-1.8-1.1-1-2.1-2.3-2.4-3.3-.3-.8-.2-1.6-.2-2.1Z" /></svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>
 }
 
@@ -125,7 +125,7 @@ export function StudentDashboardV2() {
             <div>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-500">Level {learningState.level_number} — {learningState.level_name}</p>
+                  <p className="text-sm font-semibold text-slate-500">Group: {learningState.teaching_group_name ?? 'Not assigned yet'} · Teacher: {learningState.teacher_name ?? learningState.teacher_code ?? 'Not assigned yet'} · Level {learningState.level_number}</p>
                   <p className="mt-1 text-lg font-extrabold text-[#102449]">{currentCompletedRows.length} / {currentLevelRows.length} chapters completed</p>
                 </div>
                 <p className="text-sm font-extrabold text-blue-700">{currentProgressPercent}%</p>
@@ -134,22 +134,13 @@ export function StudentDashboardV2() {
               {latestAchievement && <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Latest achievement</p><p className="mt-1.5 text-sm font-bold text-emerald-800">✓ Chapter {latestAchievement.chapter_number} — {latestAchievement.chapter_title}</p></div>}
 
               <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/40">
-                <button
-                  type="button"
-                  onClick={() => setChaptersExpanded((current) => !current)}
-                  aria-expanded={chaptersExpanded}
-                  className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-white sm:px-5"
-                >
+                <button type="button" onClick={() => setChaptersExpanded((current) => !current)} aria-expanded={chaptersExpanded} className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-white sm:px-5">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Current Level Chapters</p>
                     <p className="mt-1 text-sm font-bold text-[#102449]">{currentLevelRows.length} chapters · {currentCompletedRows.length} completed</p>
                   </div>
-                  <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-blue-700">
-                    {chaptersExpanded ? 'Collapse' : 'View chapters'}
-                    <span className={`text-lg transition-transform ${chaptersExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
-                  </span>
+                  <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-blue-700">{chaptersExpanded ? 'Collapse' : 'View chapters'}<span className={`text-lg transition-transform ${chaptersExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span></span>
                 </button>
-
                 {chaptersExpanded && (
                   <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
                     <div className="max-h-[250px] overflow-y-auto pr-1">
