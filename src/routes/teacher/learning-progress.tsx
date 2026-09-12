@@ -174,6 +174,17 @@ function TeacherLearningProgressPage() {
     setError(null)
   }
 
+  function backToStudents() {
+    setSelectedStudentId(null)
+    setSelectedLevelNumber(null)
+    setError(null)
+  }
+
+  function backToLevels() {
+    setSelectedLevelNumber(null)
+    setError(null)
+  }
+
   if (authLoading || profileLoading) return <p>Loading...</p>
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
@@ -196,7 +207,7 @@ function TeacherLearningProgressPage() {
           className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
         <button type="submit" className="h-11 rounded-xl bg-[#102449] px-5 text-sm font-bold text-white transition hover:bg-[#17325f]">Search</button>
-        {activeSearch && <button type="button" onClick={() => { setSearch(''); setActiveSearch(''); setSelectedStudentId(null); setSelectedLevelNumber(null) }} className="h-11 rounded-xl border border-slate-300 px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Clear</button>}
+        {activeSearch && <button type="button" onClick={() => { setSearch(''); setActiveSearch(''); setSelectedStudentId(null); setSelectedLevelNumber(null); setError(null) }} className="h-11 rounded-xl border border-slate-300 px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Clear</button>}
       </form>
 
       {loading ? (
@@ -210,28 +221,30 @@ function TeacherLearningProgressPage() {
         </section>
       ) : (
         <>
-          <section>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Student</p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {students.map((student) => {
-                const active = student.studentId === selectedStudentId
-                return (
-                  <button
-                    key={student.studentId}
-                    type="button"
-                    onClick={() => selectStudent(student.studentId)}
-                    className={`rounded-2xl border p-5 text-left shadow-sm transition ${active ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'}`}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="truncate text-base font-bold text-[#102449]">{student.studentName}</span>
-                      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Level {student.currentLevelNumber}</span>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-500">{student.currentLevelName}</p>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
+          {!selectedStudent && (
+            <section>
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Student</p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {students.map((student) => {
+                  const active = student.studentId === selectedStudentId
+                  return (
+                    <button
+                      key={student.studentId}
+                      type="button"
+                      onClick={() => selectStudent(student.studentId)}
+                      className={`rounded-2xl border p-5 text-left shadow-sm transition ${active ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'}`}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="truncate text-base font-bold text-[#102449]">{student.studentName}</span>
+                        <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Level {student.currentLevelNumber}</span>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-500">{student.currentLevelName}</p>
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
           {!selectedStudent ? (
             <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
@@ -247,6 +260,13 @@ function TeacherLearningProgressPage() {
                     <h2 className="mt-1 text-2xl font-extrabold text-[#102449]">{selectedStudent.studentName}</h2>
                     <p className="mt-1 text-sm text-slate-500">Current level: {selectedStudent.currentLevelName}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={backToStudents}
+                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    ← Back to students
+                  </button>
                 </div>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -282,10 +302,19 @@ function TeacherLearningProgressPage() {
 
               {activeLevel && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                  <div className="border-b border-slate-200 pb-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Level {activeLevel.levelNumber}</p>
-                    <h3 className="mt-1 text-xl font-extrabold text-[#102449]">{activeLevel.levelName}</h3>
-                    {activeLevel.ebookTitle && <p className="mt-1 text-sm text-slate-500">{activeLevel.ebookTitle}</p>}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Level {activeLevel.levelNumber}</p>
+                      <h3 className="mt-1 text-xl font-extrabold text-[#102449]">{activeLevel.levelName}</h3>
+                      {activeLevel.ebookTitle && <p className="mt-1 text-sm text-slate-500">{activeLevel.ebookTitle}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={backToLevels}
+                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      ← Back to levels
+                    </button>
                   </div>
 
                   {activeLevel.chapters.length === 0 ? (
