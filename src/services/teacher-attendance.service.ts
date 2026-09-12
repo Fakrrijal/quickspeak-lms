@@ -127,13 +127,18 @@ export async function recordTeacherGroupAttendance({
   teachingGroupId,
   attendance,
 }: RecordTeacherGroupAttendanceInput) {
-  const { data, error } = await supabase.rpc('record_my_teacher_group_attendance_v2', {
+  if (attendance.length !== 1) {
+    throw new Error('Please select exactly one student for this attendance record.')
+  }
+
+  const entry = attendance[0]
+  const { data, error } = await supabase.rpc('record_my_teacher_attendance_v2', {
     p_teaching_group_id: teachingGroupId,
-    p_attendance: attendance.map((entry) => ({
+    p_attendance: [{
       student_id: entry.studentId,
       enrollment_id: entry.enrollmentId,
       teacher_status: entry.teacherStatus,
-    })),
+    }],
   })
 
   if (error) {
