@@ -1,0 +1,29 @@
+import { supabase } from '../lib/supabase'
+
+export type TeacherEbook = {
+  ebook_id: string
+  level_id: string
+  level_name: string
+  level_number: number
+  title: string
+  heyzine_url: string
+  thumbnail_url: string | null
+}
+
+async function getHeyzineThumbnail(url: string) {
+  try {
+    const response = await fetch(`https://heyzine.com/api1/oembed?url=${encodeURIComponent(url)}&format=json`, { headers: { Accept: 'application/json' } })
+    if (!response.ok) return null
+    const payload = await response.json() as { thumbnail_url?: unknown }
+    return typeof payload.thumbnail_url === 'string' ? payload.thumbnail_url : null
+  } catch {
+    return null
+  }
+}
+
+export async function getTeacherPublishedEbooks(): Promise<TeacherEbook[]> {
+  const { data, error } = await supabase.rpc('get_published_ebooks_for_teacher')
+  if (error) throw error
+  const ebooks = (data ?? []) as Omit<TeacherEbook, 'thumbnail_url'>[]
+  return Promise.all(ebooks.map(async (ebook) => ({ ...ebook, thumbnail_url: await getHeyzineThumbnail(ebook.heyzine_url) })))
+}
