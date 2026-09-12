@@ -7,11 +7,24 @@ type PortalFooterProps = {
   role: Extract<PortalRole, 'student' | 'teacher'>
 }
 
+type HelpItem = {
+  question: string
+  answer: string
+}
+
+type GuideItem = {
+  title: string
+  steps: string[]
+}
+
 function WhatsAppIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
-      <path d="M20 11.6a8.1 8.1 0 0 1-12 7l-4 1.1 1.1-3.9A8.1 8.1 0 1 1 20 11.6Z" />
-      <path d="M8.5 8.2c.2-.4.4-.4.7.4l.7 1.7c.1.2.1.4 0 .5l.6.7c.5.1.4.3.3.6-.2.8-.9 1.3-1.7 1.3-1.1 0-2.5-.6-3.8-1.8-1.1-1-2.1-2.3-2.4-3.3-.3-.8-.2-1.6.2-2.1Z" />
+    <svg aria-hidden="true" viewBox="0 0 32 32" className="size-6">
+      <circle cx="16" cy="16" r="15" fill="currentColor" />
+      <path
+        d="M11.2 22.4 12.4 18.9a7.7 7.7 0 1 1 2.9 2.9l-4.1 1.4Zm3.9-3.8c.8.4 1.9.7 2.9.7 2.4 0 4.3-1.9 4.3-4.3s-1.9-4.3-4.3-4.3-4.3 1.9-4.3 4.3c0 .9.3 1.8.8 2.5l-.5 1.5 1.1-.4Zm-.2-4.9c.2-.4.4-.4.7-.1l.7.7c.2.2.2.4.1.6l-.3.4c-.1.2-.1.3 0 .5.4.7 1 1.3 1.7 1.7.2.1.4.1.5 0l.4-.3c.2-.1.4-.1.6.1l.7.7c.2.3.2.5-.1.7-.2.2-.5.4-.8.4-.7 0-1.7-.4-2.6-1.2-.9-.8-1.6-1.7-1.8-2.4-.1-.5 0-.9.2-1.3Z"
+        fill="#fff"
+      />
     </svg>
   )
 }
@@ -25,40 +38,172 @@ function MailIcon() {
   )
 }
 
-const copy = {
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={`size-5 transition-transform ${open ? 'rotate-180' : ''}`}
+    >
+      <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+const copy: Record<Extract<PortalRole, 'student' | 'teacher'>, { help: HelpItem[]; guides: GuideItem[] }> = {
   student: {
     help: [
-      ['Bagaimana melihat progress?', 'Buka Dashboard atau My Learning untuk melihat progress chapter yang sudah dicatat oleh guru.'],
-      ['Bagaimana melihat ebook?', 'Buka My Learning lalu pilih ebook yang tersedia untuk level Anda.'],
-      ['Ada masalah pembayaran?', 'Buka Payment dan periksa status pembayaran atau hubungi admin melalui Kontak.'],
+      {
+        question: 'Bagaimana melihat progress belajar?',
+        answer: 'Buka Dashboard untuk ringkasan progress chapter. Untuk melihat seluruh detail progress dan ebook, buka My Learning.',
+      },
+      {
+        question: 'Bagaimana melihat ebook saya?',
+        answer: 'Buka My Learning. Ebook yang tersedia untuk level Anda akan tampil di bagian ebook dan dapat dibuka dari sana.',
+      },
+      {
+        question: 'Bagaimana melihat attendance?',
+        answer: 'Buka menu Attendance pada Student Portal untuk melihat catatan kehadiran yang sudah dicatat oleh teacher.',
+      },
+      {
+        question: 'Bagaimana upload bukti pembayaran?',
+        answer: 'Buka Payment, lihat pembayaran yang perlu diselesaikan, pilih file bukti pembayaran, lalu klik Submit Payment Proof. Setelah berhasil dikirim, pembayaran menunggu verifikasi admin.',
+      },
+      {
+        question: 'Akun saya sudah aktif tetapi ada masalah.',
+        answer: 'Periksa kembali halaman Profile dan fitur yang bermasalah. Bila masalah tetap terjadi, gunakan Kontak untuk menghubungi admin atau Report untuk mengirim laporan.',
+      },
     ],
     guides: [
-      'Dashboard & Learning Progress',
-      'My Learning & Ebook',
-      'Attendance',
-      'Payment & Upload Bukti Pembayaran',
-      'Profile & Account',
+      {
+        title: 'Dashboard & Learning Progress',
+        steps: [
+          'Login ke Student Portal.',
+          'Dashboard menampilkan Current Learning Stage, Attendance Summary, dan Learning Progress.',
+          'Pada Learning Progress, gunakan View chapters untuk membuka daftar chapter. Daftar chapter menggunakan scroll internal agar dashboard tetap ringkas.',
+          'Gunakan View details untuk membuka halaman My Learning.',
+        ],
+      },
+      {
+        title: 'My Learning & Ebook',
+        steps: [
+          'Buka My Learning dari sidebar.',
+          'Bagian Current Learning Stage menampilkan level dan package yang sedang diikuti.',
+          'Learning Progress menampilkan chapter yang selesai dan yang belum selesai.',
+          'Ebook yang tersedia untuk level aktif dapat dibuka dengan Open Ebook.',
+        ],
+      },
+      {
+        title: 'Attendance',
+        steps: [
+          'Buka Attendance dari sidebar.',
+          'Periksa daftar meeting dan status kehadiran yang sudah dicatat teacher.',
+          'Gunakan halaman ini sebagai riwayat kehadiran belajar Anda.',
+        ],
+      },
+      {
+        title: 'Payment & Upload Bukti Pembayaran',
+        steps: [
+          'Buka Payment dari sidebar.',
+          'Periksa invoice, jumlah pembayaran, periode, dan rekening tujuan.',
+          'Pilih bukti pembayaran berformat PDF, JPG, JPEG, atau PNG sesuai batas ukuran yang ditampilkan.',
+          'Klik Submit Payment Proof dan tunggu verifikasi admin.',
+        ],
+      },
+      {
+        title: 'Profile & Account',
+        steps: [
+          'Buka Profile dari sidebar.',
+          'Periksa informasi akun dan data profil Anda.',
+          'Gunakan Contact atau Report pada footer bila membutuhkan bantuan admin.',
+        ],
+      },
     ],
   },
   teacher: {
     help: [
-      ['Bagaimana mencatat Learning Progress?', 'Buka Learning Progress, pilih siswa, buka level yang tersedia, lalu klik Save pada chapter yang selesai.'],
-      ['Bagaimana mengelola Teaching Groups?', 'Buka Teaching Groups untuk melihat group yang ditugaskan, level, dan roster siswa.'],
-      ['Bagaimana mencatat Attendance?', 'Buka Attendance lalu pilih group dan periode yang sesuai untuk mencatat kehadiran.'],
+      {
+        question: 'Bagaimana mencatat Learning Progress siswa?',
+        answer: 'Buka Learning Progress, cari dan pilih siswa, pilih level yang sudah diambil, lalu klik Save pada chapter yang selesai. Setelah tersimpan, status berubah menjadi Saved dan tersedia aksi Undo.',
+      },
+      {
+        question: 'Bagaimana melihat siswa dalam Teaching Groups?',
+        answer: 'Buka Teaching Groups untuk melihat teaching group yang ditugaskan kepada Anda, level group, serta roster siswa di setiap group.',
+      },
+      {
+        question: 'Bagaimana mencatat Attendance?',
+        answer: 'Buka Attendance, pilih teaching group dan periode yang sesuai, lalu catat status kehadiran siswa untuk setiap meeting.',
+      },
+      {
+        question: 'Bagaimana melihat Fee?',
+        answer: 'Buka Fee untuk melihat laporan fee teacher berdasarkan aktivitas teaching yang tersedia pada sistem.',
+      },
+      {
+        question: 'Bagaimana membuka materi buku?',
+        answer: 'Buka Books untuk melihat ebook yang sudah dipublikasikan. Pilih Open Book untuk membuka ebook terkait level.',
+      },
     ],
     guides: [
-      'Dashboard & Teaching Activity',
-      'Teaching Groups',
-      'Learning Progress',
-      'Books',
-      'Attendance & Fee',
-      'Profile & Account',
+      {
+        title: 'Dashboard & Teaching Activity',
+        steps: [
+          'Buka Dashboard pada Teacher Portal.',
+          'Pilih From Date dan To Date untuk menentukan periode laporan.',
+          'Dashboard menampilkan Classes, Active Students, Fee (Unpaid), Attendance, dan Period Overview.',
+          'Gunakan data ini untuk memantau aktivitas teaching pada periode yang dipilih.',
+        ],
+      },
+      {
+        title: 'Teaching Groups',
+        steps: [
+          'Buka Teaching Groups.',
+          'Lihat daftar teaching group yang sedang ditugaskan kepada Anda.',
+          'Periksa level, package, jumlah siswa, dan roster siswa pada setiap group.',
+          'Gunakan View Attendance untuk masuk ke pencatatan kehadiran group.',
+        ],
+      },
+      {
+        title: 'Learning Progress',
+        steps: [
+          'Buka Learning Progress.',
+          'Gunakan pencarian siswa jika jumlah siswa banyak, lalu pilih siswa.',
+          'Pilih level yang sudah diambil siswa. Level masa depan tetap terkunci.',
+          'Pada daftar chapter, klik Save untuk chapter yang selesai dipelajari.',
+          'Setelah tersimpan, status menjadi Saved dan dapat dibatalkan menggunakan Undo.',
+        ],
+      },
+      {
+        title: 'Books',
+        steps: [
+          'Buka Books.',
+          'Lihat ebook QuickSpeak yang sudah berstatus published untuk teacher.',
+          'Pilih Open Book untuk membuka ebook yang menjadi referensi pembelajaran.',
+        ],
+      },
+      {
+        title: 'Attendance & Fee',
+        steps: [
+          'Buka Attendance untuk memilih group dan mencatat kehadiran setiap meeting.',
+          'Gunakan riwayat attendance untuk meninjau catatan kehadiran siswa.',
+          'Buka Fee untuk melihat ringkasan fee sesuai aktivitas teaching yang tersedia.',
+        ],
+      },
+      {
+        title: 'Profile & Account',
+        steps: [
+          'Buka Profile pada Teacher Portal.',
+          'Periksa data profil dan informasi akun Anda.',
+          'Gunakan Kontak atau Report pada footer bila membutuhkan bantuan admin.',
+        ],
+      },
     ],
   },
-} as const
+}
 
 export function PortalFooter({ role }: PortalFooterProps) {
   const [section, setSection] = useState<SupportSection | null>(null)
+  const [openHelp, setOpenHelp] = useState<number | null>(null)
+  const [openGuide, setOpenGuide] = useState<number | null>(null)
   const [reportCategory, setReportCategory] = useState('Technical Issue')
   const [reportDescription, setReportDescription] = useState('')
 
@@ -66,8 +211,20 @@ export function PortalFooter({ role }: PortalFooterProps) {
   const reportMailto = useMemo(() => {
     const subject = encodeURIComponent(`[QuickSpeak Report] ${reportCategory}`)
     const body = encodeURIComponent(`Role: ${role}\nCategory: ${reportCategory}\n\nDescription:\n${reportDescription || '(Please describe the issue.)'}`)
-    return `mailto:quicspeaklms@gmail.com?subject=${subject}&body=${body}`
+    return `mailto:quickspeaklms@gmail.com?subject=${subject}&body=${body}`
   }, [reportCategory, reportDescription, role])
+
+  const openSection = (nextSection: SupportSection) => {
+    setSection(nextSection)
+    setOpenHelp(null)
+    setOpenGuide(null)
+  }
+
+  const closeSection = () => {
+    setSection(null)
+    setOpenHelp(null)
+    setOpenGuide(null)
+  }
 
   return (
     <>
@@ -84,7 +241,7 @@ export function PortalFooter({ role }: PortalFooterProps) {
               <button
                 key={key}
                 type="button"
-                onClick={() => setSection(key)}
+                onClick={() => openSection(key)}
                 className="font-semibold text-slate-600 transition hover:text-[#102449] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"
               >
                 {label}
@@ -96,8 +253,8 @@ export function PortalFooter({ role }: PortalFooterProps) {
 
       {section && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/35 p-4 sm:p-6" role="presentation">
-          <button type="button" aria-label="Close" onClick={() => setSection(null)} className="absolute inset-0 h-full w-full cursor-default" />
-          <section className="relative mx-auto my-8 w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="portal-support-title">
+          <button type="button" aria-label="Close" onClick={closeSection} className="absolute inset-0 h-full w-full cursor-default" />
+          <section className="relative mx-auto my-8 w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="portal-support-title">
             <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 sm:px-7">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">QuickSpeak Support</p>
@@ -105,39 +262,86 @@ export function PortalFooter({ role }: PortalFooterProps) {
                   {section === 'help' ? 'Bantuan' : section === 'guides' ? 'Panduan' : section === 'contact' ? 'Kontak' : 'Report'}
                 </h2>
               </div>
-              <button type="button" onClick={() => setSection(null)} className="rounded-lg px-3 py-2 text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">Tutup</button>
+              <button type="button" onClick={closeSection} className="rounded-lg px-3 py-2 text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">Tutup</button>
             </header>
 
             <div className="p-6 sm:p-7">
               {section === 'help' && (
-                <div className="space-y-3">
-                  {activeCopy.help.map(([question, answer]) => (
-                    <article key={question} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                      <h3 className="font-bold text-[#102449]">{question}</h3>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{answer}</p>
-                    </article>
-                  ))}
+                <div className="space-y-2">
+                  {activeCopy.help.map((item, index) => {
+                    const open = openHelp === index
+                    return (
+                      <div key={item.question} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <button
+                          type="button"
+                          onClick={() => setOpenHelp(open ? null : index)}
+                          aria-expanded={open}
+                          className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+                        >
+                          <span className="font-bold text-[#102449]">{item.question}</span>
+                          <span className="shrink-0 text-slate-500"><Chevron open={open} /></span>
+                        </button>
+                        {open && (
+                          <div className="border-t border-slate-200 bg-slate-50/60 px-4 py-4 sm:px-5">
+                            <p className="text-sm leading-6 text-slate-600">{item.answer}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
               {section === 'guides' && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {activeCopy.guides.map((guide) => (
-                    <article key={guide} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-sm font-bold text-[#102449]">{guide}</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">Panduan penggunaan QuickSpeak untuk {role}.</p>
-                    </article>
-                  ))}
+                <div className="space-y-2">
+                  {activeCopy.guides.map((guide, index) => {
+                    const open = openGuide === index
+                    return (
+                      <div key={guide.title} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <button
+                          type="button"
+                          onClick={() => setOpenGuide(open ? null : index)}
+                          aria-expanded={open}
+                          className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+                        >
+                          <span className="font-bold text-[#102449]">{guide.title}</span>
+                          <span className="shrink-0 text-slate-500"><Chevron open={open} /></span>
+                        </button>
+                        {open && (
+                          <div className="border-t border-slate-200 bg-slate-50/60 px-4 py-4 sm:px-5">
+                            <ol className="space-y-3">
+                              {guide.steps.map((step, stepIndex) => (
+                                <li key={step} className="flex gap-3 text-sm leading-6 text-slate-600">
+                                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{stepIndex + 1}</span>
+                                  <span>{step}</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
               {section === 'contact' && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <a href="mailto:quicspeaklms@gmail.com" className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                  <a
+                    href="mailto:quickspeaklms@gmail.com"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
                     <MailIcon />
                     Email Admin
                   </a>
-                  <a href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%20Admin%2C%20saya%20membutuhkan%20bantuan%20terkait%20portal." target="_blank" rel="noreferrer" aria-label="WhatsApp Admin" className="inline-flex items-center justify-center rounded-lg bg-[#102449] px-4 py-3 text-white transition hover:bg-[#17325f]">
+                  <a
+                    href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%20Admin%2C%20saya%20membutuhkan%20bantuan%20terkait%20portal."
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="WhatsApp Admin"
+                    title="WhatsApp Admin — 082138138564"
+                    className="inline-flex items-center justify-center rounded-lg bg-[#25D366] px-4 py-3 text-white transition hover:bg-[#20bd5a]"
+                  >
                     <WhatsAppIcon />
                   </a>
                 </div>
