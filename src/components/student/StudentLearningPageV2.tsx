@@ -115,7 +115,7 @@ export function StudentLearningPageV2() {
     return () => { cancelled = true }
   }, [canLoadEbooks])
 
-  const packageCompleted = Boolean(packageStatus?.current_package_session_count >= packageStatus.session_limit)
+  const packageCompleted = Boolean(packageStatus && packageStatus.current_package_session_count >= packageStatus.session_limit)
   const levelCompleted = Boolean(packageStatus?.level_completed)
   const legacyCompleted = Boolean(state && (state.enrollment_status === 'completed' || state.completed_at || state.completed_sessions >= state.session_limit))
   const completed = levelCompleted || (packageStatus ? packageCompleted && levelCompleted : legacyCompleted)
