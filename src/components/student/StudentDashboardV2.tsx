@@ -5,15 +5,12 @@ import { useStudentAttendance } from '../../hooks/useStudentAttendance'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
 
-function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'arrow' | 'check' | 'help' | 'mail' | 'whatsapp' }) {
+function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'arrow' | 'check' }) {
   const common = 'size-5 fill-none stroke-current stroke-2'
   if (name === 'book') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" /><path d="M4 5.5v16M8 7h8M8 11h8" /></svg>
   if (name === 'calendar') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" /></svg>
   if (name === 'user') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><circle cx="12" cy="7" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
   if (name === 'check') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="m5 12 4 4L19 6" /></svg>
-  if (name === 'help') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><circle cx="12" cy="12" r="9" /><path d="M9.75 9a2.35 2.35 0 1 1 3.62 1.98c-.9.55-1.37 1-1.37 2.02M12 16.8h.01" /></svg>
-  if (name === 'mail') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3.5" y="5" width="17" height="14" rx="2" /><path d="m4.5 7 7.5 6 7.5-6" /></svg>
-  if (name === 'whatsapp') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 11.6a8.1 8.1 0 0 1-12 7l-4 1.1 1.1-3.9a8.1 8.1 0 1 1 14.9-4.2Z" /><path d="M8.5 8.2c.2-.4.4-.4.7.4l.7 1.7c.1.2.1.4 0 .5l.6.7c.5.1.4.3.3.6-.2.8-.9 1.3-1.7 1.3-1.1 0-2.5-.6-3.8-1.8-1.1-1-2.1-2.3-2.4-3.3-.3-.8-.2-1.6.2-2.1Z" /></svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>
 }
 
@@ -162,11 +159,10 @@ export function StudentDashboardV2() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="account-support-title">
-        <div className="grid gap-0 px-6 py-5 sm:px-7 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)] xl:items-center">
-          <div className="flex items-start gap-3.5 pb-5 xl:pb-0"><div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><Icon name="check" /></div><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Account Status</p><h2 id="account-support-title" className="mt-1 text-lg font-bold tracking-[-0.015em] text-[#102449]">Your account is active</h2><p className="mt-1 max-w-md text-sm leading-6 text-slate-600">You can access your learning area and continue your current stage.</p></div></div>
-          <div className="border-t border-slate-200 pt-4 xl:border-l xl:border-t-0 xl:px-6 xl:py-1"><div><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Student</p><p className="mt-1.5 truncate text-sm font-bold text-slate-900">{profile.full_name}</p></div><div className="mt-3"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Email</p><p className="mt-1.5 truncate text-sm font-bold text-slate-900">{profile.email}</p></div></div>
-          <div className="border-t border-slate-200 pt-4 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-1"><div className="flex items-center gap-2"><div className="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><Icon name="help" /></div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Need help?</p></div><p className="mt-1.5 text-base font-bold text-[#102449]">Contact QuickSpeak Admin</p><p className="mt-1 text-sm leading-5 text-slate-600">Learning, payment, or account questions.</p><div className="mt-3 grid grid-cols-2 gap-2"><a href="mailto:quicspeaklms@gmail.com" className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"><span aria-hidden="true">✉</span> Email Admin</a><a href="https://wa.me/6282138138564?text=Halo%20QuickSpeak%20Admin%2C%20saya%20membutuhkan%20bantuan%20terkait%20student%20portal." target="_blank" rel="noreferrer" className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#102449] px-3 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"><span aria-hidden="true">◉</span> WhatsApp Admin</a></div></div>
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="account-status-title">
+        <div className="grid gap-0 px-6 py-5 sm:px-7 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)] lg:items-center">
+          <div className="flex items-start gap-3.5 pb-5 lg:pb-0"><div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><Icon name="check" /></div><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Account Status</p><h2 id="account-status-title" className="mt-1 text-lg font-bold tracking-[-0.015em] text-[#102449]">Your account is active</h2><p className="mt-1 max-w-md text-sm leading-6 text-slate-600">You can access your learning area and continue your current stage.</p></div></div>
+          <div className="border-t border-slate-200 pt-4 lg:border-l lg:border-t-0 lg:px-6 lg:py-1"><div><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Student</p><p className="mt-1.5 truncate text-sm font-bold text-slate-900">{profile.full_name}</p></div><div className="mt-3"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Email</p><p className="mt-1.5 truncate text-sm font-bold text-slate-900">{profile.email}</p></div></div>
         </div>
       </section>
     </div>
