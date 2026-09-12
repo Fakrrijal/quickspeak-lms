@@ -59,6 +59,9 @@ returns table (
   chapter_id uuid,
   chapter_number integer,
   chapter_title text,
+  material_id uuid,
+  material_number integer,
+  material_title text,
   completed_at timestamptz
 )
 language sql
@@ -77,6 +80,9 @@ as $$
     viewed_level.level_number,
     eb.id,
     eb.title,
+    lc.id,
+    lc.chapter_number,
+    lc.title,
     lc.id,
     lc.chapter_number,
     lc.title,
