@@ -5,6 +5,9 @@ import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
 import { getStudentLevelPackageStatus, requestCurrentLevelPackageRenewal, requestNextLevelEnrollmentFromResult, type StudentLevelPackageStatus } from '../../services/level-completion.service'
+import { StudentAssessmentPage } from './StudentAssessmentPage'
+import { StudentBooksPage } from './StudentBooksPage'
+import { StudentHistoryPage } from './StudentHistoryPage'
 
 function formatPackage(value: StudentLearningState['package_type']) {
   return value === 'private' ? 'Private' : 'Semi-Private'
@@ -25,6 +28,7 @@ export function StudentLearningCurrentPage() {
   const [action, setAction] = useState<'renew' | 'next' | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [payment, setPayment] = useState<{ invoice_number: string; payment_amount: number } | null>(null)
+  const view = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('view') : null
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'student' && status === 'active'
   useEffect(() => {
@@ -50,6 +54,13 @@ export function StudentLearningCurrentPage() {
     return () => { cancelled = true }
   }, [canLoad])
 
+  if (authLoading || profileLoading) return <section className="border border-slate-200 bg-white p-6 shadow-sm"><div className="h-3 w-28 animate-pulse rounded bg-slate-200" /><div className="mt-4 h-8 w-72 animate-pulse rounded bg-slate-100" /></section>
+  if (!isAuthenticated || !profile || profileError || status !== 'active' || role !== 'student') return null
+  if (view === 'books') return <StudentBooksPage />
+  if (view === 'assessment') return <StudentAssessmentPage />
+  if (view === 'history') return <StudentHistoryPage />
+  if (loading) return <section className="border border-slate-200 bg-white p-6 shadow-sm"><div className="h-3 w-28 animate-pulse rounded bg-slate-200" /><div className="mt-4 h-8 w-72 animate-pulse rounded bg-slate-100" /></section>
+
   const currentRows = useMemo(() => state ? rows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [rows, state])
   const completedCount = currentRows.filter((row) => row.completed_at).length
   const progressPercent = currentRows.length ? Math.round((completedCount / currentRows.length) * 100) : 0
@@ -73,9 +84,6 @@ export function StudentLearningCurrentPage() {
       setError(submitError instanceof Error ? submitError.message : 'Unable to start the selected package.')
     } finally { setSubmitting(false) }
   }
-
-  if (authLoading || profileLoading || loading) return <section className="border border-slate-200 bg-white p-6 shadow-sm"><div className="h-3 w-28 animate-pulse rounded bg-slate-200" /><div className="mt-4 h-8 w-72 animate-pulse rounded bg-slate-100" /></section>
-  if (!isAuthenticated || !profile || profileError || status !== 'active' || role !== 'student') return null
 
   return <div className="space-y-6">
     <header className="border-b border-slate-200 pb-5"><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Learning</p><h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">My Learning</h1><p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">Learning Progress hanya menampilkan level yang sedang aktif.</p></header>
