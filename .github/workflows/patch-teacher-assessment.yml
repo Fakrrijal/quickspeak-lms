@@ -1,6 +1,9 @@
 name: Patch teacher assessment UI
 
 on:
+  push:
+    branches:
+      - feature/level-completion-renewal
   workflow_dispatch:
 
 permissions:
@@ -44,7 +47,6 @@ jobs:
               text = text.replace(old_level_fallback, new_level_fallback, 1)
 
           old_select_level = "                {activeLevel.chapters.map((chapter) => {\n                  const saving = savingChapterId === chapter.id\n"
-          # Keep chapter UI intact; assessment panel is inserted after the chapter list.
           if old_select_level not in text:
               raise SystemExit('Expected chapter list anchor not found')
 
