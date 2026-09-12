@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../providers/AuthProvider'
 import { useTeacherGroupAttendance } from '../hooks/useTeacherGroupAttendance'
 import { useTeacherAttendance } from '../hooks/useTeacherAttendance'
-import { type TeacherAttendanceGroup, type TeacherAttendanceMeeting, type TeacherAttendancePeriod, getMyTeacherAttendance, getMyTeacherAttendanceGroups } from '../services/teacher-attendance.service'
+import { type TeacherAttendanceMeeting, type TeacherAttendancePeriod } from '../services/teacher-attendance.service'
 import { downloadAdminAttendancePdf } from '../utils/admin-attendance-pdf'
 import { summarizeAdminAttendanceOverall, summarizeAdminAttendanceStudents, type AdminAttendanceRecord } from '../services/admin-attendance.service'
-import { getMyTeacherFeeReport, type MyTeacherFeeReport } from '../services/teacher-fee.service'
 
-export const Route = createFileRoute('/teacher')({ component: TeacherRouteComponent })
+export const Route = createFileRoute('/teacher')({
+  beforeLoad: ({ location }) => {
+    if (location.pathname === '/teacher') {
+      throw redirect({ to: '/teacher/overview', replace: true })
+    }
+  },
+  component: TeacherRouteComponent,
+})
 
 function formatPackageType(packageType: string) {
   return packageType === 'semi_private' ? 'Semi-Private' : 'Private'
@@ -36,6 +42,7 @@ function formatRecordedDateTime(value: string) {
   return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
+/*
 function Icon({ name }: { name: 'users' | 'calendar' | 'wallet' | 'check' | 'arrow' | 'group' }) {
   const common = 'size-5 fill-none stroke-current stroke-2'
   if (name === 'users') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm9 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
@@ -45,6 +52,7 @@ function Icon({ name }: { name: 'users' | 'calendar' | 'wallet' | 'check' | 'arr
   if (name === 'group') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 9h8M8 13h5M8 17h3" /></svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>
 }
+*/
 
 function TeacherAttendanceDetailModal({ student, records, period, referenceDate, onClose }: { student: ReturnType<typeof summarizeAdminAttendanceStudents>[number], records: AdminAttendanceRecord[], period: TeacherAttendancePeriod, referenceDate: string, onClose: () => void }) {
   const overall = summarizeAdminAttendanceOverall(records)
@@ -65,10 +73,10 @@ function TeacherAttendanceDetailModal({ student, records, period, referenceDate,
 }
 
 function TeacherRouteComponent() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
-  return pathname === '/teacher' ? <TeacherDashboard /> : <Outlet />
+  return <Outlet />
 }
 
+/* Legacy TeacherDashboard removed from routing in favor of /teacher/overview.
 function TeacherDashboard() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
@@ -180,6 +188,7 @@ function TeacherDashboard() {
     </div>
   )
 }
+*/
 
 export function TeacherAttendancePage() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
