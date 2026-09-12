@@ -221,7 +221,7 @@ export function StudentLearningPageV2() {
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Current Learning Stage</p>
               <h2 className="mt-1.5 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">Level {state.level_number}</h2>
-              <p className="mt-1 text-sm font-semibold text-blue-700">{state.level_name} · {formatPackage(state.package_type)}</p>
+              <p className="mt-1 text-sm font-semibold text-blue-700">{formatPackage(state.package_type)}</p>
             </div>
             <span className={`inline-flex w-fit items-center rounded-md px-2.5 py-1.5 text-xs font-bold ${assigned ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>{assigned ? 'Active learning' : 'Waiting for class assignment'}</span>
           </div>
