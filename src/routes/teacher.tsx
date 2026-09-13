@@ -42,18 +42,6 @@ function formatRecordedDateTime(value: string) {
   return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
-/*
-function Icon({ name }: { name: 'users' | 'calendar' | 'wallet' | 'check' | 'arrow' | 'group' }) {
-  const common = 'size-5 fill-none stroke-current stroke-2'
-  if (name === 'users') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm9 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-  if (name === 'calendar') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" /></svg>
-  if (name === 'wallet') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 13h.01" /></svg>
-  if (name === 'check') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="m5 12 4 4L19 6" /></svg>
-  if (name === 'group') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 9h8M8 13h5M8 17h3" /></svg>
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>
-}
-*/
-
 function TeacherAttendanceDetailModal({ student, records, period, referenceDate, onClose }: { student: ReturnType<typeof summarizeAdminAttendanceStudents>[number], records: AdminAttendanceRecord[], period: TeacherAttendancePeriod, referenceDate: string, onClose: () => void }) {
   const overall = summarizeAdminAttendanceOverall(records)
   return (
@@ -75,120 +63,6 @@ function TeacherAttendanceDetailModal({ student, records, period, referenceDate,
 function TeacherRouteComponent() {
   return <Outlet />
 }
-
-/* Legacy TeacherDashboard removed from routing in favor of /teacher/overview.
-function TeacherDashboard() {
-  const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
-  const navigate = useNavigate()
-  const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
-  const [groups, setGroups] = useState<TeacherAttendanceGroup[]>([])
-  const [meetings, setMeetings] = useState<TeacherAttendanceMeeting[]>([])
-  const [feeReport, setFeeReport] = useState<MyTeacherFeeReport | null>(null)
-  const [summaryLoading, setSummaryLoading] = useState(true)
-  const [summaryError, setSummaryError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
-
-  useEffect(() => {
-    if (authLoading || profileLoading) return
-    if (!isAuthenticated || !profile || profileError || status === null) navigate({ to: '/login', replace: true })
-    else if (status === 'waiting') navigate({ to: '/waiting', replace: true })
-  }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
-
-  useEffect(() => {
-    if (!canLoad) return
-    let cancelled = false
-    setSummaryLoading(true)
-    setSummaryError(null)
-    const now = new Date()
-    const month = now.getMonth() + 1
-    const year = now.getFullYear()
-    const referenceDate = `${year}-${String(month).padStart(2, '0')}-01`
-    Promise.all([getMyTeacherAttendanceGroups(), getMyTeacherAttendance('month', referenceDate), getMyTeacherFeeReport(month, year)])
-      .then(([groupsData, meetingsData, feeReportData]) => {
-        if (cancelled) return
-        setGroups(groupsData)
-        setMeetings(meetingsData)
-        setFeeReport(feeReportData)
-        setSummaryLoading(false)
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setSummaryError(err instanceof Error ? err.message : 'Unable to load dashboard summary')
-        setSummaryLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [canLoad, retryCount])
-
-  if (authLoading || profileLoading) return <p>Loading...</p>
-  if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
-  if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
-
-  const classCount = groups.length
-  const activeStudentCount = new Set(groups.flatMap((group) => group.students.map((student) => student.student_id))).size
-  const feeAmount = feeReport?.period_summary.earned_amount ?? 0
-  const completedMeetings = meetings.filter((meeting) => meeting.teacher_status !== null && meeting.teacher_recorded_at !== null)
-  const presentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'present').length
-  const absentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'absent').length
-  const attendanceCount = completedMeetings.length
-  const recentAttendance = [...completedMeetings].sort((left, right) => right.session_date.localeCompare(left.session_date) || String(right.teacher_recorded_at).localeCompare(String(left.teacher_recorded_at))).slice(0, 5)
-
-  return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <header className="border-b border-slate-200 pb-5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
-        <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#102449] sm:text-4xl">Welcome back, {profile.full_name || 'Teacher'}.</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Here is your current teaching operations overview.</p>
-      </header>
-
-      {summaryLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <div key={item} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="h-4 w-24 animate-pulse rounded bg-slate-200" /><div className="mt-4 h-8 w-20 animate-pulse rounded bg-slate-200" /></div>)}</div>
-      ) : summaryError ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900"><p>{summaryError}</p><button type="button" onClick={() => setRetryCount((count) => count + 1)} className="mt-3 font-bold underline">Retry</button></div>
-      ) : (
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { label: 'Classes', value: classCount, icon: 'group' as const, tone: 'bg-blue-50 text-blue-700' },
-            { label: 'Active Students', value: activeStudentCount, icon: 'users' as const, tone: 'bg-emerald-50 text-emerald-700' },
-            { label: 'Fee (This Month)', value: `Rp${feeAmount.toLocaleString('id-ID')}`, icon: 'wallet' as const, tone: 'bg-amber-50 text-amber-800' },
-            { label: 'Attendance (This Month)', value: attendanceCount, icon: 'calendar' as const, tone: 'bg-violet-50 text-violet-700' },
-          ].map((card) => (
-            <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-3"><div className={`flex size-10 items-center justify-center rounded-lg ${card.tone}`}><Icon name={card.icon} /></div><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">This month</span></div>
-              <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.13em] text-slate-500">{card.label}</p>
-              <p className="mt-1 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{card.value}</p>
-            </article>
-          ))}
-        </section>
-      )}
-
-      {!summaryLoading && !summaryError && (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]">
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-6 py-5 sm:px-7"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Teaching Workspace</p><h2 className="mt-1 text-xl font-bold text-[#102449]">Assigned teaching groups</h2><p className="mt-1 text-sm text-slate-600">Your current teaching groups and student coverage.</p></div>
-            <div className="divide-y divide-slate-100">
-              {groups.length === 0 ? <div className="p-6"><p className="text-sm text-slate-600">No active teaching groups are assigned to you.</p></div> : groups.map((group) => <article key={group.teaching_group_id} className="p-6 sm:p-7"><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="text-lg font-bold text-[#102449]">{group.teaching_group_name}</h3><div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-600"><span className="rounded-full bg-slate-100 px-2.5 py-1">{group.level_name}</span><span className="rounded-full bg-slate-100 px-2.5 py-1">{formatPackageType(group.package_type)}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">{group.students.length} student{group.students.length === 1 ? '' : 's'}</span></div></div><a href="/teacher/attendance" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f]">View Attendance <Icon name="arrow" /></a></div></article>)}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Monthly Overview</p>
-            <h2 className="mt-1 text-xl font-bold text-[#102449]">Teaching activity</h2>
-            <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2"><div className="rounded-xl bg-slate-50 p-4"><dt className="text-xs font-semibold text-slate-500">Sessions</dt><dd className="mt-1 text-xl font-extrabold text-[#102449]">{attendanceCount}</dd></div><div className="rounded-xl bg-emerald-50 p-4"><dt className="text-xs font-semibold text-emerald-700">Present</dt><dd className="mt-1 text-xl font-extrabold text-emerald-800">{presentCount}</dd></div><div className="rounded-xl bg-rose-50 p-4"><dt className="text-xs font-semibold text-rose-700">Absent</dt><dd className="mt-1 text-xl font-extrabold text-rose-800">{absentCount}</dd></div><div className="rounded-xl bg-amber-50 p-4"><dt className="text-xs font-semibold text-amber-800">Earned Fee</dt><dd className="mt-1 text-xl font-extrabold text-amber-900">Rp{feeAmount.toLocaleString('id-ID')}</dd></div></dl>
-            <div className="mt-5 border-t border-slate-200 pt-5"><p className="text-sm leading-6 text-slate-600">Attendance records and fee totals update from your current teaching activity.</p></div>
-          </section>
-        </div>
-      )}
-
-      {!summaryLoading && !summaryError && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-2 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Recent Activity</p><h2 className="mt-1 text-xl font-bold text-[#102449]">Recent attendance</h2></div><a href="/teacher/attendance" className="text-sm font-bold text-blue-700 hover:text-blue-800">View all attendance</a></div>
-          <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="px-5 py-3 font-semibold">Date</th><th className="px-5 py-3 font-semibold">Student</th><th className="px-5 py-3 font-semibold">Teaching Group</th><th className="px-5 py-3 font-semibold">Status</th><th className="px-5 py-3 font-semibold">Recorded</th></tr></thead><tbody className="divide-y divide-slate-100">{recentAttendance.length === 0 ? <tr><td colSpan={5} className="px-5 py-8 text-slate-600">No attendance activity recorded this month.</td></tr> : recentAttendance.map((meeting) => <tr key={meeting.meeting_id} className="hover:bg-slate-50"><td className="whitespace-nowrap px-5 py-3 text-slate-700">{formatSessionDate(meeting.session_date)}</td><td className="px-5 py-3 font-semibold text-slate-900">{meeting.student_display_name}</td><td className="px-5 py-3 text-slate-700">{meeting.teaching_group_name}</td><td className="px-5 py-3"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${meeting.teacher_status === 'present' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{meeting.teacher_status === 'present' ? 'Present' : 'Absent'}</span></td><td className="whitespace-nowrap px-5 py-3 text-slate-600">{formatAttendanceTime(meeting.teacher_recorded_at)}</td></tr>)}</tbody></table></div>
-        </section>
-      )}
-    </div>
-  )
-}
-*/
 
 export function TeacherAttendancePage() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
@@ -305,8 +179,8 @@ export function TeacherAttendancePage() {
 
         {reportExpanded && (
           <div id="teacher-attendance-records-content" className="border-t border-slate-200">
-            <div className="h-[360px] overflow-y-scroll overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <div className="h-[230px] overflow-y-scroll overflow-x-auto">
+              <table className="min-w-full whitespace-nowrap divide-y divide-slate-200 text-left text-sm">
                 <thead className="sticky top-0 z-10 bg-white text-slate-600 shadow-sm">
                   <tr><th className="px-5 py-3">Student</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Teaching Group</th><th className="px-5 py-3 text-right">Sessions</th><th className="px-5 py-3 text-right">Present</th><th className="px-5 py-3 text-right">Absent</th><th className="px-5 py-3 text-right">Rate</th><th className="px-5 py-3">Action</th></tr>
                 </thead>
@@ -334,9 +208,6 @@ export function TeacherAttendancePage() {
             </div>
           </div>
         )}
-      </section>
-
-      <section className="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-xl font-semibold text-slate-900">Attendance History</h2>{historyUpdating && <p className="mt-1 text-sm text-slate-500">Updating history…</p>}</div><div className="flex flex-wrap gap-3"><div><label htmlFor="history-period" className="block text-sm font-medium text-slate-700">Filter</label><select id="history-period" value={period} onChange={(event) => handlePeriodChange(event.target.value as TeacherAttendancePeriod)} className="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="day">Daily</option><option value="month">Monthly</option><option value="year">Yearly</option></select></div><div><label htmlFor="history-reference" className="block text-sm font-medium text-slate-700">{period === 'day' ? 'Date' : period === 'month' ? 'Month' : 'Year'}</label><input id="history-reference" type={period === 'day' ? 'date' : period === 'month' ? 'month' : 'number'} value={referenceInputValue} min={period === 'year' ? '2000' : undefined} max={period === 'year' ? '9999' : undefined} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" /></div></div></div>{historyLoading ? <p className="mt-4 text-sm text-slate-600">Loading history…</p> : historyError ? <div className="mt-4 text-sm text-amber-800"><p>{historyError}</p><button type="button" onClick={() => void reloadHistory()} className="mt-2 font-medium underline">Retry</button></div> : meetings.length === 0 ? <p className="mt-4 text-sm text-slate-600">No attendance history for this period.</p> : <div className="mt-4 overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="px-3 py-2 font-medium">Session</th><th className="px-3 py-2 font-medium">Date</th><th className="px-3 py-2 font-medium">Time</th><th className="px-3 py-2 font-medium">Student</th><th className="px-3 py-2 font-medium">Teaching Group</th><th className="px-3 py-2 font-medium">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{meetings.map((meeting) => <tr key={meeting.meeting_id}><td className="px-3 py-3">{meeting.session_number}</td><td className="px-3 py-3">{formatSessionDate(meeting.session_date)}</td><td className="px-3 py-3">{formatAttendanceTime(meeting.teacher_recorded_at)}</td><td className="px-3 py-3">{meeting.student_display_name}</td><td className="px-3 py-3">{meeting.teaching_group_name}</td><td className="px-3 py-3"><span className={meeting.teacher_status === 'present' ? 'rounded-full bg-emerald-100 px-2 py-1 text-emerald-800' : meeting.teacher_status === 'absent' ? 'rounded-full bg-rose-100 px-2 py-1 text-rose-800' : 'rounded-full bg-amber-100 px-2 py-1 text-amber-800'}>{meeting.teacher_status === 'present' ? 'Present' : meeting.teacher_status === 'absent' ? 'Absent' : 'Pending'}</span></td></tr>)}</tbody></table></div>}
       </section>
 
       {detailStudent && <TeacherAttendanceDetailModal student={detailStudent} records={detailRecords} period={period} referenceDate={referenceDate} onClose={() => setDetailStudentKey(null)} />}
