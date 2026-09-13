@@ -50,8 +50,8 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
       setError('Your account email is not available. Please refresh the page and try again.')
       return
     }
-    if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long.')
+    if (newPassword.length < 4) {
+      setError('New password must be at least 4 characters long.')
       return
     }
     if (newPassword === currentPassword) {
@@ -127,7 +127,7 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Password must be at least 8 characters. Use a password you do not use for other accounts.
+          Password must be at least 4 characters. Use a password you do not use for other accounts.
         </div>
 
         {error && <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{error}</p>}
