@@ -345,7 +345,7 @@ function StudentAttendancePage() {
                   <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {periodLabel}.</p>
                 </div>
               ) : (
-                <div className="max-h-[360px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-200">
+                <div className="h-[360px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
                   <table className="min-w-[1040px] w-full text-left text-sm">
                     <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500 shadow-sm">
                       <tr>
