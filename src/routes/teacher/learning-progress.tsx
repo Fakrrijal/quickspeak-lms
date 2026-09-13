@@ -279,7 +279,9 @@ function TeacherLearningProgressPage() {
       </form>
 
       {loading ? (
-        <div className="space-y-4">{[1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />)}</div>
+        <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          {[1, 2, 3, 4].map((item) => <div key={item} className="h-14 animate-pulse rounded-xl bg-slate-100" />)}
+        </div>
       ) : error ? (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900">{error}</div>
       ) : students.length === 0 ? (
@@ -291,8 +293,8 @@ function TeacherLearningProgressPage() {
         <section>
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Student</p>
-              <h2 className="mt-1 text-xl font-extrabold text-[#102449]">Select student</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Students</p>
+              <h2 className="mt-1 text-xl font-extrabold text-[#102449]">Learning Progress</h2>
             </div>
             <p className="text-sm font-semibold text-slate-500">{visibleStudents.length} student{visibleStudents.length === 1 ? '' : 's'}</p>
           </div>
@@ -303,24 +305,28 @@ function TeacherLearningProgressPage() {
               <p className="mt-2 text-sm text-slate-600">Try another student name.</p>
             </div>
           ) : (
-            <div className="max-h-[520px] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/60 p-3 pr-2 shadow-inner sm:max-h-[600px]">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="max-h-[600px] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="sticky top-0 z-10 hidden grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_130px_44px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
+                <span>Student</span>
+                <span>Latest Progress</span>
+                <span>Level</span>
+                <span aria-hidden="true" />
+              </div>
+
+              <div className="divide-y divide-slate-100">
                 {visibleStudents.map((student) => (
                   <button
                     key={student.studentId}
                     type="button"
                     onClick={() => selectStudent(student.studentId)}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-200 hover:bg-slate-50 hover:shadow"
+                    className="grid w-full grid-cols-1 gap-2 px-4 py-4 text-left transition hover:bg-slate-50 sm:grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_130px_44px] sm:items-center"
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="truncate text-base font-bold text-[#102449]">{student.studentName}</span>
-                      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Level {student.currentLevelNumber}</span>
-                    </div>
-                    {student.latestChapterTitle ? (
-                      <p className="mt-2 truncate text-sm font-bold text-emerald-700">✓ Chapter {student.latestChapterNumber} — {student.latestChapterTitle}</p>
-                    ) : (
-                      <p className="mt-2 text-sm text-slate-500">Belum ada chapter yang disimpan</p>
-                    )}
+                    <span className="min-w-0 truncate text-sm font-bold text-[#102449]">{student.studentName}</span>
+                    <span className="min-w-0 truncate text-sm text-slate-600">
+                      {student.latestChapterTitle ? `Chapter ${student.latestChapterNumber} — ${student.latestChapterTitle}` : 'Belum ada chapter yang disimpan'}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-600">Level {student.currentLevelNumber}</span>
+                    <span className="flex items-center justify-end text-lg font-bold text-blue-700" aria-hidden="true">→</span>
                   </button>
                 ))}
               </div>
@@ -347,9 +353,7 @@ function TeacherLearningProgressPage() {
                 </div>
                 <p className="mt-2 text-sm text-slate-600">Chapter {latestSavedAchievement.chapter_number} — {latestSavedAchievement.chapter_title}</p>
                 <p className="mt-1 text-sm font-bold text-emerald-700">✓ {latestSavedAchievement.material_title}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">
-                  {latestSavedAchievement.teaching_group_name ?? 'Group not available'} · {latestSavedAchievement.teacher_name ?? latestSavedAchievement.teacher_code ?? 'Teacher not available'}
-                </p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">{latestSavedAchievement.teaching_group_name ?? 'Group not available'} · {latestSavedAchievement.teacher_name ?? latestSavedAchievement.teacher_code ?? 'Teacher not available'}</p>
               </div>
             )}
 
@@ -362,17 +366,12 @@ function TeacherLearningProgressPage() {
                     type="button"
                     disabled={!unlocked}
                     onClick={() => unlocked && selectLevel(level.levelNumber)}
-                    className={`rounded-2xl border p-5 text-left transition ${
-                      !unlocked
-                        ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60'
-                        : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'
-                    }`}
+                    className={`rounded-xl border p-4 text-left transition ${!unlocked ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60' : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'}`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-bold text-slate-500">Level {level.levelNumber}</span>
                       <span className="text-lg" aria-hidden="true">{unlocked ? '→' : '🔒'}</span>
                     </div>
-                    <p className="mt-2 text-base font-extrabold text-[#102449]">{level.levelName}</p>
                     {unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">{level.teachingGroupName ?? 'Group not available'} · {level.teacherName ?? level.teacherCode ?? 'Teacher not available'}</p>}
                     {unlocked && <p className="mt-1 text-xs font-semibold text-slate-500">{level.chapters.length} chapters</p>}
                     {!unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">Not taken yet</p>}
@@ -388,7 +387,7 @@ function TeacherLearningProgressPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{activeLevel?.teachingGroupName ?? 'Group not available'} · {activeLevel?.teacherName ?? activeLevel?.teacherCode ?? 'Teacher not available'}</p>
-                <h3 className="mt-1 text-xl font-extrabold text-[#102449]">Level {activeLevel?.levelNumber} · {activeLevel?.levelName}</h3>
+                <h3 className="mt-1 text-xl font-extrabold text-[#102449]">Level {activeLevel?.levelNumber}</h3>
                 {activeLevel?.ebookTitle && <p className="mt-1 text-sm text-slate-500">{activeLevel.ebookTitle}</p>}
               </div>
               <button type="button" onClick={backToLevels} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to levels</button>
@@ -401,10 +400,7 @@ function TeacherLearningProgressPage() {
                 {activeLevel.chapters.map((chapter) => {
                   const saving = savingChapterId === chapter.id
                   return (
-                    <div
-                      key={chapter.id}
-                      className={`flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${chapter.completedAt ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/60'}`}
-                    >
+                    <div key={chapter.id} className={`flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${chapter.completedAt ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/60'}`}>
                       <div className="min-w-0">
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {chapter.number}</p>
                         <p className="mt-1 text-base font-bold text-[#102449]">{chapter.title}</p>
@@ -413,24 +409,10 @@ function TeacherLearningProgressPage() {
                       {chapter.completedAt ? (
                         <div className="flex shrink-0 items-center gap-2">
                           <span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700">✓ Saved</span>
-                          <button
-                            type="button"
-                            disabled={saving}
-                            onClick={() => undoChapter(selectedStudent.studentId, chapter.id)}
-                            className="rounded-lg border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-60"
-                          >
-                            {saving ? 'Saving...' : 'Undo'}
-                          </button>
+                          <button type="button" disabled={saving} onClick={() => undoChapter(selectedStudent.studentId, chapter.id)} className="rounded-lg border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving...' : 'Undo'}</button>
                         </div>
                       ) : (
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() => saveChapter(selectedStudent.studentId, chapter.id)}
-                          className="shrink-0 rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60"
-                        >
-                          {saving ? 'Saving...' : 'Save'}
-                        </button>
+                        <button type="button" disabled={saving} onClick={() => saveChapter(selectedStudent.studentId, chapter.id)} className="shrink-0 rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving...' : 'Save'}</button>
                       )}
                     </div>
                   )
