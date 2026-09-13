@@ -23,11 +23,15 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
         {
           label: 'My Learning',
           to: '/student/learning',
-          activePrefixes: ['/student/learning', '/student/ebooks/'],
         },
         {
           label: 'Attendance',
           to: '/student/attendance',
+        },
+        {
+          label: 'Books',
+          to: '/student/ebooks',
+          activePrefixes: ['/student/ebooks/'],
         },
         { label: 'Profile', to: '/student/profile' },
       ],
