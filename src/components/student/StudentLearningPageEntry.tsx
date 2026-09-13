@@ -41,7 +41,6 @@ export function StudentLearningPageEntry() {
   const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<'private' | 'semi_private' | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [loadingLevels, setLoadingLevels] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [paymentInitialization, setPaymentInitialization] = useState<{
     invoice_number: string
@@ -190,7 +189,7 @@ export function StudentLearningPageEntry() {
           <select
             value={selectedLevelId ?? ''}
             onChange={(event) => setSelectedLevelId(event.target.value || null)}
-            disabled={loadingLevels || submitting}
+            disabled={submitting}
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-400 sm:max-w-xs"
           >
             {levels.map((level) => (
