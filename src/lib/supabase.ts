@@ -117,15 +117,15 @@ export async function getEmailConfirmationResult(
     return 'invalid_callback'
   }
 
-  const { data, error } = await supabase.auth.getSession()
+  const { data, error } = await supabase.auth.getUser(
+    callback.accessToken,
+  )
 
-  if (error || !data.session) {
+  if (error || !data.user) {
     return 'invalid_callback'
   }
 
-  return data.session.access_token === callback.accessToken
-    ? 'success'
-    : 'invalid_callback'
+  return 'success'
 }
 
 export function takePasswordRecoveryCallback(): EmailConfirmationCallback | null {
