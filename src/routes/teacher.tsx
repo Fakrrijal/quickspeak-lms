@@ -115,7 +115,7 @@ export function TeacherAttendancePage() {
   const [teacherStatus, setTeacherStatus] = useState<'present' | 'absent' | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [detailStudentKey, setDetailStudentKey] = useState<string | null>(null)
-  const [period, setPeriod] = useState<TeacherAttendancePeriod>('month')
+  const period: TeacherAttendancePeriod = 'month'
   const [referenceDate, setReferenceDate] = useState(() => `${getTodayIsoDate().slice(0, 7)}-01`)
   const [reportSearch, setReportSearch] = useState('')
   const [reportGroup, setReportGroup] = useState('')
