@@ -243,7 +243,7 @@ function TeacherFeePage() {
         )}
 
         {feeView === 'history' && (
-          <div className="h-[230px] overflow-y-scroll overflow-x-auto">
+          <div className="h-[500px] overflow-y-scroll overflow-x-auto">
             <table className="min-w-[1040px] w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Time</th><th className="px-4 py-3">Session</th><th className="px-4 py-3">Teaching Group</th><th className="px-4 py-3">Package</th><th className="px-4 py-3">Present Students</th><th className="px-4 py-3">Fee</th><th className="px-4 py-3">Status</th></tr></thead>
               <tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={8} className="px-4 py-8 text-slate-600">Loading fee history...</td></tr> : visibleEntries.length === 0 ? <tr><td colSpan={8} className="px-4 py-8 text-slate-600">No fee history for this selection.</td></tr> : visibleEntries.map((entry, index) => <tr key={`${entry.teaching_group_name}-${entry.session_date}-${index}`} className="hover:bg-slate-50"><td className="whitespace-nowrap px-4 py-3">{formatDate(entry.session_date)}</td><td className="whitespace-nowrap px-4 py-3">{formatTime(entry.session_time)}</td><td className="px-4 py-3">{entry.session_number}</td><td className="px-4 py-3">{entry.teaching_group_name}</td><td className="px-4 py-3">{entry.package_type === 'semi_private' ? 'Semi-Private' : 'Private'}</td><td className="px-4 py-3">{entry.present_students}</td><td className="px-4 py-3 font-semibold">{formatAmount(entry.fee)}</td><td className="px-4 py-3"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase ${entry.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>{entry.status}</span></td></tr>)}</tbody>
@@ -252,7 +252,7 @@ function TeacherFeePage() {
         )}
 
         {feeView === 'detail' && (
-          <div className="h-[230px] overflow-y-scroll overflow-x-auto">
+          <div className="h-[460px] overflow-y-scroll overflow-x-auto">
             <table className="min-w-[1000px] w-full text-left text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-3 py-2.5">Date</th><th className="px-3 py-2.5">Teaching Group</th><th className="px-3 py-2.5">Level</th><th className="px-3 py-2.5">Student</th><th className="px-3 py-2.5">Code</th><th className="px-3 py-2.5">Attendance</th><th className="px-3 py-2.5 text-right">Fee</th></tr></thead>
               <tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={7} className="px-3 py-8 text-slate-600">Loading fee detail...</td></tr> : visibleDetailEntries.length === 0 ? <tr><td colSpan={7} className="px-3 py-8 text-slate-600">No attendance detail for this selection.</td></tr> : visibleDetailEntries.map((entry) => <tr key={entry.attendance_id} className="hover:bg-slate-50"><td className="whitespace-nowrap px-3 py-2">{formatDate(entry.session_date)}</td><td className="px-3 py-2">{entry.teaching_group_name}</td><td className="px-3 py-2">{entry.level_name}</td><td className="px-3 py-2 font-medium">{entry.student_name}</td><td className="px-3 py-2">{entry.student_code}</td><td className="px-3 py-2 capitalize">{entry.attendance_status}</td><td className="px-3 py-2 text-right">{formatAmount(entry.student_fee)}</td></tr>)}</tbody>
