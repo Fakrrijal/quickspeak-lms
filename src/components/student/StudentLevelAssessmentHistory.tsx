@@ -60,7 +60,7 @@ export function StudentLevelAssessmentHistory() {
           <p className="text-sm leading-6 text-slate-600">Belum ada level yang diselesaikan.</p>
         ) : (
           <div className="space-y-2">
-            {results.map((item, index) => (
+            {results.map((item) => (
               <details key={item.result_id} className="group rounded-xl border border-slate-200 bg-slate-50/50">
                 <summary className="flex cursor-pointer list-none items-center gap-4 px-4 py-4 sm:px-5 [&::-webkit-details-marker]:hidden">
                   <div className="min-w-0 flex-1">
