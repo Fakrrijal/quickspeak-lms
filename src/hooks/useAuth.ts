@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 import { queryClient } from '../lib/queryClient'
 import { supabase } from '../lib/supabase'
 
@@ -25,8 +25,9 @@ export function useAuth() {
   useEffect(() => {
     let mounted = true
 
-    const applySession = (nextSession: Session | null) => {
+    const applySession = (nextSession: Session | null, event: AuthChangeEvent | null = null) => {
       const nextUser = nextSession?.user ?? null
+      const sameUser = currentUserIdRef.current === nextUser?.id && nextUser?.id != null
 
       if (currentUserIdRef.current !== nextUser?.id) {
         queryClient.removeQueries({ queryKey: ['my-profile'] })
@@ -39,7 +40,19 @@ export function useAuth() {
       }
 
       setSession(nextSession)
-      setUser(nextUser)
+
+      // A password update emits USER_UPDATED with the same user identity.
+      // Keep the existing User object in that case so the Profile page and
+      // Account Security component do not remount and lose success feedback.
+      // Other USER_UPDATED changes (for example email confirmation changes)
+      // still refresh the User state when relevant auth fields differ.
+      const userAuthFieldsChanged =
+        user?.email !== nextUser?.email ||
+        user?.email_confirmed_at !== nextUser?.email_confirmed_at
+
+      if (!sameUser || event !== 'USER_UPDATED' || userAuthFieldsChanged) {
+        setUser(nextUser)
+      }
     }
 
     async function loadSession() {
@@ -51,7 +64,7 @@ export function useAuth() {
         console.error('Failed to load auth session:', error)
         applySession(null)
       } else {
-        applySession(data.session)
+        applySession(data.session, 'INITIAL_SESSION')
       }
 
       setLoading(false)
@@ -61,10 +74,10 @@ export function useAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
 
-      applySession(nextSession)
+      applySession(nextSession, event)
       setLoading(false)
     })
 
@@ -72,7 +85,7 @@ export function useAuth() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [])
+  }, [user])
 
   const loadProfile = useCallback(async (userId: string) => {
     const requestId = ++profileRequestIdRef.current
