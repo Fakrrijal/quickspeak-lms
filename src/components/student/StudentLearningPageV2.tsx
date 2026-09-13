@@ -240,7 +240,7 @@ export function StudentLearningPageV2() {
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Current Learning</p>
               <h2 className="mt-1.5 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">Level {state.level_number}</h2>
-              <p className="mt-1 text-sm font-semibold text-blue-700">{state.level_name} · {formatPackage(state.package_type)}</p>
+              <p className="mt-1 text-sm font-semibold text-blue-700">{formatPackage(state.package_type)}</p>
             </div>
             <span className={`inline-flex w-fit items-center rounded-md px-2.5 py-1.5 text-xs font-bold ${levelCompleted ? 'bg-emerald-50 text-emerald-700' : assigned ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-800'}`}>
               {levelCompleted ? 'Level completed' : assigned ? 'Active learning' : 'Waiting for class assignment'}
@@ -291,7 +291,7 @@ export function StudentLearningPageV2() {
       <section className="border border-slate-200 bg-white shadow-sm" aria-labelledby="student-progress-title">
         <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-700">Current Level Progress</p>
-          <h2 id="student-progress-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Level {state.level_number} · {state.level_name}</h2>
+          <h2 id="student-progress-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Level {state.level_number}</h2>
           <p className="mt-1 text-sm text-slate-500">Hanya progress level yang sedang aktif ditampilkan di sini.</p>
         </div>
         <div className="p-6 sm:p-7">
@@ -338,22 +338,3 @@ export function StudentLearningPageV2() {
                 <h2 className="mt-1 text-xl font-extrabold text-[#102449]">{packageAction === 'renew' ? 'Perpanjang Paket' : 'Pilih Paket Level Berikutnya'}</h2>
               </div>
               <button type="button" onClick={() => setShowPackageSelection(false)} className="text-slate-400">✕</button>
-            </div>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button type="button" disabled={submitting} onClick={() => void handleChoosePackage('private')} className="border border-slate-200 p-4 text-left transition hover:border-blue-200 disabled:opacity-60">
-                <p className="font-extrabold text-[#102449]">Private</p>
-                <p className="mt-1 text-sm text-slate-500">Rp180.000</p>
-              </button>
-              <button type="button" disabled={submitting} onClick={() => void handleChoosePackage('semi_private')} className="border border-slate-200 p-4 text-left transition hover:border-blue-200 disabled:opacity-60">
-                <p className="font-extrabold text-[#102449]">Semi-Private</p>
-                <p className="mt-1 text-sm text-slate-500">Rp150.000</p>
-              </button>
-            </div>
-            {packageAction === 'renew' && <p className="mt-4 text-xs leading-5 text-slate-500">Renewal will keep the current package type and price.</p>}
-            {error && <p className="mt-4 text-sm font-medium text-rose-700">{error}</p>}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
