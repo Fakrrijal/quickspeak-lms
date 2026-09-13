@@ -27,6 +27,9 @@ function passwordError(error: unknown) {
   const message = error instanceof Error ? error.message : 'Unable to change password.'
   if (/invalid login credentials|invalid credentials/i.test(message)) return 'Current password is incorrect.'
   if (/same password/i.test(message)) return 'New password must be different from your current password.'
+  if (/password.*(short|characters|length)|at least.*character/i.test(message)) {
+    return 'New password must be at least 8 characters long.'
+  }
   return message
 }
 
@@ -50,8 +53,12 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
       setError('Your account email is not available. Please refresh the page and try again.')
       return
     }
-    if (newPassword.length < 4) {
-      setError('New password must be at least 4 characters long.')
+    if (currentPassword.length === 0) {
+      setError('Please enter your current password.')
+      return
+    }
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters long.')
       return
     }
     if (newPassword === currentPassword) {
@@ -127,11 +134,19 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Password must be at least 4 characters. Use a password you do not use for other accounts.
+          Password must be at least 8 characters. Use a password you do not use for other accounts.
         </div>
 
-        {error && <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{error}</p>}
-        {success && <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{success}</p>}
+        {error && (
+          <p role="alert" aria-live="polite" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p role="status" aria-live="polite" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+            {success}
+          </p>
+        )}
 
         <div className="flex justify-end border-t border-slate-200 pt-5">
           <button type="submit" disabled={saving} className="inline-flex items-center justify-center rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50">
