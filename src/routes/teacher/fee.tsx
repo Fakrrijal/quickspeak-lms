@@ -101,6 +101,8 @@ function TeacherFeeDetailModal({ detailEntries, studentSummaries, month, year, d
   )
 }
 
+type FeeView = 'summary' | 'history' | 'detail'
+
 function TeacherFeePage() {
   const { isAuthenticated, loading: authLoading, profileLoading, profileError, role, status, profile } = useAuthContext()
   const navigate = useNavigate()
@@ -108,9 +110,7 @@ function TeacherFeePage() {
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [year, setYear] = useState(today.getFullYear())
   const [statusFilter, setStatusFilter] = useState<TeacherFeeStatus>('all')
-  const [feeHistoryExpanded, setFeeHistoryExpanded] = useState(true)
-  const [feeDetailExpanded, setFeeDetailExpanded] = useState(true)
-  const [studentSummaryExpanded, setStudentSummaryExpanded] = useState(true)
+  const [feeView, setFeeView] = useState<FeeView>('summary')
   const canLoad = !authLoading && !profileLoading && isAuthenticated && !profileError && role === 'teacher' && status === 'active'
   const { entries, detailEntries, detailReconcilesPeriod, periodSummary, loading, error, reload } = useTeacherFee(month, year, canLoad)
   const [isExporting, setIsExporting] = useState(false)
@@ -162,6 +162,11 @@ function TeacherFeePage() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   const statusTone = summary.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'
+  const viewMeta = {
+    summary: { eyebrow: 'Student Fee Summary', title: 'Fee Summary', description: 'Fee totals grouped by student and teaching group.' },
+    history: { eyebrow: 'Earnings Activity', title: 'Fee History', description: 'Fee earnings by teaching session.' },
+    detail: { eyebrow: 'Attendance Records', title: 'Fee Detail', description: `Attendance-based fee detail for ${formatMonth(year, month)}.` },
+  }[feeView]
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -209,93 +214,59 @@ function TeacherFeePage() {
       {exportError && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{exportError}</div>}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-5 sm:px-7">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Earnings Activity</p>
-            <h2 className="mt-1 text-xl font-bold text-[#102449]">Fee History</h2>
-          </div>
-          <button type="button" onClick={() => setFeeHistoryExpanded((current) => !current)} aria-expanded={feeHistoryExpanded} aria-controls="teacher-fee-history-content" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50">
-            {feeHistoryExpanded ? 'Collapse' : 'View records'}
-            <span className={`text-base transition-transform ${feeHistoryExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
-          </button>
-        </div>
-        {feeHistoryExpanded && (
-          <div id="teacher-fee-history-content" className="border-t border-slate-200">
-            <div className="h-[230px] overflow-y-scroll overflow-x-auto">
-              <table className="min-w-[1040px] w-full divide-y divide-slate-200 text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Time</th><th className="px-4 py-3">Session</th><th className="px-4 py-3">Teaching Group</th><th className="px-4 py-3">Package</th><th className="px-4 py-3">Present Students</th><th className="px-4 py-3">Fee</th><th className="px-4 py-3">Status</th></tr></thead>
-                <tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={8} className="px-4 py-8 text-slate-600">Loading fee history...</td></tr> : visibleEntries.length === 0 ? <tr><td colSpan={8} className="px-4 py-8 text-slate-600">No fee history for this selection.</td></tr> : visibleEntries.map((entry, index) => <tr key={`${entry.teaching_group_name}-${entry.session_date}-${index}`} className="hover:bg-slate-50"><td className="whitespace-nowrap px-4 py-3">{formatDate(entry.session_date)}</td><td className="whitespace-nowrap px-4 py-3">{formatTime(entry.session_time)}</td><td className="px-4 py-3">{entry.session_number}</td><td className="px-4 py-3">{entry.teaching_group_name}</td><td className="px-4 py-3">{entry.package_type === 'semi_private' ? 'Semi-Private' : 'Private'}</td><td className="px-4 py-3">{entry.present_students}</td><td className="px-4 py-3 font-semibold">{formatAmount(entry.fee)}</td><td className="px-4 py-3"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase ${entry.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>{entry.status}</span></td></tr>)}</tbody>
-              </table>
+        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{viewMeta.eyebrow}</p>
+              <h2 className="mt-1 text-xl font-bold text-[#102449]">{viewMeta.title}</h2>
+              <p className="mt-1 text-sm text-slate-500">{viewMeta.description}</p>
             </div>
+            <div className="inline-flex w-fit rounded-xl border border-slate-200 bg-slate-50 p-1">
+              {[
+                ['summary', 'Summary'],
+                ['history', 'View History'],
+                ['detail', 'View Fee Detail'],
+              ].map(([value, label]) => (
+                <button key={value} type="button" onClick={() => setFeeView(value as FeeView)} className={feeView === value ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white shadow-sm' : 'rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-white hover:text-[#102449]'}>{label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {feeView === 'summary' && (
+          <div className="h-[440px] overflow-y-scroll overflow-x-auto">
+            <table className="min-w-[900px] w-full text-left text-sm">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr className="h-10"><th className="px-3">Student</th><th className="px-3">Code</th><th className="px-3">Teaching Group</th><th className="px-3 text-right">Present</th><th className="px-3 text-right">Fee / Attendance</th><th className="px-3 text-right">Total</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">{loading ? <tr className="h-10"><td colSpan={6} className="px-3 text-slate-600">Loading student fee summary...</td></tr> : studentSummaries.length === 0 ? <tr className="h-10"><td colSpan={6} className="px-3 text-slate-600">No student fee summary for this selection.</td></tr> : studentSummaries.map((student) => <tr key={`${student.student_id}:${student.teaching_group_id}:${student.fee_rate}`} className="h-10 hover:bg-slate-50"><td className="px-3 font-medium">{student.student_name}</td><td className="px-3">{student.student_code}</td><td className="px-3">{student.teaching_group_name}</td><td className="px-3 text-right">{student.present_attendance_count}</td><td className="px-3 text-right">{formatAmount(student.fee_rate)}</td><td className="px-3 text-right font-semibold">{formatAmount(student.student_total)}</td></tr>)}</tbody>
+            </table>
+          </div>
+        )}
+
+        {feeView === 'history' && (
+          <div className="h-[230px] overflow-y-scroll overflow-x-auto">
+            <table className="min-w-[1040px] w-full divide-y divide-slate-200 text-left text-sm">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Time</th><th className="px-4 py-3">Session</th><th className="px-4 py-3">Teaching Group</th><th className="px-4 py-3">Package</th><th className="px-4 py-3">Present Students</th><th className="px-4 py-3">Fee</th><th className="px-4 py-3">Status</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={8} className="px-4 py-8 text-slate-600">Loading fee history...</td></tr> : visibleEntries.length === 0 ? <tr><td colSpan={8} className="px-4 py-8 text-slate-600">No fee history for this selection.</td></tr> : visibleEntries.map((entry, index) => <tr key={`${entry.teaching_group_name}-${entry.session_date}-${index}`} className="hover:bg-slate-50"><td className="whitespace-nowrap px-4 py-3">{formatDate(entry.session_date)}</td><td className="whitespace-nowrap px-4 py-3">{formatTime(entry.session_time)}</td><td className="px-4 py-3">{entry.session_number}</td><td className="px-4 py-3">{entry.teaching_group_name}</td><td className="px-4 py-3">{entry.package_type === 'semi_private' ? 'Semi-Private' : 'Private'}</td><td className="px-4 py-3">{entry.present_students}</td><td className="px-4 py-3 font-semibold">{formatAmount(entry.fee)}</td><td className="px-4 py-3"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase ${entry.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>{entry.status}</span></td></tr>)}</tbody>
+            </table>
+          </div>
+        )}
+
+        {feeView === 'detail' && (
+          <div className="h-[230px] overflow-y-scroll overflow-x-auto">
+            <table className="min-w-[1000px] w-full text-left text-sm">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-3 py-2.5">Date</th><th className="px-3 py-2.5">Teaching Group</th><th className="px-3 py-2.5">Level</th><th className="px-3 py-2.5">Student</th><th className="px-3 py-2.5">Code</th><th className="px-3 py-2.5">Attendance</th><th className="px-3 py-2.5 text-right">Fee</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={7} className="px-3 py-8 text-slate-600">Loading fee detail...</td></tr> : visibleDetailEntries.length === 0 ? <tr><td colSpan={7} className="px-3 py-8 text-slate-600">No attendance detail for this selection.</td></tr> : visibleDetailEntries.map((entry) => <tr key={entry.attendance_id} className="hover:bg-slate-50"><td className="whitespace-nowrap px-3 py-2">{formatDate(entry.session_date)}</td><td className="px-3 py-2">{entry.teaching_group_name}</td><td className="px-3 py-2">{entry.level_name}</td><td className="px-3 py-2 font-medium">{entry.student_name}</td><td className="px-3 py-2">{entry.student_code}</td><td className="px-3 py-2 capitalize">{entry.attendance_status}</td><td className="px-3 py-2 text-right">{formatAmount(entry.student_fee)}</td></tr>)}</tbody>
+            </table>
           </div>
         )}
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Reconciliation</p>
-          <h2 className="mt-1 text-xl font-bold text-[#102449]">Fee Detail &amp; Summary</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Student Attendances</p><p className="mt-1 text-lg font-extrabold text-[#102449]">{studentSummaries.reduce((total, s) => total + s.present_attendance_count, 0)}</p></div>
+          <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Total Teacher Fee</p><p className="mt-1 text-lg font-extrabold text-[#102449]">{formatAmount(summary.earned)}</p></div>
+          <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Reconciliation</p><p className={`mt-1 text-sm font-bold ${detailReconcilesPeriod ? 'text-emerald-700' : 'text-amber-700'}`}>{detailReconcilesPeriod ? '✓ Reconciled' : '⚠ Review required'}</p></div>
         </div>
-
-        {visibleDetailEntries.length === 0 ? (
-          <div className="p-6 sm:p-7"><p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">No attendance detail for this selection.</p></div>
-        ) : (
-          <div className="divide-y divide-slate-200">
-            <section>
-              <div className="flex items-center justify-between gap-4 px-6 py-4 sm:px-7">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Detail Records</p>
-                  <p className="mt-1 text-sm text-slate-500">Attendance-based fee detail for {formatMonth(year, month)}.</p>
-                </div>
-                <button type="button" onClick={() => setFeeDetailExpanded((current) => !current)} aria-expanded={feeDetailExpanded} aria-controls="teacher-fee-detail-records-content" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50">
-                  {feeDetailExpanded ? 'Collapse' : 'View records'}
-                  <span className={`text-base transition-transform ${feeDetailExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
-                </button>
-              </div>
-              {feeDetailExpanded && (
-                <div id="teacher-fee-detail-records-content" className="border-t border-slate-100 px-6 py-5 sm:px-7">
-                  <div className="h-[230px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
-                    <table className="min-w-[1000px] w-full text-left text-sm">
-                      <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-3 py-2.5">Date</th><th className="px-3 py-2.5">Teaching Group</th><th className="px-3 py-2.5">Level</th><th className="px-3 py-2.5">Student</th><th className="px-3 py-2.5">Code</th><th className="px-3 py-2.5">Attendance</th><th className="px-3 py-2.5 text-right">Fee</th></tr></thead>
-                      <tbody className="divide-y divide-slate-100">{visibleDetailEntries.map((entry) => <tr key={entry.attendance_id} className="hover:bg-slate-50"><td className="whitespace-nowrap px-3 py-2">{formatDate(entry.session_date)}</td><td className="px-3 py-2">{entry.teaching_group_name}</td><td className="px-3 py-2">{entry.level_name}</td><td className="px-3 py-2 font-medium">{entry.student_name}</td><td className="px-3 py-2">{entry.student_code}</td><td className="px-3 py-2 capitalize">{entry.attendance_status}</td><td className="px-3 py-2 text-right">{formatAmount(entry.student_fee)}</td></tr>)}</tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center justify-between gap-4 px-6 py-4 sm:px-7">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Student Summary</p>
-                  <p className="mt-1 text-sm text-slate-500">Fee totals grouped by student and teaching group.</p>
-                </div>
-                <button type="button" onClick={() => setStudentSummaryExpanded((current) => !current)} aria-expanded={studentSummaryExpanded} aria-controls="teacher-fee-student-summary-content" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50">
-                  {studentSummaryExpanded ? 'Collapse' : 'View records'}
-                  <span className={`text-base transition-transform ${studentSummaryExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
-                </button>
-              </div>
-              {studentSummaryExpanded && (
-                <div id="teacher-fee-student-summary-content" className="border-t border-slate-100 px-6 py-5 sm:px-7">
-                  <div className="h-[430px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
-                    <table className="min-w-[900px] w-full text-left text-sm">
-                      <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-3 py-2.5">Student</th><th className="px-3 py-2.5">Code</th><th className="px-3 py-2.5">Teaching Group</th><th className="px-3 py-2.5 text-right">Present</th><th className="px-3 py-2.5 text-right">Fee / Attendance</th><th className="px-3 py-2.5 text-right">Total</th></tr></thead>
-                      <tbody className="divide-y divide-slate-100">{studentSummaries.map((student) => <tr key={`${student.student_id}:${student.teaching_group_id}:${student.fee_rate}`}><td className="px-3 py-2 font-medium">{student.student_name}</td><td className="px-3 py-2">{student.student_code}</td><td className="px-3 py-2">{student.teaching_group_name}</td><td className="px-3 py-2 text-right">{student.present_attendance_count}</td><td className="px-3 py-2 text-right">{formatAmount(student.fee_rate)}</td><td className="px-3 py-2 text-right">{formatAmount(student.student_total)}</td></tr>)}</tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section className="px-6 py-5 sm:px-7">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Student Attendances</p><p className="mt-1 text-lg font-extrabold text-[#102449]">{studentSummaries.reduce((total, s) => total + s.present_attendance_count, 0)}</p></div>
-                <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Total Teacher Fee</p><p className="mt-1 text-lg font-extrabold text-[#102449]">{formatAmount(summary.earned)}</p></div>
-                <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Reconciliation</p><p className={`mt-1 text-sm font-bold ${detailReconcilesPeriod ? 'text-emerald-700' : 'text-amber-700'}`}>{detailReconcilesPeriod ? '✓ Reconciled' : '⚠ Review required'}</p></div>
-              </div>
-            </section>
-          </div>
-        )}
       </section>
 
       {showDetailModal && <TeacherFeeDetailModal detailEntries={visibleDetailEntries} studentSummaries={studentSummaries} month={month} year={year} detailReconcilesPeriod={detailReconcilesPeriod} onClose={() => setShowDetailModal(false)} />}
