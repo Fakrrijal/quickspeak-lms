@@ -117,6 +117,8 @@ function AdminDashboardPage() {
           <Link to="/admin" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Student Management</Link>
           <Link to="/admin/waiting-teachers" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Waiting Teachers</Link>
           <Link to="/admin/teaching-groups" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teaching Groups</Link>
+          <Link to="/admin/approved-enrollments" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Approved Enrollments</Link>
+          <Link to="/admin/enrollment-corrections" className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">Enrollment Corrections</Link>
           <Link to="/admin/teacher-fees" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teacher Fees</Link>
           <Link to="/admin/attendance-reports" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Attendance Reports</Link>
           <Link to="/admin/system-errors" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">System Errors</Link>
