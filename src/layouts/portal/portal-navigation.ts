@@ -101,6 +101,7 @@ export function isPortalPath(pathname: string) {
   return (
     pathname === '/student'
     || pathname === '/student/learning'
+    || pathname === '/student/ebooks'
     || pathname === '/student/attendance'
     || pathname === '/student/profile'
     || pathname === '/student-payment'
