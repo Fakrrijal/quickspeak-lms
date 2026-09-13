@@ -202,6 +202,7 @@ export function TeacherAttendancePage() {
   const [referenceDate, setReferenceDate] = useState(() => `${getTodayIsoDate().slice(0, 7)}-01`)
   const [reportSearch, setReportSearch] = useState('')
   const [reportGroup, setReportGroup] = useState('')
+  const [reportExpanded, setReportExpanded] = useState(true)
   const canLoadGroups = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
   const { groups, loading, error, mutationError, saving, saveAttendance, reload } = useTeacherGroupAttendance(canLoadGroups)
   const { meetings, loading: historyLoading, error: historyError, isUpdating: historyUpdating, reload: reloadHistory } = useTeacherAttendance(period, referenceDate, canLoadGroups)
@@ -266,7 +267,74 @@ export function TeacherAttendancePage() {
 
       <section className="grid gap-4 sm:grid-cols-4"><article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Sessions</p><p className="mt-2 text-2xl font-extrabold text-[#102449]">{historyLoading ? '…' : totalRecords}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Present</p><p className="mt-2 text-2xl font-extrabold text-emerald-700">{historyLoading ? '…' : presentRecords}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Absent</p><p className="mt-2 text-2xl font-extrabold text-rose-700">{historyLoading ? '…' : absentRecords}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Attendance Rate</p><p className="mt-2 text-2xl font-extrabold text-[#102449]">{historyLoading ? '…' : attendanceRate === null ? '—' : `${attendanceRate.toFixed(0)}%`}</p></article></section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p><h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2><p className="mt-1 text-sm text-slate-600">{formatPeriod(referenceDate, period)}</p></div><button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button></div><div className="flex flex-wrap gap-3 border-b border-slate-200 bg-slate-50/70 px-6 py-4"><label className="text-sm font-semibold text-slate-700">Search<input value={reportSearch} onChange={(event) => setReportSearch(event.target.value)} placeholder="Student / code / group" className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label><label className="text-sm font-semibold text-slate-700">Teaching Group<select value={reportGroup} onChange={(event) => setReportGroup(event.target.value)} className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"><option value="">All Authorized Groups</option>{groups.map((group) => <option key={group.teaching_group_id} value={group.teaching_group_id}>{group.teaching_group_name}</option>)}</select></label><label className="text-sm font-semibold text-slate-700">Month<input type="month" value={referenceDate.slice(0, 7)} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label><label className="text-sm font-semibold text-slate-700">Year<input type="number" value={referenceDate.slice(0, 4)} onChange={(event) => setReferenceDate(`${event.target.value}-${referenceDate.slice(5, 7)}-01`)} min="2000" max="9999" className="mt-1.5 block w-24 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label></div><div className="overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 text-left text-sm"><thead className="bg-white text-slate-600"><tr><th className="px-5 py-3">Student</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Teaching Group</th><th className="px-5 py-3 text-right">Sessions</th><th className="px-5 py-3 text-right">Present</th><th className="px-5 py-3 text-right">Absent</th><th className="px-5 py-3 text-right">Rate</th><th className="px-5 py-3">Action</th></tr></thead><tbody className="divide-y divide-slate-100">{historyLoading ? <tr><td colSpan={8} className="px-5 py-8 text-slate-600">Loading attendance report...</td></tr> : studentSummary.length === 0 ? <tr><td colSpan={8} className="px-5 py-8 text-slate-600">No attendance records for this period.</td></tr> : studentSummary.map((student) => <tr key={`${student.student_id}:${student.teaching_group_id}`} className="hover:bg-slate-50"><td className="px-5 py-3 font-semibold text-slate-900"><button type="button" onClick={() => setDetailStudentKey(`${student.student_id}:${student.teaching_group_id}`)} className="hover:text-blue-700 hover:underline">{student.student_name}</button></td><td className="px-5 py-3 text-slate-600">{student.student_code}</td><td className="px-5 py-3 text-slate-700">{student.teaching_group_name}</td><td className="px-5 py-3 text-right">{student.total_sessions}</td><td className="px-5 py-3 text-right text-emerald-700">{student.present}</td><td className="px-5 py-3 text-right text-rose-700">{student.absent}</td><td className="px-5 py-3 text-right font-semibold">{student.attendance_rate === null ? '-' : `${student.attendance_rate.toFixed(1)}%`}</td><td className="px-5 py-3"><button type="button" onClick={() => setDetailStudentKey(`${student.student_id}:${student.teaching_group_id}`)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">View Detail</button></td></tr>)}</tbody></table></div></section>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p>
+            <h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2>
+            <p className="mt-1 text-sm text-slate-600">{formatPeriod(referenceDate, period)}</p>
+          </div>
+          <button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button>
+        </div>
+
+        <div className="flex flex-wrap gap-3 border-b border-slate-200 bg-slate-50/70 px-6 py-4">
+          <label className="text-sm font-semibold text-slate-700">Search<input value={reportSearch} onChange={(event) => setReportSearch(event.target.value)} placeholder="Student / code / group" className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label>
+          <label className="text-sm font-semibold text-slate-700">Teaching Group<select value={reportGroup} onChange={(event) => setReportGroup(event.target.value)} className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"><option value="">All Authorized Groups</option>{groups.map((group) => <option key={group.teaching_group_id} value={group.teaching_group_id}>{group.teaching_group_name}</option>)}</select></label>
+          <label className="text-sm font-semibold text-slate-700">Month<input type="month" value={referenceDate.slice(0, 7)} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label>
+          <label className="text-sm font-semibold text-slate-700">Year<input type="number" value={referenceDate.slice(0, 4)} onChange={(event) => setReferenceDate(`${event.target.value}-${referenceDate.slice(5, 7)}-01`)} min="2000" max="9999" className="mt-1.5 block w-24 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label>
+        </div>
+
+        <div className="border-t border-slate-200 px-6 py-4 sm:px-7">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p>
+              <p className="mt-1 text-sm text-slate-500">Authorized session summary for {formatPeriod(referenceDate, period)}.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReportExpanded((current) => !current)}
+              aria-expanded={reportExpanded}
+              aria-controls="teacher-attendance-records-content"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50"
+            >
+              {reportExpanded ? 'Collapse' : 'View records'}
+              <span className={`text-base transition-transform ${reportExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
+            </button>
+          </div>
+        </div>
+
+        {reportExpanded && (
+          <div id="teacher-attendance-records-content" className="border-t border-slate-200">
+            <div className="h-[360px] overflow-y-scroll overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="sticky top-0 z-10 bg-white text-slate-600 shadow-sm">
+                  <tr><th className="px-5 py-3">Student</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Teaching Group</th><th className="px-5 py-3 text-right">Sessions</th><th className="px-5 py-3 text-right">Present</th><th className="px-5 py-3 text-right">Absent</th><th className="px-5 py-3 text-right">Rate</th><th className="px-5 py-3">Action</th></tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {historyLoading ? (
+                    <tr><td colSpan={8} className="px-5 py-8 text-slate-600">Loading attendance report...</td></tr>
+                  ) : studentSummary.length === 0 ? (
+                    <tr><td colSpan={8} className="px-5 py-8 text-slate-600">No attendance records for this period.</td></tr>
+                  ) : (
+                    studentSummary.map((student) => (
+                      <tr key={`${student.student_id}:${student.teaching_group_id}`} className="hover:bg-slate-50">
+                        <td className="px-5 py-3 font-semibold text-slate-900"><button type="button" onClick={() => setDetailStudentKey(`${student.student_id}:${student.teaching_group_id}`)} className="hover:text-blue-700 hover:underline">{student.student_name}</button></td>
+                        <td className="px-5 py-3 text-slate-600">{student.student_code}</td>
+                        <td className="px-5 py-3 text-slate-700">{student.teaching_group_name}</td>
+                        <td className="px-5 py-3 text-right">{student.total_sessions}</td>
+                        <td className="px-5 py-3 text-right text-emerald-700">{student.present}</td>
+                        <td className="px-5 py-3 text-right text-rose-700">{student.absent}</td>
+                        <td className="px-5 py-3 text-right font-semibold">{student.attendance_rate === null ? '-' : `${student.attendance_rate.toFixed(1)}%`}</td>
+                        <td className="px-5 py-3"><button type="button" onClick={() => setDetailStudentKey(`${student.student_id}:${student.teaching_group_id}`)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">View Detail</button></td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
 
       <section className="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-xl font-semibold text-slate-900">Attendance History</h2>{historyUpdating && <p className="mt-1 text-sm text-slate-500">Updating history…</p>}</div><div className="flex flex-wrap gap-3"><div><label htmlFor="history-period" className="block text-sm font-medium text-slate-700">Filter</label><select id="history-period" value={period} onChange={(event) => handlePeriodChange(event.target.value as TeacherAttendancePeriod)} className="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="day">Daily</option><option value="month">Monthly</option><option value="year">Yearly</option></select></div><div><label htmlFor="history-reference" className="block text-sm font-medium text-slate-700">{period === 'day' ? 'Date' : period === 'month' ? 'Month' : 'Year'}</label><input id="history-reference" type={period === 'day' ? 'date' : period === 'month' ? 'month' : 'number'} value={referenceInputValue} min={period === 'year' ? '2000' : undefined} max={period === 'year' ? '9999' : undefined} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" /></div></div></div>{historyLoading ? <p className="mt-4 text-sm text-slate-600">Loading history…</p> : historyError ? <div className="mt-4 text-sm text-amber-800"><p>{historyError}</p><button type="button" onClick={() => void reloadHistory()} className="mt-2 font-medium underline">Retry</button></div> : meetings.length === 0 ? <p className="mt-4 text-sm text-slate-600">No attendance history for this period.</p> : <div className="mt-4 overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="px-3 py-2 font-medium">Session</th><th className="px-3 py-2 font-medium">Date</th><th className="px-3 py-2 font-medium">Time</th><th className="px-3 py-2 font-medium">Student</th><th className="px-3 py-2 font-medium">Teaching Group</th><th className="px-3 py-2 font-medium">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{meetings.map((meeting) => <tr key={meeting.meeting_id}><td className="px-3 py-3">{meeting.session_number}</td><td className="px-3 py-3">{formatSessionDate(meeting.session_date)}</td><td className="px-3 py-3">{formatAttendanceTime(meeting.teacher_recorded_at)}</td><td className="px-3 py-3">{meeting.student_display_name}</td><td className="px-3 py-3">{meeting.teaching_group_name}</td><td className="px-3 py-3"><span className={meeting.teacher_status === 'present' ? 'rounded-full bg-emerald-100 px-2 py-1 text-emerald-800' : meeting.teacher_status === 'absent' ? 'rounded-full bg-rose-100 px-2 py-1 text-rose-800' : 'rounded-full bg-amber-100 px-2 py-1 text-amber-800'}>{meeting.teacher_status === 'present' ? 'Present' : meeting.teacher_status === 'absent' ? 'Absent' : 'Pending'}</span></td></tr>)}</tbody></table></div>}
       </section>
