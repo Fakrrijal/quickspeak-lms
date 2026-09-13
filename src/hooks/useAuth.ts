@@ -21,12 +21,14 @@ export function useAuth() {
   const [profileError, setProfileError] = useState<Error | null>(null)
   const profileRequestIdRef = useRef<number>(0)
   const currentUserIdRef = useRef<string | null>(null)
+  const currentUserRef = useRef<User | null>(null)
 
   useEffect(() => {
     let mounted = true
 
     const applySession = (nextSession: Session | null, event: AuthChangeEvent | null = null) => {
       const nextUser = nextSession?.user ?? null
+      const previousUser = currentUserRef.current
       const sameUser = currentUserIdRef.current === nextUser?.id && nextUser?.id != null
 
       if (currentUserIdRef.current !== nextUser?.id) {
@@ -47,10 +49,11 @@ export function useAuth() {
       // Other USER_UPDATED changes (for example email confirmation changes)
       // still refresh the User state when relevant auth fields differ.
       const userAuthFieldsChanged =
-        user?.email !== nextUser?.email ||
-        user?.email_confirmed_at !== nextUser?.email_confirmed_at
+        previousUser?.email !== nextUser?.email ||
+        previousUser?.email_confirmed_at !== nextUser?.email_confirmed_at
 
       if (!sameUser || event !== 'USER_UPDATED' || userAuthFieldsChanged) {
+        currentUserRef.current = nextUser
         setUser(nextUser)
       }
     }
@@ -85,7 +88,7 @@ export function useAuth() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [user])
+  }, [])
 
   const loadProfile = useCallback(async (userId: string) => {
     const requestId = ++profileRequestIdRef.current
