@@ -44,8 +44,7 @@ export function StudentLevelAssessmentHistory() {
   return (
     <section className="border border-slate-200 bg-white shadow-sm" aria-labelledby="level-history-title">
       <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
-        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-700">Level History</p>
-        <h2 id="level-history-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Riwayat Level</h2>
+        <h2 id="level-history-title" className="text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Level History</h2>
         <p className="mt-1 text-sm text-slate-500">Level yang sudah selesai tetap tersimpan sebagai riwayat akademik.</p>
       </div>
 
