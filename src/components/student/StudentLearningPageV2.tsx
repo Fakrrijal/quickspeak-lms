@@ -352,7 +352,7 @@ export function StudentLearningPageV2() {
                 </div>
                 <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${currentProgressPercent}%` }} /></div>
 
-                <div className="mt-6 max-h-[560px] space-y-6 overflow-y-auto pr-2">
+                <div className="mt-6 max-h-[360px] space-y-6 overflow-y-scroll pr-2">
                   {historicalLevels.map((level) => {
                     const completedCount = level.rows.filter((row) => row.completed_at).length
                     const percent = level.rows.length ? Math.round((completedCount / level.rows.length) * 100) : 0
