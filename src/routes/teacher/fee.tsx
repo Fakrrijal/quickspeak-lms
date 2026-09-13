@@ -277,7 +277,7 @@ function TeacherFeePage() {
               </div>
               {studentSummaryExpanded && (
                 <div id="teacher-fee-student-summary-content" className="border-t border-slate-100 px-6 py-5 sm:px-7">
-                  <div className="h-[230px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
+                  <div className="h-[430px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
                     <table className="min-w-[900px] w-full text-left text-sm">
                       <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 shadow-sm"><tr><th className="px-3 py-2.5">Student</th><th className="px-3 py-2.5">Code</th><th className="px-3 py-2.5">Teaching Group</th><th className="px-3 py-2.5 text-right">Present</th><th className="px-3 py-2.5 text-right">Fee / Attendance</th><th className="px-3 py-2.5 text-right">Total</th></tr></thead>
                       <tbody className="divide-y divide-slate-100">{studentSummaries.map((student) => <tr key={`${student.student_id}:${student.teaching_group_id}:${student.fee_rate}`}><td className="px-3 py-2 font-medium">{student.student_name}</td><td className="px-3 py-2">{student.student_code}</td><td className="px-3 py-2">{student.teaching_group_name}</td><td className="px-3 py-2 text-right">{student.present_attendance_count}</td><td className="px-3 py-2 text-right">{formatAmount(student.fee_rate)}</td><td className="px-3 py-2 text-right">{formatAmount(student.student_total)}</td></tr>)}</tbody>
