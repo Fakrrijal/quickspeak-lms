@@ -17,6 +17,7 @@ function TeacherTeachingGroupsPage() {
   const [groups, setGroups] = useState<Awaited<ReturnType<typeof getMyTeacherAttendanceGroups>>>([])
   const [search, setSearch] = useState('')
   const [groupType, setGroupType] = useState<'all' | 'private' | 'semi_private'>('all')
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
 
@@ -74,6 +75,14 @@ function TeacherTeachingGroupsPage() {
     })
   }, [groupType, grouped, search])
 
+  const selectedGroup = grouped.find((group) => group.id === selectedGroupId) ?? null
+
+  useEffect(() => {
+    if (selectedGroupId && !grouped.some((group) => group.id === selectedGroupId)) {
+      setSelectedGroupId(null)
+    }
+  }, [grouped, selectedGroupId])
+
   if (authLoading || profileLoading) return <p>Loading...</p>
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
@@ -81,24 +90,16 @@ function TeacherTeachingGroupsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <header className="border-b border-slate-200 pb-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Teaching Groups</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Manage your assigned classes, students, and teaching groups.</p>
-          </div>
-          {!loading && !error && grouped.length > 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Assigned Groups</p>
-              <p className="mt-1 text-xl font-extrabold tracking-tight text-[#102449]">{summary.groups}</p>
-            </div>
-          )}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Teaching Groups</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Manage your assigned classes, students, and teaching groups.</p>
         </div>
       </header>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((item) => <div key={item} className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm" />)}
+        <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          {[1, 2, 3, 4].map((item) => <div key={item} className="h-14 animate-pulse rounded-xl bg-slate-100" />)}
         </div>
       ) : error ? (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900">{error}</div>
@@ -106,6 +107,62 @@ function TeacherTeachingGroupsPage() {
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
           <h2 className="text-lg font-bold text-[#102449]">No teaching groups assigned</h2>
           <p className="mt-2 text-sm text-slate-600">Your active teaching groups will appear here once assigned.</p>
+        </section>
+      ) : selectedGroup ? (
+        <section className="space-y-5">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+              <div>
+                <button type="button" onClick={() => setSelectedGroupId(null)} className="text-sm font-bold text-blue-700 hover:underline">← Back to teaching groups</button>
+                <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Teaching Group</p>
+                <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.02em] text-[#102449]">{selectedGroup.name}</h2>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-blue-700">{selectedGroup.level}</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{formatPackageType(selectedGroup.packageType)}</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{selectedGroup.students.length} student{selectedGroup.students.length === 1 ? '' : 's'}</span>
+                </div>
+              </div>
+              <Link to="/teacher/attendance" className="inline-flex items-center justify-center rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">View Attendance <span aria-hidden="true" className="ml-2">→</span></Link>
+            </div>
+
+            <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-6">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Students</p>
+                <p className="mt-1 text-xl font-extrabold text-[#102449]">{selectedGroup.students.length}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Level</p>
+                <p className="mt-1 text-base font-extrabold text-[#102449]">{selectedGroup.level}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Package</p>
+                <p className="mt-1 text-base font-extrabold text-[#102449]">{formatPackageType(selectedGroup.packageType)}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 px-5 py-5 sm:px-6">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Student Roster</p>
+                  <h3 className="mt-1 text-lg font-bold text-[#102449]">Students in this group</h3>
+                </div>
+                <span className="text-sm font-semibold text-slate-500">{selectedGroup.students.length} student{selectedGroup.students.length === 1 ? '' : 's'}</span>
+              </div>
+              <div className="mt-3 max-h-[470px] overflow-y-auto rounded-xl border border-slate-200">
+                <div className="divide-y divide-slate-100">
+                  {selectedGroup.students.map((student) => (
+                    <div key={student.id} className="flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-slate-50">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-extrabold text-blue-700">{student.name.slice(0, 1).toUpperCase()}</span>
+                        <span className="truncate text-sm font-semibold text-slate-800">{student.name}</span>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold text-slate-500">{selectedGroup.level}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       ) : (
         <>
@@ -124,8 +181,8 @@ function TeacherTeachingGroupsPage() {
             ))}
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:px-5">
               <div className="min-w-0 flex-1">
                 <label className="sr-only" htmlFor="teaching-groups-search">Search group or student</label>
                 <input
@@ -147,9 +204,7 @@ function TeacherTeachingGroupsPage() {
                 <option value="semi_private">Semi-Private</option>
               </select>
             </div>
-            <div className="mt-3 text-xs font-semibold text-slate-500">
-              Showing {filteredGroups.length} of {grouped.length} group{grouped.length === 1 ? '' : 's'}
-            </div>
+            <div className="px-5 py-3 text-xs font-semibold text-slate-500">{filteredGroups.length} teaching group{filteredGroups.length === 1 ? '' : 's'}</div>
           </section>
 
           {filteredGroups.length === 0 ? (
@@ -158,63 +213,32 @@ function TeacherTeachingGroupsPage() {
               <p className="mt-2 text-sm text-slate-600">Try another group or student name, or reset the filter.</p>
             </section>
           ) : (
-            <section className="grid gap-4 lg:grid-cols-2">
-              {filteredGroups.map((group) => (
-                <article key={group.id} className="flex min-h-[360px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                  <div className="border-b border-slate-100 p-5 sm:p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Teaching Group</p>
-                        <h2 className="mt-1 truncate text-2xl font-bold tracking-[-0.02em] text-[#102449]">{group.name}</h2>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">{formatPackageType(group.packageType)}</span>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                      <span className="rounded-full bg-blue-50 px-3 py-1.5 text-blue-700">{group.level}</span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1.5 text-slate-700">{group.students.length} student{group.students.length === 1 ? '' : 's'}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 p-5 sm:p-6">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Students</p>
-                        <p className="mt-1 text-xl font-extrabold text-[#102449]">{group.students.length}</p>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Current Level</p>
-                        <p className="mt-1 truncate text-base font-extrabold text-[#102449]">{group.level}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Students</p>
-                          <p className="mt-1 text-sm text-slate-600">Students currently covered by this group.</p>
-                        </div>
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-sm font-extrabold text-blue-700 ring-1 ring-blue-100">{group.students.length}</span>
-                      </div>
-
-                      <div className="mt-4 max-h-48 space-y-2 overflow-y-auto pr-1">
-                        {group.students.map((student) => (
-                          <div key={student.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
-                            <div className="flex min-w-0 items-center gap-2.5">
-                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-extrabold text-blue-700 shadow-sm">{student.name.slice(0, 1).toUpperCase()}</span>
-                              <span className="truncate text-sm font-semibold text-slate-800">{student.name}</span>
-                            </div>
-                            <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-slate-600 ring-1 ring-slate-200">{group.level}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-100 bg-slate-50/60 p-4 sm:px-6">
-                    <Link to="/teacher/attendance" className="inline-flex w-full items-center justify-center rounded-xl bg-[#102449] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#17325f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">View Attendance <span aria-hidden="true" className="ml-2 text-base">→</span></Link>
-                  </div>
-                </article>
-              ))}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="max-h-[520px] overflow-y-auto">
+                <div className="sticky top-0 z-10 hidden grid-cols-[minmax(180px,1.4fr)_120px_150px_120px_44px] border-b border-slate-200 bg-white px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
+                  <span>Teaching Group</span>
+                  <span>Level</span>
+                  <span>Type</span>
+                  <span>Students</span>
+                  <span aria-hidden="true" />
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {filteredGroups.map((group) => (
+                    <button
+                      key={group.id}
+                      type="button"
+                      onClick={() => setSelectedGroupId(group.id)}
+                      className="grid w-full grid-cols-1 gap-2 px-5 py-4 text-left transition hover:bg-slate-50 sm:grid-cols-[minmax(180px,1.4fr)_120px_150px_120px_44px] sm:items-center"
+                    >
+                      <span className="min-w-0 truncate text-sm font-bold text-[#102449]">{group.name}</span>
+                      <span className="text-sm font-semibold text-slate-600">{group.level}</span>
+                      <span className="text-sm text-slate-600">{formatPackageType(group.packageType)}</span>
+                      <span className="text-sm font-semibold text-slate-700">{group.students.length}</span>
+                      <span className="flex justify-end text-lg font-bold text-blue-700" aria-hidden="true">→</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </section>
           )}
         </>
