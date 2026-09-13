@@ -61,7 +61,6 @@ function TeacherAttendanceDetailModal({
           </div>
           <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">Close</button>
         </header>
-
         <div className="space-y-6 p-6">
           <section className="rounded-xl border border-slate-200 bg-white p-5">
             <h4 className="text-lg font-bold text-[#102449]">Meeting &amp; Attendance Detail</h4>
@@ -89,7 +88,6 @@ function TeacherAttendanceDetailModal({
               ))}
             </div>
           </section>
-
           <section className="rounded-xl border border-slate-200 bg-white p-5">
             <h4 className="text-lg font-bold text-[#102449]">Attendance Summary</h4>
             <dl className="mt-4 grid gap-4 sm:grid-cols-4">
@@ -259,29 +257,54 @@ export function TeacherAttendancePage() {
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p>
-            <h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2>
-            <p className="mt-1 text-sm text-slate-600">{totalStudents} students · {formatPeriod(referenceDate, period)}</p>
+        <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p>
+              <h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2>
+              <p className="mt-1 text-sm text-slate-600">{totalStudents} students · {formatPeriod(referenceDate, period)}</p>
+            </div>
+            <button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button>
           </div>
-          <button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button>
         </div>
 
-        <div className="flex flex-wrap gap-3 border-b border-slate-200 bg-slate-50/70 px-6 py-4">
-          <label className="text-sm font-semibold text-slate-700">Search<input value={reportSearch} onChange={(event) => setReportSearch(event.target.value)} placeholder="Student / code / group" className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label>
-          <label className="text-sm font-semibold text-slate-700">Teaching Group<select value={reportGroup} onChange={(event) => setReportGroup(event.target.value)} className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"><option value="">All Authorized Groups</option>{groups.map((group) => <option key={group.teaching_group_id} value={group.teaching_group_id}>{group.teaching_group_name}</option>)}</select></label>
-          <label className="text-sm font-semibold text-slate-700">Month<input type="month" value={referenceDate.slice(0, 7)} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1.5 block rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label>
-          <label className="text-sm font-semibold text-slate-700">Year<input type="number" value={referenceDate.slice(0, 4)} onChange={(event) => setReferenceDate(`${event.target.value}-${referenceDate.slice(5, 7)}-01`)} min="2000" max="9999" className="mt-1.5 block w-24 rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" /></label>
+        <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-4 sm:px-7">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Report Filters</p>
+              <p className="mt-1 text-xs text-slate-500">Filter the attendance summary without changing the underlying records.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <label className="block text-sm font-semibold text-slate-700">
+              Search
+              <input value={reportSearch} onChange={(event) => setReportSearch(event.target.value)} placeholder="Student / code / group" className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Teaching Group
+              <select value={reportGroup} onChange={(event) => setReportGroup(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                <option value="">All Authorized Groups</option>
+                {groups.map((group) => <option key={group.teaching_group_id} value={group.teaching_group_id}>{group.teaching_group_name}</option>)}
+              </select>
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Month
+              <input type="month" value={referenceDate.slice(0, 7)} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            </label>
+            <label className="block text-sm font-semibold text-slate-700">
+              Year
+              <input type="number" value={referenceDate.slice(0, 4)} onChange={(event) => setReferenceDate(`${event.target.value}-${referenceDate.slice(5, 7)}-01`)} min="2000" max="9999" className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            </label>
+          </div>
         </div>
 
-        <div className="border-t border-slate-200 px-6 py-4 sm:px-7">
+        <div className="border-b border-slate-200 px-6 py-4 sm:px-7">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p>
               <p className="mt-1 text-sm text-slate-500">Authorized session summary for {formatPeriod(referenceDate, period)}.</p>
             </div>
-            <button type="button" onClick={() => setReportExpanded((current) => !current)} aria-expanded={reportExpanded} aria-controls="teacher-attendance-records-content" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50">
+            <button type="button" onClick={() => setReportExpanded((current) => !current)} aria-expanded={reportExpanded} aria-controls="teacher-attendance-records-content" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50">
               {reportExpanded ? 'Collapse' : 'View records'}
               <span className={`text-base transition-transform ${reportExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
             </button>
@@ -289,11 +312,20 @@ export function TeacherAttendancePage() {
         </div>
 
         {reportExpanded && (
-          <div id="teacher-attendance-records-content" className="border-t border-slate-200">
-            <div className="h-[470px] overflow-y-scroll overflow-x-auto">
-              <table className="min-w-full whitespace-nowrap divide-y divide-slate-200 text-left text-sm">
+          <div id="teacher-attendance-records-content" className="border-b border-slate-200">
+            <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
+              <table className="min-w-full whitespace-nowrap text-left text-sm">
                 <thead className="sticky top-0 z-10 bg-white text-slate-600 shadow-sm">
-                  <tr><th className="px-5 py-3">Student</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Teaching Group</th><th className="px-5 py-3 text-right">Total Attendance</th><th className="px-5 py-3 text-right">Present</th><th className="px-5 py-3 text-right">Absent</th><th className="px-5 py-3 text-right">Rate</th><th className="px-5 py-3">Action</th></tr>
+                  <tr>
+                    <th className="px-5 py-3">Student</th>
+                    <th className="px-5 py-3">Code</th>
+                    <th className="px-5 py-3">Teaching Group</th>
+                    <th className="px-5 py-3 text-right">Total Attendance</th>
+                    <th className="px-5 py-3 text-right">Present</th>
+                    <th className="px-5 py-3 text-right">Absent</th>
+                    <th className="px-5 py-3 text-right">Rate</th>
+                    <th className="px-5 py-3">Action</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {historyLoading ? (
