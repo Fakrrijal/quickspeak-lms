@@ -30,8 +30,7 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
         },
         {
           label: 'Books',
-          to: '/student/ebooks',
-          activePrefixes: ['/student/ebooks/'],
+          to: '/student/learning?view=books',
         },
         { label: 'Profile', to: '/student/profile' },
       ],
