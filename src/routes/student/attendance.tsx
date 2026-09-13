@@ -265,13 +265,53 @@ function StudentAttendancePage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Detailed History</p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Attendance Records</h2>
-            <p className="mt-1 text-sm text-slate-500">Showing {periodLabel}.</p>
+        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:px-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Detailed History</p>
+              <h2 className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Attendance Records</h2>
+              <p className="mt-1 text-sm text-slate-500">Showing {periodLabel}.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={download}
+                disabled={!attendance.length || attendanceLoading}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon name="download" />
+                Download PDF
+              </button>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+
+          <div className="border-t border-slate-200 bg-slate-50/70 px-0 pt-4 sm:pt-5">
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,160px)_1fr] sm:items-end">
+              <label className="block text-sm font-semibold text-slate-700">
+                Month
+                <select value={month} onChange={(event) => setMonth(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                  {Array.from({ length: 12 }, (_, index) => (
+                    <option key={index + 1} value={index + 1}>{new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2000, index))}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Year
+                <input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+              </label>
+              <div className="hidden sm:block">
+                <p className="text-right text-xs text-slate-500">Attendance is recorded by your assigned teacher.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 px-6 py-4 sm:px-7">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p>
+              <p className="mt-1 text-sm text-slate-500">Session records for {periodLabel}.</p>
+            </div>
             <button
               type="button"
               onClick={() => setRecordsExpanded((current) => !current)}
@@ -282,40 +322,11 @@ function StudentAttendancePage() {
               {recordsExpanded ? 'Collapse' : 'View records'}
               <span className={`text-base transition-transform ${recordsExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
             </button>
-            <button
-              type="button"
-              onClick={download}
-              disabled={!attendance.length || attendanceLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Icon name="download" />
-              Download PDF
-            </button>
           </div>
         </div>
 
         {recordsExpanded && (
-          <div id="attendance-records-content">
-            <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-4 sm:px-7">
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,160px)_1fr] sm:items-end">
-                <label className="block text-sm font-semibold text-slate-700">
-                  Month
-                  <select value={month} onChange={(event) => setMonth(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                    {Array.from({ length: 12 }, (_, index) => (
-                      <option key={index + 1} value={index + 1}>{new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2000, index))}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Year
-                  <input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                </label>
-                <div className="hidden sm:block">
-                  <p className="text-right text-xs text-slate-500">Attendance is recorded by your assigned teacher.</p>
-                </div>
-              </div>
-            </div>
-
+          <div id="attendance-records-content" className="border-t border-slate-200">
             {error && (
               <div className="mx-6 my-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:mx-7">
                 Unable to load attendance. <button type="button" onClick={() => void reload()} className="font-bold underline">Retry</button>
@@ -334,7 +345,7 @@ function StudentAttendancePage() {
                   <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {periodLabel}.</p>
                 </div>
               ) : (
-                <div className="max-h-[360px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
+                <div className="max-h-[360px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-200">
                   <table className="min-w-[1040px] w-full text-left text-sm">
                     <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500 shadow-sm">
                       <tr>
