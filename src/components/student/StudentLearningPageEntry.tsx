@@ -193,7 +193,7 @@ export function StudentLearningPageEntry() {
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-400 sm:max-w-xs"
           >
             {levels.map((level) => (
-              <option key={level.id} value={level.id}>Level {level.level_number} — {level.name}</option>
+              <option key={level.id} value={level.id}>Level {level.level_number}</option>
             ))}
           </select>
         </div>
