@@ -27,6 +27,14 @@ function firstRelated<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function normalizeEnrollment(enrollment: any): EnrollmentCorrectionItem {
+  return {
+    ...enrollment,
+    students: firstRelated(enrollment.students),
+    levels: firstRelated(enrollment.levels),
+  } as EnrollmentCorrectionItem
+}
+
 export async function getEnrollmentCorrectionLevels(): Promise<EnrollmentCorrectionLevel[]> {
   const { data, error } = await supabase
     .from('levels')
@@ -55,11 +63,31 @@ export async function getEditablePaidEnrollments(): Promise<EnrollmentCorrection
 
   if (error) throw error
 
-  return (data ?? []).map((enrollment) => ({
-    ...enrollment,
-    students: firstRelated(enrollment.students),
-    levels: firstRelated(enrollment.levels),
-  })) as EnrollmentCorrectionItem[]
+  return (data ?? []).map(normalizeEnrollment)
+}
+
+export async function getEditablePaidEnrollmentsForStudent(
+  studentId: string,
+): Promise<EnrollmentCorrectionItem[]> {
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select(`
+      id,
+      status,
+      level_id,
+      package_type,
+      updated_at,
+      price,
+      students (student_code, profiles (full_name, email)),
+      levels (id, level_number, name)
+    `)
+    .eq('student_id', studentId)
+    .in('status', ['payment_approved', 'teacher_assignment'])
+    .order('updated_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data ?? []).map(normalizeEnrollment)
 }
 
 export async function adminEditPaidEnrollment(
