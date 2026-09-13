@@ -250,7 +250,8 @@ export function TeacherAttendancePage() {
       {successMessage && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{successMessage}</div>}
       {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}<button type="button" onClick={() => void reload()} className="ml-2 font-bold underline">Retry</button></div>}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Total Students</p><p className="mt-2 text-2xl font-extrabold text-[#102449]">{historyLoading ? '…' : totalStudents}</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Total Attendance</p><p className="mt-2 text-2xl font-extrabold text-[#102449]">{historyLoading ? '…' : totalAttendance}</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Present</p><p className="mt-2 text-2xl font-extrabold text-emerald-700">{historyLoading ? '…' : presentRecords}</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Absent</p><p className="mt-2 text-2xl font-extrabold text-rose-700">{historyLoading ? '…' : absentRecords}</p></article>
@@ -262,7 +263,7 @@ export function TeacherAttendancePage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p>
             <h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2>
-            <p className="mt-1 text-sm text-slate-600">{formatPeriod(referenceDate, period)}</p>
+            <p className="mt-1 text-sm text-slate-600">{totalStudents} students · {formatPeriod(referenceDate, period)}</p>
           </div>
           <button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button>
         </div>
@@ -315,16 +316,6 @@ export function TeacherAttendancePage() {
                   )}
                 </tbody>
               </table>
-            </div>
-
-            <div className="border-t border-slate-200 bg-slate-50/70 px-6 py-5 sm:px-7">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Attendance Overview</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-4">
-                <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-semibold text-slate-500">Total Students</p><p className="mt-1 text-xl font-extrabold text-[#102449]">{historyLoading ? '…' : totalStudents}</p></div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-semibold text-slate-500">Total Attendance</p><p className="mt-1 text-xl font-extrabold text-[#102449]">{historyLoading ? '…' : totalAttendance}</p></div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-semibold text-slate-500">Total Present</p><p className="mt-1 text-xl font-extrabold text-emerald-700">{historyLoading ? '…' : presentRecords}</p></div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-semibold text-slate-500">Total Absent</p><p className="mt-1 text-xl font-extrabold text-rose-700">{historyLoading ? '…' : absentRecords}</p></div>
-              </div>
             </div>
           </div>
         )}
