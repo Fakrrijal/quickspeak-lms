@@ -115,6 +115,7 @@ export function TeacherDashboardV2() {
   const attendanceCount = completedMeetings.length
   const presentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'present').length
   const absentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'absent').length
+  const attendanceRate = attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0
   const unpaidFee = useMemo(() => feeReports.reduce((total, report) => total + Math.max(report.period_summary.outstanding_amount, 0), 0), [feeReports])
   const rangeLabel = `${formatDate(dateRange.from)} – ${formatDate(dateRange.to)}`
 
@@ -150,8 +151,8 @@ export function TeacherDashboardV2() {
             {[
               { label: 'Classes', value: classes, icon: 'group' as const, color: 'text-blue-700' },
               { label: 'Active Students', value: activeStudents, icon: 'users' as const, color: 'text-emerald-700' },
-              { label: 'Fee (Unpaid)', value: formatRupiah(unpaidFee), icon: 'wallet' as const, color: 'text-amber-800' },
-              { label: 'Attendance', value: attendanceCount, icon: 'calendar' as const, color: 'text-violet-700' },
+              { label: 'Total Attendance', value: attendanceCount, icon: 'calendar' as const, color: 'text-violet-700' },
+              { label: 'Unpaid Fee', value: formatRupiah(unpaidFee), icon: 'wallet' as const, color: 'text-amber-800' },
             ].map((card) => (
               <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-slate-50"><span className={card.color}><Icon name={card.icon} /></span></div>
@@ -165,15 +166,15 @@ export function TeacherDashboardV2() {
             <div className="flex flex-col gap-2 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">Period Overview</p>
-                <h2 className="mt-1 text-[21px] font-bold text-[#102449]">Teaching activity</h2>
+                <h2 className="mt-1 text-[21px] font-bold text-[#102449]">Attendance overview</h2>
               </div>
               <p className="text-[15px] font-semibold text-slate-500">{rangeLabel}</p>
             </div>
             <dl className="mt-6 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-xl bg-slate-50 p-4"><dt className="text-[14px] font-semibold text-slate-500">Sessions</dt><dd className="mt-1 text-[22px] font-extrabold text-[#102449]">{attendanceCount}</dd></div>
+              <div className="rounded-xl bg-slate-50 p-4"><dt className="text-[14px] font-semibold text-slate-500">Total Attendance</dt><dd className="mt-1 text-[22px] font-extrabold text-[#102449]">{attendanceCount}</dd></div>
               <div className="rounded-xl bg-emerald-50 p-4"><dt className="text-[14px] font-semibold text-emerald-700">Present</dt><dd className="mt-1 text-[22px] font-extrabold text-emerald-800">{presentCount}</dd></div>
               <div className="rounded-xl bg-rose-50 p-4"><dt className="text-[14px] font-semibold text-rose-700">Absent</dt><dd className="mt-1 text-[22px] font-extrabold text-rose-800">{absentCount}</dd></div>
-              <div className="rounded-xl bg-amber-50 p-4"><dt className="text-[14px] font-semibold text-amber-800">Unpaid Fee</dt><dd className="mt-1 text-[22px] font-extrabold text-amber-900">{formatRupiah(unpaidFee)}</dd></div>
+              <div className="rounded-xl bg-blue-50 p-4"><dt className="text-[14px] font-semibold text-blue-700">Attendance Rate</dt><dd className="mt-1 text-[22px] font-extrabold text-blue-800">{attendanceRate}%</dd></div>
             </dl>
             <p className="mt-5 border-t border-slate-200 pt-5 text-[15px] leading-6 text-slate-600">Metrics update from teaching activity inside the selected date range.</p>
           </section>

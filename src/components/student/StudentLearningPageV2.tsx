@@ -61,6 +61,7 @@ export function StudentLearningPageV2() {
   const [submitting, setSubmitting] = useState(false)
   const [paymentInitialization, setPaymentInitialization] = useState<PaymentInitialization | null>(null)
   const [success, setSuccess] = useState(false)
+  const [expandedLevels, setExpandedLevels] = useState<Record<number, boolean>>({})
   const canLoadEbooks = Boolean(!authLoading && !profileLoading && isAuthenticated && profile && !profileError && role === 'student' && status === 'active')
   const { catalog, loading: ebooksLoading, error: ebooksError, reload: reloadEbooks } = useStudentEbooks(canLoadEbooks)
 
@@ -316,11 +317,13 @@ export function StudentLearningPageV2() {
 
       <section className="border border-slate-200 bg-white shadow-sm" aria-labelledby="student-progress-title">
         <div className="border-b border-slate-200 px-6 py-5 sm:px-7">
-          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-700">Learning Progress</p>
-          <h2 id="student-progress-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Your chapter progress</h2>
-          <p className="mt-1 text-sm text-slate-500">Completed chapters are recorded by your teacher and stay available as you move through levels.</p>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-700">Learning Progress</p>
+            <h2 id="student-progress-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Your chapter progress</h2>
+            <p className="mt-1 text-sm text-slate-500">Completed chapters are recorded by your teacher and stay available as you move through levels.</p>
+          </div>
         </div>
-        <div className="p-6 sm:p-7">
+        <div id="student-progress-content" className="p-6 sm:p-7">
           {progressLoading ? (
             <div className="space-y-3"><div className="h-5 w-48 animate-pulse rounded bg-slate-100" /><div className="h-2.5 w-full animate-pulse rounded bg-slate-100" /><div className="h-20 w-full animate-pulse rounded-xl bg-slate-50" /></div>
           ) : progressError ? (
@@ -338,25 +341,46 @@ export function StudentLearningPageV2() {
               </div>
               <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${currentProgressPercent}%` }} /></div>
 
-              <div className="mt-6 max-h-[560px] space-y-6 overflow-y-auto pr-2">
+              <div className="mt-6 space-y-4">
                 {historicalLevels.map((level) => {
                   const completedCount = level.rows.filter((row) => row.completed_at).length
                   const percent = level.rows.length ? Math.round((completedCount / level.rows.length) * 100) : 0
+                  const levelExpanded = expandedLevels[level.levelNumber] ?? (level.levelNumber === state.level_number)
                   return (
                     <section key={level.levelNumber} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Level {level.levelNumber}</p><h3 className="mt-1 text-base font-extrabold text-[#102449]">{level.levelName}</h3></div>
-                        <p className="text-xs font-extrabold text-blue-700">{completedCount}/{level.rows.length} completed · {percent}%</p>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Level {level.levelNumber}</p>
+                          <h3 className="mt-1 text-base font-extrabold text-[#102449]">{level.levelName}</h3>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <p className="text-xs font-extrabold text-blue-700">{completedCount}/{level.rows.length} completed · {percent}%</p>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedLevels((current) => ({ ...current, [level.levelNumber]: !levelExpanded }))}
+                            aria-expanded={levelExpanded}
+                            aria-controls={`student-level-${level.levelNumber}-chapters`}
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-blue-700 transition hover:bg-slate-50"
+                          >
+                            {levelExpanded ? 'Collapse' : 'View chapters'}
+                            <span className={`text-base transition-transform ${levelExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {level.rows.map((row) => (
-                          <div key={row.chapter_id} className={`rounded-xl border px-3.5 py-3 ${row.completed_at ? 'border-emerald-100 bg-emerald-50/60' : 'border-slate-200 bg-white'}`}>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {row.chapter_number}</p>
-                            <p className="mt-1 text-sm font-bold text-[#102449]">{row.chapter_title}</p>
-                            <p className={`mt-1 text-xs font-bold ${row.completed_at ? 'text-emerald-700' : 'text-slate-500'}`}>{row.completed_at ? '✓ Completed' : 'Not completed yet'}</p>
+
+                      {levelExpanded && (
+                        <div id={`student-level-${level.levelNumber}-chapters`} className="mt-3 max-h-[260px] overflow-y-auto pr-2">
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {level.rows.map((row) => (
+                              <div key={row.chapter_id} className={`rounded-xl border px-3.5 py-3 ${row.completed_at ? 'border-emerald-100 bg-emerald-50/60' : 'border-slate-200 bg-white'}`}>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {row.chapter_number}</p>
+                                <p className="mt-1 text-sm font-bold text-[#102449]">{row.chapter_title}</p>
+                                <p className={`mt-1 text-xs font-bold ${row.completed_at ? 'text-emerald-700' : 'text-slate-500'}`}>{row.completed_at ? '✓ Completed' : 'Not completed yet'}</p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
                     </section>
                   )
                 })}
@@ -368,7 +392,7 @@ export function StudentLearningPageV2() {
 
       <StudentLevelAssessmentHistory />
 
-      <section className="border border-slate-200 bg-white shadow-sm" aria-labelledby="learning-materials-title">
+      <section className="hidden" aria-hidden="true" aria-labelledby="learning-materials-title">
         <div className="flex flex-col gap-2 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-700">Learning Materials</p>
