@@ -157,6 +157,7 @@ function StudentAttendancePage() {
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [detail, setDetail] = useState<StudentAttendanceRecord | null>(null)
+  const [recordsExpanded, setRecordsExpanded] = useState(true)
 
   const canLoad = !loading
     && !profileLoading
@@ -270,87 +271,103 @@ function StudentAttendancePage() {
             <h2 className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Attendance Records</h2>
             <p className="mt-1 text-sm text-slate-500">Showing {periodLabel}.</p>
           </div>
-          <button
-            type="button"
-            onClick={download}
-            disabled={!attendance.length || attendanceLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Icon name="download" />
-            Download PDF
-          </button>
-        </div>
-
-        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-4 sm:px-7">
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,160px)_1fr] sm:items-end">
-            <label className="block text-sm font-semibold text-slate-700">
-              Month
-              <select value={month} onChange={(event) => setMonth(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                {Array.from({ length: 12 }, (_, index) => (
-                  <option key={index + 1} value={index + 1}>{new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2000, index))}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-semibold text-slate-700">
-              Year
-              <input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-            </label>
-            <div className="hidden sm:block">
-              <p className="text-right text-xs text-slate-500">Attendance is recorded by your assigned teacher.</p>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setRecordsExpanded((current) => !current)}
+              aria-expanded={recordsExpanded}
+              aria-controls="attendance-records-content"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50"
+            >
+              {recordsExpanded ? 'Collapse' : 'View records'}
+              <span className={`text-base transition-transform ${recordsExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span>
+            </button>
+            <button
+              type="button"
+              onClick={download}
+              disabled={!attendance.length || attendanceLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Icon name="download" />
+              Download PDF
+            </button>
           </div>
         </div>
 
-        {error && (
-          <div className="mx-6 my-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:mx-7">
-            Unable to load attendance. <button type="button" onClick={() => void reload()} className="font-bold underline">Retry</button>
+        {recordsExpanded && (
+          <div id="attendance-records-content">
+            <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-4 sm:px-7">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,160px)_1fr] sm:items-end">
+                <label className="block text-sm font-semibold text-slate-700">
+                  Month
+                  <select value={month} onChange={(event) => setMonth(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    {Array.from({ length: 12 }, (_, index) => (
+                      <option key={index + 1} value={index + 1}>{new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2000, index))}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Year
+                  <input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                </label>
+                <div className="hidden sm:block">
+                  <p className="text-right text-xs text-slate-500">Attendance is recorded by your assigned teacher.</p>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mx-6 my-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:mx-7">
+                Unable to load attendance. <button type="button" onClick={() => void reload()} className="font-bold underline">Retry</button>
+              </div>
+            )}
+
+            <div className="p-6 sm:p-7">
+              {attendanceLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+                </div>
+              ) : attendance.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+                  <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm"><Icon name="calendar" /></div>
+                  <h3 className="mt-4 text-base font-bold text-slate-900">No attendance records</h3>
+                  <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {periodLabel}.</p>
+                </div>
+              ) : (
+                <div className="max-h-[520px] overflow-auto rounded-xl border border-slate-200">
+                  <table className="min-w-[1040px] w-full text-left text-sm">
+                    <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500 shadow-sm">
+                      <tr>
+                        <th className="px-4 py-3.5 font-bold">Date</th>
+                        <th className="px-4 py-3.5 font-bold">Teaching Group</th>
+                        <th className="px-4 py-3.5 font-bold">Teacher</th>
+                        <th className="px-4 py-3.5 font-bold">Level</th>
+                        <th className="px-4 py-3.5 font-bold">Package</th>
+                        <th className="px-4 py-3.5 font-bold">Status</th>
+                        <th className="px-4 py-3.5 font-bold">Recorded Time</th>
+                        <th className="px-4 py-3.5 text-right font-bold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attendance.map((item) => (
+                        <tr key={item.meeting_id} className="border-t border-slate-200 bg-white transition hover:bg-slate-50">
+                          <td className="px-4 py-4 font-semibold text-slate-900">{date(item.session_date)}</td>
+                          <td className="px-4 py-4 text-slate-700">{item.teaching_group_name}</td>
+                          <td className="px-4 py-4"><p className="font-semibold text-slate-900">{item.teacher_name}</p><p className="mt-0.5 text-xs text-slate-500">{item.teacher_code}</p></td>
+                          <td className="px-4 py-4 text-slate-700">{item.level_name}</td>
+                          <td className="px-4 py-4 text-slate-700">{packageLabel(item.package_type)}</td>
+                          <td className="px-4 py-4"><StatusBadge status={item.teacher_status} /></td>
+                          <td className="px-4 py-4 whitespace-nowrap text-slate-600">{dateTime(item.teacher_recorded_at)}</td>
+                          <td className="px-4 py-4 text-right"><button type="button" onClick={() => setDetail(item)} className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-800">View Detail <Icon name="arrow" /></button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
-
-        <div className="p-6 sm:p-7">
-          {attendanceLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
-            </div>
-          ) : attendance.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
-              <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm"><Icon name="calendar" /></div>
-              <h3 className="mt-4 text-base font-bold text-slate-900">No attendance records</h3>
-              <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {periodLabel}.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-[1040px] w-full text-left text-sm">
-                <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3.5 font-bold">Date</th>
-                    <th className="px-4 py-3.5 font-bold">Teaching Group</th>
-                    <th className="px-4 py-3.5 font-bold">Teacher</th>
-                    <th className="px-4 py-3.5 font-bold">Level</th>
-                    <th className="px-4 py-3.5 font-bold">Package</th>
-                    <th className="px-4 py-3.5 font-bold">Status</th>
-                    <th className="px-4 py-3.5 font-bold">Recorded Time</th>
-                    <th className="px-4 py-3.5 text-right font-bold">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {attendance.map((item) => (
-                    <tr key={item.meeting_id} className="border-t border-slate-200 bg-white transition hover:bg-slate-50">
-                      <td className="px-4 py-4 font-semibold text-slate-900">{date(item.session_date)}</td>
-                      <td className="px-4 py-4 text-slate-700">{item.teaching_group_name}</td>
-                      <td className="px-4 py-4"><p className="font-semibold text-slate-900">{item.teacher_name}</p><p className="mt-0.5 text-xs text-slate-500">{item.teacher_code}</p></td>
-                      <td className="px-4 py-4 text-slate-700">{item.level_name}</td>
-                      <td className="px-4 py-4 text-slate-700">{packageLabel(item.package_type)}</td>
-                      <td className="px-4 py-4"><StatusBadge status={item.teacher_status} /></td>
-                      <td className="px-4 py-4 whitespace-nowrap text-slate-600">{dateTime(item.teacher_recorded_at)}</td>
-                      <td className="px-4 py-4 text-right"><button type="button" onClick={() => setDetail(item)} className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-800">View Detail <Icon name="arrow" /></button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </section>
 
       {detail && <AttendanceDetail record={detail} records={detailRecords} periodLabel={periodLabel} onClose={() => setDetail(null)} />}
