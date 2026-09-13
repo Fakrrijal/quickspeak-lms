@@ -224,7 +224,7 @@ function StudentAttendancePage() {
       <section className="border border-slate-200 bg-white p-6 shadow-sm">
         <div className="h-2.5 w-28 animate-pulse rounded-full bg-slate-200" />
         <div className="mt-4 h-8 w-72 max-w-full animate-pulse rounded-lg bg-slate-100" />
-        <div className="mt-3 h-4 w-96 max-w-full rounded-full bg-slate-100" />
+        <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded-full bg-slate-100" />
       </section>
     )
   }
@@ -334,7 +334,7 @@ function StudentAttendancePage() {
                   <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {periodLabel}.</p>
                 </div>
               ) : (
-                <div className="max-h-[520px] overflow-auto rounded-xl border border-slate-200">
+                <div className="max-h-[360px] overflow-y-scroll overflow-x-auto rounded-xl border border-slate-200">
                   <table className="min-w-[1040px] w-full text-left text-sm">
                     <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500 shadow-sm">
                       <tr>
