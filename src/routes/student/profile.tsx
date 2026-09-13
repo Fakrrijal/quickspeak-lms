@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { AccountSecurity } from '../../components/AccountSecurity'
 import { ProfileForm } from '../../components/ProfileForm'
 import { useProfile } from '../../hooks/useProfile'
 import { useAuthContext } from '../../providers/AuthProvider'
@@ -27,11 +28,16 @@ function StudentProfilePage() {
 
   const currentLevel = enrollmentQuery.data?.[0]?.level_name ?? 'No active enrollment'
 
-  return <section>
-    <h2 className="text-3xl font-bold text-slate-900">Profile</h2>
-    <p className="mt-2 text-slate-600">Manage your contact details and profile photo.</p>
-    {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" onClick={() => void reload()} className="font-medium underline">Retry</button></p>}
-    {success && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
-    <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Current Level" levelLabel={currentLevel} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
-  </section>
+  return (
+    <section>
+      <h2 className="text-3xl font-bold text-slate-900">Profile</h2>
+      <p className="mt-2 text-slate-600">Manage your contact details and profile photo.</p>
+      {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" onClick={() => void reload()} className="font-medium underline">Retry</button></p>}
+      {success && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
+      <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Current Level" levelLabel={currentLevel} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
+      <div className="mt-6">
+        <AccountSecurity email={user?.email ?? profile?.email ?? null} />
+      </div>
+    </section>
+  )
 }
