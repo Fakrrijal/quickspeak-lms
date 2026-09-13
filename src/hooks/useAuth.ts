@@ -104,15 +104,14 @@ export function useAuth() {
   }, [])
 
   useEffect(() => {
-    const userId = user?.id ?? null
-    if (userId) {
-      loadProfile(userId)
+    if (user) {
+      loadProfile(user.id)
     } else {
       setProfile(null)
       setProfileError(null)
       setProfileLoading(false)
     }
-  }, [user?.id, loadProfile])
+  }, [user, loadProfile])
 
   const emailVerified = Boolean(user?.email_confirmed_at)
 
