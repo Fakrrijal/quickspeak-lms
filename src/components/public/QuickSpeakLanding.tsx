@@ -144,14 +144,12 @@ export function QuickSpeakLanding() {
       'QuickSpeak adalah English Course dengan pembelajaran terstruktur, empat level, dan dukungan teacher.'
   }, [])
 
-  // Testimonial carousel state
   const [currentSlide, setCurrentSlide] = useState(0)
   const [cardsPerView, setCardsPerView] = useState(3)
   const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true)
   const autoPlayTimerRef = useRef<number | null>(null)
   const carouselRef = useRef<HTMLDivElement | null>(null)
 
-  // Sticky WhatsApp CTA visibility
   const [showStickyCta, setShowStickyCta] = useState(false)
   useEffect(() => {
     const handleScroll = () => {
@@ -162,15 +160,12 @@ export function QuickSpeakLanding() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Calculate total slides based on cards per view
   const totalSlides = Math.ceil(testimonials.length / cardsPerView)
 
-  // Check for prefers-reduced-motion
   const prefersReducedMotion = () => {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }
 
-  // Handle responsive card count
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -187,7 +182,6 @@ export function QuickSpeakLanding() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Auto-play carousel
   useEffect(() => {
     if (!isAutoPlayEnabled) return
 
@@ -204,7 +198,6 @@ export function QuickSpeakLanding() {
     }
   }, [totalSlides, isAutoPlayEnabled])
 
-  // Handle pause on hover/focus
   const handleCarouselMouseEnter = () => {
     setIsAutoPlayEnabled(false)
   }
@@ -221,7 +214,6 @@ export function QuickSpeakLanding() {
     setIsAutoPlayEnabled(true)
   }
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!carouselRef.current?.contains(document.activeElement)) return
@@ -262,7 +254,6 @@ export function QuickSpeakLanding() {
       <PublicHeader />
 
       <main>
-        {/* HERO SECTION */}
         <section className="relative bg-[#faf8f5] py-16 lg:py-24 overflow-hidden">
           <div className="absolute inset-0 hidden lg:block pointer-events-none">
             <img
@@ -274,7 +265,6 @@ export function QuickSpeakLanding() {
 
           <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <div className="grid items-center lg:grid-cols-12">
-              {/* Left: Copy occupying approx 55-60% width on desktop */}
               <div className="min-w-0 lg:col-span-7 xl:col-span-6 lg:pr-8">
                 <div className="inline-flex items-center rounded-full border border-[#dfe9ff] bg-[#edf4ff]/90 backdrop-blur-sm px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
                   ENGLISH COURSE
@@ -288,7 +278,6 @@ export function QuickSpeakLanding() {
                   Pembelajaran Bahasa Inggris yang terstruktur melalui 4 level, didampingi teacher, dan dirancang untuk membantu siswa berkembang secara bertahap.
                 </p>
 
-                {/* Trust Points */}
                 <div className="mt-6 space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1b5dd7] text-sm font-bold text-white">✓</div>
@@ -308,7 +297,6 @@ export function QuickSpeakLanding() {
                   </div>
                 </div>
 
-                {/* CTAs */}
                 <div className="mt-7 flex flex-col gap-4 sm:flex-row">
                   <Link
                     to="/register"
@@ -327,7 +315,6 @@ export function QuickSpeakLanding() {
                 </div>
               </div>
 
-              {/* Mobile / Tablet Image View */}
               <div className="mt-12 lg:hidden relative overflow-hidden rounded-3xl bg-transparent">
                 <img src="/hero-student-hijab.png" alt="QuickSpeak Learning Experience" className="w-full h-auto object-cover aspect-[4/3]" />
               </div>
@@ -393,14 +380,11 @@ export function QuickSpeakLanding() {
             </div>
 
             <div className="mt-12">
-              {/* Desktop Horizontal Learning Journey */}
               <div className="hidden lg:grid lg:grid-cols-4 gap-6 xl:gap-8 relative">
-                {/* Connecting Progress Bar Behind */}
                 <div className="absolute top-[38px] left-[10%] right-[10%] h-0.5 bg-slate-200 z-0" />
 
                 {journeySteps.map((item, index) => (
                   <div key={item.title} className="relative z-10 flex flex-col items-center text-center group">
-                    {/* Level Number Node */}
                     <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white border-2 border-[#1b5dd7] text-2xl font-black text-[#102449] shadow-sm transition-all group-hover:bg-[#1b5dd7] group-hover:text-white">
                       0{index + 1}
                     </div>
@@ -420,7 +404,6 @@ export function QuickSpeakLanding() {
                 ))}
               </div>
 
-              {/* Tablet & Mobile Vertical Progression */}
               <div className="lg:hidden max-w-2xl mx-auto space-y-8 relative">
                 <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-slate-200" />
 
@@ -447,11 +430,9 @@ export function QuickSpeakLanding() {
           </div>
         </section>
 
-        {/* LEARNING EXPERIENCE SECTION */}
         <section className="bg-[#f8fafc] py-24 text-slate-900 border-t border-slate-200/80">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-              {/* Left: Copy */}
               <div>
                 <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
                   YOUR LEARNING EXPERIENCE
@@ -494,7 +475,6 @@ export function QuickSpeakLanding() {
                 </div>
               </div>
 
-              {/* Right: Educational Process Visual */}
               <div className="relative">
                 <div className="absolute -left-8 top-8 h-40 w-40 rounded-full bg-[#dfeaff] blur-3xl opacity-60" />
                 <div className="absolute -right-8 bottom-0 h-44 w-44 rounded-full bg-[#f9eaa5] blur-3xl opacity-50" />
@@ -638,7 +618,6 @@ export function QuickSpeakLanding() {
               onFocus={handleCarouselFocus}
               onBlur={handleCarouselBlur}
             >
-              {/* Carousel Container */}
               <div className="overflow-hidden">
                 <div
                   className="flex transition-transform duration-500 ease-out"
@@ -661,7 +640,6 @@ export function QuickSpeakLanding() {
                               key={`${slideIdx}-${cardIdx}`}
                               className="flex flex-col rounded-3xl border border-slate-200/90 bg-white shadow-[0_10px_30px_rgba(16,36,73,0.04)] transition duration-300 hover:shadow-md overflow-hidden"
                             >
-                              {/* Student Photo Section */}
 <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 p-3 sm:p-4">
   <img
     src={testimonial.image}
@@ -670,9 +648,7 @@ export function QuickSpeakLanding() {
   />
 </div>
 
-                              {/* Card Content */}
                               <div className="flex flex-1 flex-col p-6 sm:p-7">
-                                {/* Student Info */}
                                 <div className="mb-4">
                                   <h3 className="text-xl font-bold tracking-[-0.03em] text-[#102449]">
                                     {testimonial.name}
@@ -682,7 +658,6 @@ export function QuickSpeakLanding() {
                                   </p>
                                 </div>
 
-                                {/* Testimonial Quote */}
                                 <p className="flex-1 text-sm leading-8 text-slate-600">
                                   &quot;{testimonial.quote}&quot;
                                 </p>
@@ -696,7 +671,6 @@ export function QuickSpeakLanding() {
                 </div>
               </div>
 
-              {/* Previous Arrow */}
               <button
                 onClick={handlePrevious}
                 type="button"
@@ -708,7 +682,6 @@ export function QuickSpeakLanding() {
                 </svg>
               </button>
 
-              {/* Next Arrow */}
               <button
                 onClick={handleNext}
                 type="button"
@@ -716,11 +689,10 @@ export function QuickSpeakLanding() {
                 className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-[#102449] p-2 text-white shadow-lg transition hover:bg-[#143562] hover:shadow-xl active:scale-95 sm:p-3 md:-right-16 lg:-right-20 focus:outline-none focus:ring-2 focus:ring-[#1b5dd7] focus:ring-offset-2"
               >
                 <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7-7 7" />
                 </svg>
               </button>
 
-              {/* Pagination Dots */}
               <div className="mt-8 flex justify-center gap-2">
                 {Array.from({ length: totalSlides }).map((_, idx) => (
                   <button
@@ -741,9 +713,6 @@ export function QuickSpeakLanding() {
           </div>
         </section>
 
-
-
-        {/* CONSULTATION SECTION */}
         <section className="bg-gradient-to-r from-[#102449] to-[#1b3a6b] py-16 sm:py-20">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
@@ -937,7 +906,7 @@ export function QuickSpeakLanding() {
           aria-hidden="true"
           className="h-7 w-7"
         >
-          <path d="M20.52 3.48A11.93 11.93 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.88c0 2.09.55 4.12 1.6 5.92L0 24l6.36-1.66a11.86 11.86 0 0 0 5.68 1.45h.01c6.54 0 11.88-5.34-3.41-8.43Z" />
+          <path d="M20.52 3.48A11.93 11.93 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.88c0 2.09.55 4.12 1.6 5.92L0 24l6.36-1.66a11.86 11.86 0 0 0 5.68 1.45h.01c6.54 0 11.88-5.34 11.88-11.88 0-3.17-1.23-6.16-3.41-8.43Z" />
           <path
             d="M17.47 14.38c-.3-.15-1.77-.87-2.04-.97-.27-.15-.47.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.21 5.09 4.5.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35Z"
             fill="#25D366"
