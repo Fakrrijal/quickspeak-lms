@@ -57,7 +57,7 @@ function TeacherProfilePage() {
       )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-4.5 sm:px-7">
+        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-4 sm:px-7">
           <h2 className="text-lg font-bold text-[#102449]">Personal Information</h2>
           <p className="mt-1 text-sm text-slate-600">Keep your teacher profile information up to date.</p>
         </div>
