@@ -11,25 +11,25 @@ export function PublicHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-sm">
+    <header className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <img src="/favicon.svg" alt="QuickSpeak" className="h-11 w-11 object-contain" />
-        </div>
+        <Link to="/" className="flex items-center gap-3" aria-label="QuickSpeak English home">
+          <img src="/favicon.svg" alt="" aria-hidden="true" className="h-10 w-10 shrink-0 object-contain" />
+          <span className="leading-none">
+            <span className="block text-[18px] font-extrabold tracking-[-0.03em] text-[#102449]">QuickSpeak</span>
+            <span className="mt-0.5 block text-[8px] font-bold uppercase tracking-[0.34em] text-[#1b5dd7]">English</span>
+          </span>
+        </Link>
 
-        <div className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
+        <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 lg:flex">
           {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="transition hover:text-[#102449]"
-            >
+            <a key={item.label} href={item.href} className="transition hover:text-[#102449]">
               {item.label}
             </a>
           ))}
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
           <Link to="/login" className="font-semibold text-slate-700 transition hover:text-[#102449]">
             Masuk
           </Link>
@@ -44,13 +44,14 @@ export function PublicHeader() {
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           type="button"
-          aria-label="Open navigation menu"
+          aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMobileMenuOpen}
           className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 lg:hidden"
         >
           <span className="space-y-1.5">
-            <span className={`block h-0.5 w-5 rounded bg-slate-700 transition ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`block h-0.5 w-5 rounded bg-slate-700 transition ${isMobileMenuOpen ? 'translate-y-2 rotate-45' : ''}`} />
             <span className={`block h-0.5 w-5 rounded bg-slate-700 transition ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block h-0.5 w-5 rounded bg-slate-700 transition ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+            <span className={`block h-0.5 w-5 rounded bg-slate-700 transition ${isMobileMenuOpen ? '-translate-y-2 -rotate-45' : ''}`} />
           </span>
         </button>
       </nav>
