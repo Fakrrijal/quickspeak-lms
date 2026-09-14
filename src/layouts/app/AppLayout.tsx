@@ -55,11 +55,6 @@ export function AppLayout() {
   const isPartnerPage = pathname === '/partner'
   const isHomePage = pathname === '/'
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname)
-  const authPageClass = pathname === '/register'
-    ? 'auth-register'
-    : pathname === '/login'
-      ? 'auth-login'
-      : ''
 
   if (isHomePage) {
     return <Outlet />
