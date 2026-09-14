@@ -53,17 +53,26 @@ export function AppLayout() {
   }
 
   const isPartnerPage = pathname === '/partner'
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
       {!isPartnerPage && (
-        <header className="border-b bg-white">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-            <h1 className="text-xl font-bold text-slate-900">
-              QuickSpeak
-            </h1>
+        <header className="border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
+          <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between px-6 py-3">
+            <a href="/" className="inline-flex items-center gap-3" aria-label="QuickSpeak home">
+              <img
+                src="/favicon.svg"
+                alt="QuickSpeak"
+                className="h-10 w-10 shrink-0"
+              />
+              <div className="leading-tight">
+                <div className="text-[18px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#1b5dd7]">English</div>
+              </div>
+            </a>
 
-            {isAuthenticated && (
+            {isAuthenticated && !isAuthPage && (
               <div className="flex items-center gap-4">
                 {logoutError && (
                   <span className="text-sm text-red-600">
@@ -73,7 +82,7 @@ export function AppLayout() {
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
                 >
                   {isLoggingOut ? 'Logging out...' : 'Logout'}
                 </button>
@@ -83,7 +92,7 @@ export function AppLayout() {
         </header>
       )}
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className={isAuthPage ? 'mx-auto max-w-7xl px-6 py-10 sm:py-14' : 'mx-auto max-w-7xl px-6 py-8'}>
         <Outlet />
       </main>
     </div>
