@@ -217,6 +217,42 @@
   color: #3154a5;
 }
 
+/* My Learning terminology: preserve accessible DOM text while presenting the canonical product label. */
+.qs-student-portal section:has(+ section[aria-labelledby='student-progress-title']) > div:first-child > div > div:first-child > p:first-child {
+  color: transparent !important;
+  position: relative;
+}
+
+.qs-student-portal section:has(+ section[aria-labelledby='student-progress-title']) > div:first-child > div > div:first-child > p:first-child::after {
+  content: 'CURRENT LEVEL';
+  color: #64748b;
+  position: absolute;
+  inset: 0;
+}
+
+/* Highlight the first incomplete chapter as the student's next learning target. */
+.qs-student-portal section[aria-labelledby='student-progress-title'] [id^='student-level-'][id$='-chapters'] > div > div:nth-child(1 of .border-slate-200.bg-white) {
+  position: relative;
+  border-color: #b9cff7 !important;
+  background: #f7faff !important;
+  box-shadow: inset 3px 0 0 #2f66d0;
+}
+
+.qs-student-portal section[aria-labelledby='student-progress-title'] [id^='student-level-'][id$='-chapters'] > div > div:nth-child(1 of .border-slate-200.bg-white)::after {
+  content: 'NEXT';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 5px;
+  background: #e8f0ff;
+  padding: 3px 6px;
+  color: #3154a5;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 @media (max-width: 767px) {
   .qs-student-portal .student-dashboard-shell h1 {
     font-size: 28px;
