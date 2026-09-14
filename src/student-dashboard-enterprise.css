@@ -39,6 +39,15 @@
   line-height: 1 !important;
 }
 
+/* Calm down secondary blue while keeping QuickSpeak blue for important actions. */
+.qs-student-portal .student-dashboard-shell .text-blue-700 {
+  color: #2456c7 !important;
+}
+
+.qs-student-portal .student-dashboard-shell a.text-blue-700:hover {
+  color: #1d4fa9 !important;
+}
+
 .qs-student-portal .student-progress-surface {
   border-color: #dfe6ef;
   border-radius: 14px;
@@ -61,7 +70,7 @@
 }
 
 .qs-student-portal .student-progress-surface .student-progress-fill {
-  background: #1f5eff;
+  background: #2b63d9;
 }
 
 .qs-student-portal .student-next-step {
@@ -91,10 +100,12 @@
   color: #0a6b50 !important;
 }
 
+/* Account status is supporting metadata, not a primary card. */
 .qs-student-portal .student-account-strip {
   border-top: 1px solid #e3e9f2;
-  padding-top: 1rem;
+  padding-top: 0.75rem;
   color: #64748b;
+  font-size: 0.8125rem;
 }
 
 .qs-student-portal .student-account-strip strong {
