@@ -29,7 +29,7 @@ export function PublicHeader() {
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200/80 bg-white shadow-sm">
-      {/* Utility strip: follows the two-tier structure of institutional websites while keeping QuickSpeak styling. */}
+      {/* Utility strip: mirrors the two-tier institutional pattern while using QuickSpeak branding. */}
       <div className="border-b border-slate-200/80 bg-[#f4f8ff]">
         <div className="mx-auto flex h-12 max-w-7xl items-center gap-5 px-4 sm:px-6 lg:px-8">
           <Link
@@ -45,9 +45,9 @@ export function PublicHeader() {
             Pendaftaran Siswa Baru
           </Link>
 
-          <form onSubmit={handleQuickSearch} className="min-w-0 flex-1 lg:mx-auto lg:max-w-[380px]">
+          <form onSubmit={handleQuickSearch} className="hidden min-w-0 flex-1 lg:mx-auto lg:flex lg:max-w-[380px]">
             <label className="sr-only" htmlFor="quickspeak-search">Cari di QuickSpeak</label>
-            <div className="flex h-9 items-center rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="flex h-9 w-full items-center rounded-lg border border-slate-200 bg-white shadow-sm">
               <span className="flex h-full w-10 shrink-0 items-center justify-center text-slate-400" aria-hidden="true">
                 <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2" focusable="false">
                   <circle cx="11" cy="11" r="6.5" />
