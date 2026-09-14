@@ -253,6 +253,50 @@
   letter-spacing: 0.08em;
 }
 
+/* Attendance table: keep the enterprise table compact on desktop without sacrificing mobile usability. */
+@media (min-width: 1024px) {
+  .qs-student-portal #attendance-records-content .overflow-x-auto {
+    overflow-x: visible !important;
+  }
+
+  .qs-student-portal #attendance-records-content table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed;
+  }
+
+  .qs-student-portal #attendance-records-content table th,
+  .qs-student-portal #attendance-records-content table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+  }
+
+  .qs-student-portal #attendance-records-content table th:nth-child(1),
+  .qs-student-portal #attendance-records-content table td:nth-child(1) { width: 12%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(2),
+  .qs-student-portal #attendance-records-content table td:nth-child(2) { width: 13%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(3),
+  .qs-student-portal #attendance-records-content table td:nth-child(3) { width: 15%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(4),
+  .qs-student-portal #attendance-records-content table td:nth-child(4) { width: 8%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(5),
+  .qs-student-portal #attendance-records-content table td:nth-child(5) { width: 12%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(6),
+  .qs-student-portal #attendance-records-content table td:nth-child(6) { width: 11%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(7),
+  .qs-student-portal #attendance-records-content table td:nth-child(7) { width: 16%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(8),
+  .qs-student-portal #attendance-records-content table td:nth-child(8) { width: 13%; }
+
+  .qs-student-portal #attendance-records-content table th:nth-child(7),
+  .qs-student-portal #attendance-records-content table td:nth-child(7),
+  .qs-student-portal #attendance-records-content table th:nth-child(8),
+  .qs-student-portal #attendance-records-content table td:nth-child(8) {
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 767px) {
   .qs-student-portal .student-dashboard-shell h1 {
     font-size: 28px;
