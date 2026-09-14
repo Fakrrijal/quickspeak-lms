@@ -127,28 +127,28 @@ function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-md items-center justify-center py-4">
-      <section className="w-full rounded-2xl border border-slate-200 bg-white p-7 shadow-[0_18px_50px_rgba(15,35,75,0.08)] sm:p-9">
+    <div className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-md items-center justify-center py-4 sm:py-6">
+      <section className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,35,75,0.08)] sm:p-8">
         <div className="text-center">
           <img
             src="/favicon.svg"
             alt="QuickSpeak"
-            className="mx-auto h-16 w-16"
+            className="mx-auto h-14 w-14"
           />
-          <div className="mt-3 text-[18px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
+          <div className="mt-2 text-[18px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
           <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.3em] text-[#1b5dd7]">English</div>
 
-          <h1 className="mt-7 text-3xl font-bold tracking-[-0.03em] text-[#102449]">
+          <h1 className="mt-5 text-3xl font-bold tracking-[-0.03em] text-[#102449]">
             Welcome back
           </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-1.5 text-sm leading-6 text-slate-600">
             Sign in to your QuickSpeak account.
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="mt-8 space-y-5">
+        <form onSubmit={handleLogin} className="mt-7 space-y-4">
           <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">Email</span>
+            <span className="mb-1.5 block text-sm font-semibold text-slate-700">Email</span>
             <input
               type="email"
               placeholder="you@example.com"
@@ -158,13 +158,13 @@ function LoginPage() {
                 setResendSuccess(false)
               }}
               autoComplete="email"
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1b5dd7] focus:ring-4 focus:ring-blue-100"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1b5dd7] focus:ring-4 focus:ring-blue-100"
               required
             />
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">Password</span>
+            <span className="mb-1.5 block text-sm font-semibold text-slate-700">Password</span>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -172,7 +172,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1b5dd7] focus:ring-4 focus:ring-blue-100"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1b5dd7] focus:ring-4 focus:ring-blue-100"
                 required
               />
               <button
@@ -237,13 +237,13 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="h-12 w-full rounded-xl bg-[#1b5dd7] px-4 font-semibold text-white shadow-sm transition hover:bg-[#154fb7] focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-11 w-full rounded-xl bg-[#1b5dd7] px-4 font-semibold text-white shadow-sm transition hover:bg-[#154fb7] focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Signing in...' : 'Login'}
           </button>
         </form>
 
-        <p className="mt-7 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-slate-600">
           Don&apos;t have an account?{' '}
           <Link
             to="/register"
