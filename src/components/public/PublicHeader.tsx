@@ -29,19 +29,18 @@ export function PublicHeader() {
 
   return (
     <header className="sticky left-0 right-0 top-0 z-50 border-b border-slate-200/80 bg-white shadow-sm">
-      {/* Utility strip: mirrors the two-tier institutional pattern while using QuickSpeak branding. */}
+      {/* Compact utility strip */}
       <div className="border-b border-slate-200/80 bg-[#f4f8ff]">
-        <div className="mx-auto flex h-12 max-w-7xl items-center gap-5 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-11 max-w-7xl items-center gap-5 px-4 sm:px-6 lg:px-8">
           <Link
             to="/register"
             className="hidden shrink-0 items-center gap-2 text-sm font-semibold text-[#102449] transition hover:text-[#1b5dd7] lg:flex"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1b5dd7] text-white" aria-hidden="true">
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2" focusable="false">
-                <path d="M3.5 6.5h11v8h-11z" />
-                <path d="M14.5 9.5h3l3 2.5v2.5h-6z" />
-                <circle cx="7.5" cy="17" r="1.7" />
-                <circle cx="17.5" cy="17" r="1.7" />
+            <span className="flex h-6 w-6 items-center justify-center text-[#1b5dd7]" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] fill-none stroke-current stroke-2" focusable="false">
+                <path d="M4 9.5 12 5l8 4.5v7.5H4V9.5Z" />
+                <path d="M7.5 11.25h9M8.5 14h7" />
+                <path d="M6.5 9.5 12 12.5l5.5-3" />
               </svg>
             </span>
             Pendaftaran Siswa Baru
@@ -60,7 +59,7 @@ export function PublicHeader() {
                 id="quickspeak-search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Cari"
+                placeholder="Cari program atau kelas"
                 className="min-w-0 flex-1 bg-transparent pr-3 text-sm text-slate-700 outline-none placeholder:text-slate-400"
               />
             </div>
@@ -99,9 +98,9 @@ export function PublicHeader() {
       </div>
 
       {/* Primary navigation */}
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <nav className="mx-auto flex min-h-[82px] max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3" aria-label="QuickSpeak English home">
-          <img src="/favicon.svg" alt="" aria-hidden="true" className="h-10 w-10 shrink-0 object-contain" />
+          <img src="/favicon.svg" alt="" aria-hidden="true" className="h-11 w-11 shrink-0 object-contain" />
           <span className="leading-none">
             <span className="block text-[18px] font-extrabold tracking-[-0.03em] text-[#102449]">QuickSpeak</span>
             <span className="mt-0.5 block text-[8px] font-bold uppercase tracking-[0.34em] text-[#1b5dd7]">English</span>
