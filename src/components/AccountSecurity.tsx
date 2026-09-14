@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 
 type AccountSecurityProps = {
@@ -6,6 +6,9 @@ type AccountSecurityProps = {
 }
 
 type FieldName = 'current' | 'new' | 'confirm'
+
+const PASSWORD_CHANGE_SUCCESS_KEY = 'quickspeak:account-security:password-change-success'
+const PASSWORD_CHANGE_SUCCESS_EVENT = 'quickspeak:account-security:password-change-success'
 
 function EyeIcon({ hidden }: { hidden: boolean }) {
   return hidden ? (
@@ -45,7 +48,30 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
   const clearFeedback = () => {
     setError(null)
     setSuccess(null)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    }
   }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const storedSuccess = window.sessionStorage.getItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    if (storedSuccess) {
+      setSuccess(storedSuccess)
+      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    }
+
+    const handlePasswordChangeSuccess = () => {
+      const message = window.sessionStorage.getItem(PASSWORD_CHANGE_SUCCESS_KEY) ?? 'Password changed successfully.'
+      setError(null)
+      setSuccess(message)
+      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    }
+
+    window.addEventListener(PASSWORD_CHANGE_SUCCESS_EVENT, handlePasswordChangeSuccess)
+    return () => window.removeEventListener(PASSWORD_CHANGE_SUCCESS_EVENT, handlePasswordChangeSuccess)
+  }, [])
 
   const toggle = (field: FieldName) => setShow((value) => ({ ...value, [field]: !value[field] }))
 
@@ -85,11 +111,20 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
       if (updateError) throw updateError
 
+      const successMessage = 'Password changed successfully.'
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(PASSWORD_CHANGE_SUCCESS_KEY, successMessage)
+        window.dispatchEvent(new Event(PASSWORD_CHANGE_SUCCESS_EVENT))
+      }
+
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setSuccess('Password changed successfully.')
+      setSuccess(successMessage)
     } catch (submitError) {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+      }
       setError(passwordError(submitError))
     } finally {
       setSaving(false)
