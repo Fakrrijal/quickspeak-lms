@@ -8,6 +8,7 @@ type AccountSecurityProps = {
 type FieldName = 'current' | 'new' | 'confirm'
 
 const PASSWORD_CHANGE_SUCCESS_KEY = 'quickspeak:account-security:password-change-success'
+const PASSWORD_CHANGE_SUCCESS_EVENT = 'quickspeak:account-security:password-change-success'
 
 function EyeIcon({ hidden }: { hidden: boolean }) {
   return hidden ? (
@@ -44,32 +45,39 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
+  const clearFeedback = () => {
+    setError(null)
+    setSuccess(null)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    }
+  }
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const storedSuccess = window.sessionStorage.getItem(PASSWORD_CHANGE_SUCCESS_KEY)
-    if (!storedSuccess) return
+    if (storedSuccess) {
+      setSuccess(storedSuccess)
+      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    }
 
-    setSuccess(storedSuccess)
-    window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    const handlePasswordChangeSuccess = () => {
+      const message = window.sessionStorage.getItem(PASSWORD_CHANGE_SUCCESS_KEY) ?? 'Password changed successfully.'
+      setError(null)
+      setSuccess(message)
+      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
+    }
 
-    const timeoutId = window.setTimeout(() => {
-      setSuccess(null)
-    }, 6000)
-
-    return () => window.clearTimeout(timeoutId)
+    window.addEventListener(PASSWORD_CHANGE_SUCCESS_EVENT, handlePasswordChangeSuccess)
+    return () => window.removeEventListener(PASSWORD_CHANGE_SUCCESS_EVENT, handlePasswordChangeSuccess)
   }, [])
 
   const toggle = (field: FieldName) => setShow((value) => ({ ...value, [field]: !value[field] }))
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError(null)
-    setSuccess(null)
-
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
-    }
+    clearFeedback()
 
     if (!email) {
       setError('Your account email is not available. Please refresh the page and try again.')
@@ -103,14 +111,16 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
       if (updateError) throw updateError
 
+      const successMessage = 'Password changed successfully.'
       if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(PASSWORD_CHANGE_SUCCESS_KEY, 'Password changed successfully.')
+        window.sessionStorage.setItem(PASSWORD_CHANGE_SUCCESS_KEY, successMessage)
+        window.dispatchEvent(new Event(PASSWORD_CHANGE_SUCCESS_EVENT))
       }
 
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setSuccess('Password changed successfully.')
+      setSuccess(successMessage)
     } catch (submitError) {
       if (typeof window !== 'undefined') {
         window.sessionStorage.removeItem(PASSWORD_CHANGE_SUCCESS_KEY)
@@ -145,7 +155,7 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
                   required
                   type={show[field.key] ? 'text' : 'password'}
                   value={field.value}
-                  onChange={(event) => field.setValue(event.target.value)}
+                  onChange={(event) => { field.setValue(event.target.value); clearFeedback() }}
                   autoComplete={field.key === 'current' ? 'current-password' : 'new-password'}
                   className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -172,8 +182,8 @@ export function AccountSecurity({ email }: AccountSecurityProps) {
           </p>
         )}
         {success && (
-          <p role="status" aria-live="polite" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-            {success}
+          <p role="status" aria-live="polite" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+            ✓ {success}
           </p>
         )}
 

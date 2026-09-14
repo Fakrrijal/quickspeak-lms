@@ -29,7 +29,7 @@ function TeacherProfilePage() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-5">
       <header className="border-b border-slate-200 pb-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -57,20 +57,18 @@ function TeacherProfilePage() {
       )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-5 sm:px-7">
+        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-4 sm:px-7">
           <h2 className="text-lg font-bold text-[#102449]">Personal Information</h2>
           <p className="mt-1 text-sm text-slate-600">Keep your teacher profile information up to date.</p>
         </div>
-        <div className="px-6 py-6 sm:px-7 sm:py-7">
-          <ProfileForm
-            avatarUrl={avatarUrl}
-            profile={profile}
-            saving={saving}
-            levelTitle="Teaching Level"
-            levelLabel={teachingLevels.join(', ') || 'No active teaching groups'}
-            onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })}
-          />
-        </div>
+        <ProfileForm
+          avatarUrl={avatarUrl}
+          profile={profile}
+          saving={saving}
+          levelTitle="Teaching Level"
+          levelLabel={teachingLevels.join(', ') || 'No active teaching groups'}
+          onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })}
+        />
       </section>
 
       <AccountSecurity email={user?.email ?? profile?.email ?? null} />
