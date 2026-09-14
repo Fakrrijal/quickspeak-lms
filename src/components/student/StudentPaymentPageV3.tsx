@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from '@tanstack/react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getActivePaymentSettings, type PaymentSettings } from '../../services/payment-settings.service'
@@ -34,7 +34,7 @@ function formatMethod(value: string | null) {
   return value === 'bank_transfer' ? 'Bank Transfer' : formatStatus(value)
 }
 
-function formatDate(value: string) {
+function formatPaymentDate(value: string) {
   return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(value))
 }
 
