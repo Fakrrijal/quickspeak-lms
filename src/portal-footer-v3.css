@@ -1,0 +1,20 @@
+/* QuickSpeak Student Portal footer: keep support links and copyright centered as one balanced cluster. */
+.qs-student-portal > footer > div {
+  align-items: center;
+  justify-content: center;
+}
+
+.qs-student-portal > footer > div > nav {
+  order: 1;
+}
+
+.qs-student-portal > footer > div > div {
+  order: 2;
+}
+
+@media (min-width: 640px) {
+  .qs-student-portal > footer > div {
+    flex-direction: row !important;
+    gap: 1.25rem;
+  }
+}
