@@ -29,15 +29,30 @@ function StudentProfilePage() {
   const currentLevel = enrollmentQuery.data?.[0]?.level_name ?? 'No active enrollment'
 
   return (
-    <section>
-      <h2 className="text-3xl font-bold text-slate-900">Profile</h2>
-      <p className="mt-2 text-slate-600">Manage your contact details and profile photo.</p>
-      {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" onClick={() => void reload()} className="font-medium underline">Retry</button></p>}
-      {success && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
-      <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Current Level" levelLabel={currentLevel} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
-      <div className="mt-6">
-        <AccountSecurity email={user?.email ?? profile?.email ?? null} />
-      </div>
+    <section className="space-y-6">
+      <header className="border-b border-slate-200 pb-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Profile</p>
+        <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#102449]">Profile</h1>
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Manage your contact details, profile photo, and account security.</p>
+      </header>
+
+      {error && (
+        <p role="alert" aria-live="polite" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {error} <button type="button" onClick={() => void reload()} className="font-semibold underline">Retry</button>
+        </p>
+      )}
+      {success && <p role="status" aria-live="polite" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{success}</p>}
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="personal-information-title">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Personal Information</p>
+          <h2 id="personal-information-title" className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Personal Information</h2>
+          <p className="mt-1 text-sm text-slate-600">Keep your contact details and profile photo up to date.</p>
+        </div>
+        <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Current Level" levelLabel={currentLevel} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
+      </section>
+
+      <AccountSecurity email={user?.email ?? profile?.email ?? null} />
     </section>
   )
 }
