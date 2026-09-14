@@ -29,9 +29,7 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
     const newPreviewUrl = avatarFile ? URL.createObjectURL(avatarFile) : null
     setPreviewUrl(newPreviewUrl)
     return () => {
-      if (newPreviewUrl) {
-        URL.revokeObjectURL(newPreviewUrl)
-      }
+      if (newPreviewUrl) URL.revokeObjectURL(newPreviewUrl)
     }
   }, [avatarFile])
 
@@ -49,24 +47,24 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="px-6 py-5 sm:px-7 sm:py-6">
+    <form onSubmit={(event) => void handleSubmit(event)} className="px-5 py-5 sm:px-7 sm:py-6">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-lg font-bold text-slate-600 ring-1 ring-slate-200">
             {previewUrl || avatarUrl ? <img src={previewUrl || avatarUrl || undefined} alt="Profile avatar" className="h-full w-full object-cover" /> : initials}
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Profile photo</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Profile photo</p>
             <p className="mt-1 text-base font-bold text-[#102449]">Keep your profile up to date</p>
-            <label className="mt-2 inline-flex cursor-pointer items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+            <label className="mt-2 inline-flex cursor-pointer items-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
               {avatarFile ? 'Change selected photo' : 'Change Photo'}
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setAvatarFile(event.target.files?.[0] ?? null); clearSuccess() }} className="sr-only" />
             </label>
             {avatarFile && <p className="mt-1.5 max-w-xs truncate text-xs text-slate-500">{avatarFile.name}</p>}
           </div>
         </div>
-        <div className="rounded-lg bg-slate-50 px-4 py-2.5 sm:max-w-xs">
-          <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Account role</p>
+        <div className="rounded-xl bg-slate-50 px-4 py-2.5 sm:max-w-xs">
+          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">Account role</p>
           <p className="mt-1 text-sm font-bold text-slate-900">{profile?.role === 'teacher' ? 'Teacher' : 'Student'}</p>
         </div>
       </div>
@@ -75,23 +73,23 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
         <div className="grid gap-4 lg:grid-cols-2">
           <label className="text-sm font-semibold text-slate-700">
             Full Name
-            <input required value={fullName} onChange={(event) => { setFullName(event.target.value); clearSuccess() }} className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            <input required value={fullName} onChange={(event) => { setFullName(event.target.value); clearSuccess() }} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
           </label>
           <label className="text-sm font-semibold text-slate-700">
             Email
-            <input readOnly value={profile?.email ?? ''} className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-600" />
+            <input readOnly value={profile?.email ?? ''} className="mt-1.5 h-11 w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-500" />
           </label>
           <label className="text-sm font-semibold text-slate-700">
             Phone
-            <input value={phone} onChange={(event) => { setPhone(event.target.value); clearSuccess() }} className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            <input value={phone} onChange={(event) => { setPhone(event.target.value); clearSuccess() }} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
           </label>
           <label className="text-sm font-semibold text-slate-700">
             {levelTitle}
-            <input readOnly value={levelLabel} className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-600" />
+            <input readOnly value={levelLabel} className="mt-1.5 h-11 w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-500" />
           </label>
           <label className="text-sm font-semibold text-slate-700 lg:col-span-2">
             Address
-            <textarea value={address} onChange={(event) => { setAddress(event.target.value); clearSuccess() }} placeholder="Enter your address" className="mt-1.5 min-h-24 w-full resize-y rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100" rows={3} />
+            <textarea value={address} onChange={(event) => { setAddress(event.target.value); clearSuccess() }} placeholder="Enter your address" className="mt-1.5 min-h-20 w-full resize-y rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100" rows={3} />
           </label>
         </div>
 
@@ -99,12 +97,12 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
           <div className="flex-1">
             <p className="text-xs leading-5 text-slate-500">Your email, role, and current level are managed by QuickSpeak.</p>
             {saveSuccess && (
-              <p role="status" aria-live="polite" className="mt-2 inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+              <p role="status" aria-live="polite" className="mt-2 inline-flex rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
                 ✓ Profile updated successfully.
               </p>
             )}
           </div>
-          <button type="submit" disabled={saving || !profile} className="inline-flex items-center justify-center rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={saving || !profile} className="inline-flex items-center justify-center rounded-xl bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-50">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
