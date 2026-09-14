@@ -28,7 +28,7 @@ export function PublicHeader() {
   }
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200/80 bg-white shadow-sm">
+    <header className="sticky left-0 right-0 top-0 z-50 border-b border-slate-200/80 bg-white shadow-sm">
       {/* Utility strip: mirrors the two-tier institutional pattern while using QuickSpeak branding. */}
       <div className="border-b border-slate-200/80 bg-[#f4f8ff]">
         <div className="mx-auto flex h-12 max-w-7xl items-center gap-5 px-4 sm:px-6 lg:px-8">
