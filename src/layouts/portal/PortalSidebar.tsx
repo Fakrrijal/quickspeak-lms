@@ -81,7 +81,7 @@ export function PortalSidebar({
       id={id}
       aria-label="Portal navigation"
       data-portal-sidebar={role}
-      className="flex h-full min-h-0 flex-col overflow-y-auto bg-white px-4 py-4"
+      className="flex min-h-full flex-col overflow-y-auto bg-white px-4 py-4 lg:overflow-visible"
     >
       <div className="shrink-0">
         {role === 'student' || role === 'teacher' ? (

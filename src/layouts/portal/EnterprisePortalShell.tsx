@@ -62,10 +62,8 @@ export function EnterprisePortalShell({
       <div className="flex">
         <aside
           className={[
-            'hidden w-[248px] shrink-0 border-r border-slate-200 bg-white lg:block',
-            isStudentPortal
-              ? 'self-stretch'
-              : 'lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)]',
+            'hidden w-[248px] shrink-0 self-start border-r border-slate-200 bg-white lg:block',
+            isStudentPortal ? 'self-stretch' : '',
           ].join(' ')}
         >
           <PortalSidebar role={role} pathname={pathname} userName={userName} avatarUrl={avatarUrl} />
