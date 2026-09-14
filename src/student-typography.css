@@ -1,0 +1,79 @@
+/* QuickSpeak Student Portal typography system. Scoped to student portal only. */
+.qs-student-portal {
+  font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+}
+
+.qs-student-portal button,
+.qs-student-portal input,
+.qs-student-portal textarea,
+.qs-student-portal select {
+  font-family: inherit;
+}
+
+/* Page hierarchy */
+.qs-student-portal main h1 {
+  font-size: 2rem !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.qs-student-portal main section h2 {
+  font-size: 1.25rem !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.qs-student-portal main p[class*='text-[11px]'] {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+}
+
+.qs-student-portal main p[class~='text-sm'] {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+.qs-student-portal main a[class~='text-sm'],
+.qs-student-portal main button[class~='text-sm'] {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  font-weight: 700 !important;
+}
+
+/* Sidebar hierarchy */
+.qs-student-portal [data-portal-sidebar='student'] {
+  font-family: inherit;
+}
+
+.qs-student-portal [data-portal-sidebar='student'] p[class*='text-[11px]'] {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+}
+
+.qs-student-portal [data-portal-sidebar='student'] a {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+
+.qs-student-portal [data-portal-sidebar='student'] a[aria-current='page'] {
+  font-weight: 700 !important;
+}
+
+.qs-student-portal [data-portal-sidebar='student'] p.text-sm {
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+}
+
+.qs-student-portal [data-portal-sidebar='student'] p.text-xs {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  font-weight: 500 !important;
+}
