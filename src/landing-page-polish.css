@@ -40,6 +40,33 @@
   color: #334155;
 }
 
+/* Keep the four Hero benefits balanced as a two-column desktop grid. */
+#top > main > section:first-child .space-y-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 2.5rem;
+}
+
+/* Keep the visible Hero brand language consistent. */
+#top > main > section:first-child .space-y-4 > div:nth-child(3) > span {
+  font-size: 0;
+}
+
+#top > main > section:first-child .space-y-4 > div:nth-child(3) > span::after {
+  content: "Teacher Profesional";
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+/* Give the Level Journey and Learning Experience sections a clear separation. */
+#top > main > section:nth-of-type(3) {
+  padding-bottom: 7rem;
+}
+
+#top > main > section:nth-of-type(4) {
+  padding-top: 8rem;
+}
+
 @media (min-width: 1024px) {
   #top > main > section:first-child {
     padding-top: 4.5rem;
@@ -55,5 +82,9 @@
       rgba(250, 248, 245, 0.28) 58%,
       rgba(250, 248, 245, 0) 69%
     );
+  }
+
+  #top > main > section:first-child .space-y-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
