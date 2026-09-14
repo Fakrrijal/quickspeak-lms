@@ -38,9 +38,9 @@ export function PublicHeader() {
           >
             <span className="flex h-6 w-6 items-center justify-center text-[#1b5dd7]" aria-hidden="true">
               <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] fill-none stroke-current stroke-2" focusable="false">
-                <path d="M4 9.5 12 5l8 4.5v7.5H4V9.5Z" />
-                <path d="M7.5 11.25h9M8.5 14h7" />
-                <path d="M6.5 9.5 12 12.5l5.5-3" />
+                <path d="M3 10h4l10-5v14l-10-5H3v-4Z" />
+                <path d="M7 14l2 6" />
+                <path d="M20 9.5a3 3 0 0 1 0 5" />
               </svg>
             </span>
             Pendaftaran Siswa Baru
@@ -98,16 +98,16 @@ export function PublicHeader() {
       </div>
 
       {/* Primary navigation */}
-      <nav className="mx-auto flex min-h-[82px] max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <nav className="mx-auto flex min-h-[74px] max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3" aria-label="QuickSpeak English home">
-          <img src="/favicon.svg" alt="" aria-hidden="true" className="h-11 w-11 shrink-0 object-contain" />
+          <img src="/favicon.svg" alt="" aria-hidden="true" className="h-[42px] w-[42px] shrink-0 object-contain" />
           <span className="leading-none">
             <span className="block text-[18px] font-extrabold tracking-[-0.03em] text-[#102449]">QuickSpeak</span>
             <span className="mt-0.5 block text-[8px] font-bold uppercase tracking-[0.34em] text-[#1b5dd7]">English</span>
           </span>
         </Link>
 
-        <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 lg:flex">
+        <div className="hidden items-center gap-7 text-sm font-medium text-slate-600 lg:flex">
           {navItems.map((item) => (
             <a key={item.label} href={item.href} className="transition hover:text-[#102449]">
               {item.label}
