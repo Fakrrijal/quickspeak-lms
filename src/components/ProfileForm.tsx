@@ -47,7 +47,7 @@ export function ProfileForm({ avatarUrl, levelLabel, levelTitle, profile, saving
     <form onSubmit={(event) => void handleSubmit(event)} className="px-6 py-5 sm:px-7 sm:py-6">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex size-18 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-lg font-bold text-slate-600 ring-1 ring-slate-200">
+          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-lg font-bold text-slate-600 ring-1 ring-slate-200">
             {previewUrl || avatarUrl ? <img src={previewUrl || avatarUrl || undefined} alt="Profile avatar" className="h-full w-full object-cover" /> : initials}
           </div>
           <div>
