@@ -11,28 +11,22 @@
   font-family: inherit;
 }
 
-.qs-student-portal .student-dashboard-shell {
-  max-width: 1180px;
-}
-
-.qs-student-portal .student-dashboard-shell > header {
-  margin-bottom: 1.5rem;
-}
-
-.qs-student-portal .student-dashboard-summary {
-  gap: 1rem;
+/* Primary desktop summary row: keep the two summary surfaces aligned. */
+.qs-student-portal main[aria-label='Student learning summary'] {
+  align-items: stretch !important;
 }
 
 .qs-student-portal .student-primary-surface,
 .qs-student-portal .student-secondary-surface {
+  height: 100%;
   border-color: #dfe6ef;
   border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(15 35 70 / 0.04);
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035);
 }
 
 .qs-student-portal .student-primary-surface:hover,
 .qs-student-portal .student-secondary-surface:hover {
-  box-shadow: 0 2px 6px rgb(15 35 70 / 0.06);
+  box-shadow: 0 2px 6px rgb(15 35 70 / 0.055);
 }
 
 .qs-student-portal .student-primary-surface h3 {
@@ -49,7 +43,7 @@
   border-color: #dfe6ef;
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 1px 2px rgb(15 35 70 / 0.04);
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035);
 }
 
 .qs-student-portal .student-progress-surface .student-progress-header {
@@ -57,8 +51,8 @@
 }
 
 .qs-student-portal .student-progress-surface .student-progress-summary {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-top: 1.125rem;
+  padding-bottom: 1.125rem;
 }
 
 .qs-student-portal .student-progress-surface .student-progress-bar {
@@ -78,6 +72,23 @@
 
 .qs-student-portal .student-next-step a {
   border-radius: 9px;
+}
+
+/* Achievement is semantic, but intentionally quieter than the primary action. */
+.qs-student-portal .student-progress-surface .bg-emerald-50\/70 {
+  background: #f0fdf8 !important;
+}
+
+.qs-student-portal .student-progress-surface .border-emerald-100 {
+  border-color: #d4f2e5 !important;
+}
+
+.qs-student-portal .student-progress-surface .text-emerald-700 {
+  color: #087857 !important;
+}
+
+.qs-student-portal .student-progress-surface .text-emerald-800 {
+  color: #0a6b50 !important;
 }
 
 .qs-student-portal .student-account-strip {
@@ -123,5 +134,14 @@
 @media (max-width: 767px) {
   .qs-student-portal .student-dashboard-shell h1 {
     font-size: 28px;
+  }
+
+  .qs-student-portal main[aria-label='Student learning summary'] {
+    align-items: initial !important;
+  }
+
+  .qs-student-portal .student-primary-surface,
+  .qs-student-portal .student-secondary-surface {
+    height: auto;
   }
 }
