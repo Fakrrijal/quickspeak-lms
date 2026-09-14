@@ -38,8 +38,10 @@ export function PublicHeader() {
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1b5dd7] text-white" aria-hidden="true">
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2" focusable="false">
-                <path d="M4 5.5h16v10H8l-4 3V5.5Z" />
-                <path d="M8 9h8M8 12h5" />
+                <path d="M3.5 6.5h11v8h-11z" />
+                <path d="M14.5 9.5h3l3 2.5v2.5h-6z" />
+                <circle cx="7.5" cy="17" r="1.7" />
+                <circle cx="17.5" cy="17" r="1.7" />
               </svg>
             </span>
             Pendaftaran Siswa Baru
