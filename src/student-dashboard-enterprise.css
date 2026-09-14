@@ -29,6 +29,12 @@
   box-shadow: 0 2px 6px rgb(15 35 70 / 0.055);
 }
 
+/* Keep the status badge subordinate to the Level headline. */
+.qs-student-portal .student-primary-surface span.bg-blue-50.text-blue-700 {
+  background: #f4f7ff !important;
+  color: #3154a5 !important;
+}
+
 .qs-student-portal .student-primary-surface h3 {
   font-size: 26px !important;
   line-height: 1.15 !important;
@@ -37,15 +43,6 @@
 .qs-student-portal .student-primary-surface .text-3xl {
   font-size: 30px !important;
   line-height: 1 !important;
-}
-
-/* Calm down secondary blue while keeping QuickSpeak blue for important actions. */
-.qs-student-portal .student-dashboard-shell .text-blue-700 {
-  color: #2456c7 !important;
-}
-
-.qs-student-portal .student-dashboard-shell a.text-blue-700:hover {
-  color: #1d4fa9 !important;
 }
 
 .qs-student-portal .student-progress-surface {
@@ -66,11 +63,18 @@
 
 .qs-student-portal .student-progress-surface .student-progress-bar {
   height: 10px;
-  background: #edf2f7;
+  background: #eef2f6;
 }
 
 .qs-student-portal .student-progress-surface .student-progress-fill {
-  background: #2b63d9;
+  background: #2f66d0;
+}
+
+/* Make the percentage a first-class metric and keep it unmistakably visible. */
+.qs-student-portal .student-progress-surface .text-xl.font-extrabold.text-blue-700 {
+  color: #102449 !important;
+  font-size: 26px !important;
+  line-height: 1 !important;
 }
 
 .qs-student-portal .student-next-step {
@@ -100,12 +104,10 @@
   color: #0a6b50 !important;
 }
 
-/* Account status is supporting metadata, not a primary card. */
 .qs-student-portal .student-account-strip {
   border-top: 1px solid #e3e9f2;
-  padding-top: 0.75rem;
+  padding-top: 1rem;
   color: #64748b;
-  font-size: 0.8125rem;
 }
 
 .qs-student-portal .student-account-strip strong {
