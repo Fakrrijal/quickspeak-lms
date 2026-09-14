@@ -24,6 +24,14 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
 }
 
+function formatRecordedDate(value: string) {
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+}
+
+function formatRecordedTime(value: string) {
+  return new Intl.DateTimeFormat('en-GB', { timeStyle: 'short' }).format(new Date(value))
+}
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
@@ -104,7 +112,6 @@ export function StudentAttendancePageV3() {
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [detail, setDetail] = useState<StudentAttendanceRecord | null>(null)
-  const [recordsExpanded, setRecordsExpanded] = useState(true)
   const [page, setPage] = useState(1)
 
   const canLoad = !loading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'student' && status === 'active'
@@ -173,31 +180,32 @@ export function StudentAttendancePageV3() {
           <div className="border-t border-slate-200 bg-slate-50/70 px-0 pt-4 sm:pt-5"><div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,160px)_1fr] sm:items-end"><label className="block text-sm font-semibold text-slate-700">Month<select value={month} onChange={(event) => setMonth(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">{Array.from({ length: 12 }, (_, index) => <option key={index + 1} value={index + 1}>{new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2000, index))}</option>)}</select></label><label className="block text-sm font-semibold text-slate-700">Year<input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><div className="hidden sm:block"><p className="text-right text-xs text-slate-500">Attendance is recorded by your assigned teacher.</p></div></div></div>
         </div>
 
-        <div className="border-t border-slate-200 px-6 py-4 sm:px-7"><div className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p><p className="mt-1 text-sm text-slate-500">Session records for {period}.</p></div><button type="button" onClick={() => setRecordsExpanded((current) => !current)} aria-expanded={recordsExpanded} aria-controls="attendance-records-content" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-slate-50">{recordsExpanded ? 'Collapse' : 'View records'}<span className={`text-base transition-transform ${recordsExpanded ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span></button></div></div>
-
-        {recordsExpanded && <div id="attendance-records-content" className="border-t border-slate-200">
-          {error && <div className="mx-6 my-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:mx-7">Unable to load attendance. <button type="button" onClick={() => void reload()} className="font-bold underline">Retry</button></div>}
-          <div className="p-6 sm:p-7">
+        <div className="border-t border-slate-200 px-6 py-4 sm:px-7">
+          <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p><p className="mt-1 text-sm text-slate-500">Session records for {period}.</p></div>
+          {error && <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">Unable to load attendance. <button type="button" onClick={() => void reload()} className="font-bold underline">Retry</button></div>}
+          <div>
             {attendanceLoading ? <div className="space-y-3">{[1, 2, 3, 4].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}</div> : attendance.length === 0 ? <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center"><div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm"><Icon name="calendar" /></div><h3 className="mt-4 text-base font-bold text-slate-900">No attendance records</h3><p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {period}.</p></div> : (
               <>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="min-w-[940px] w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500"><tr><th className="px-4 py-3.5 font-bold">Date</th><th className="px-4 py-3.5 font-bold">Teaching Group</th><th className="px-4 py-3.5 font-bold">Teacher</th><th className="px-4 py-3.5 font-bold">Level</th><th className="px-4 py-3.5 font-bold">Package</th><th className="px-4 py-3.5 font-bold">Status</th><th className="px-4 py-3.5 font-bold">Recorded Time</th><th className="px-4 py-3.5 text-right font-bold">Action</th></tr></thead>
-                    <tbody>{pageRecords.map((item) => <tr key={item.meeting_id} className="border-t border-slate-200 bg-white transition hover:bg-slate-50"><td className="px-4 py-4 font-semibold text-slate-900">{formatDate(item.session_date)}</td><td className="px-4 py-4 text-slate-700">{item.teaching_group_name}</td><td className="px-4 py-4"><p className="font-semibold text-slate-900">{item.teacher_name}</p><p className="mt-0.5 text-xs text-slate-500">{item.teacher_code}</p></td><td className="px-4 py-4 text-slate-700">{item.level_name}</td><td className="px-4 py-4 text-slate-700">{packageLabel(item.package_type)}</td><td className="px-4 py-4"><StatusBadge status={item.teacher_status} /></td><td className="whitespace-nowrap px-4 py-4 text-slate-600">{formatDateTime(item.teacher_recorded_at)}</td><td className="px-4 py-4 text-right"><button type="button" onClick={() => setDetail(item)} className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-800">View Detail <Icon name="arrow" /></button></td></tr>)}</tbody>
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500"><tr><th className="px-3 py-3.5 font-bold">Date</th><th className="px-3 py-3.5 font-bold">Teaching Group</th><th className="px-3 py-3.5 font-bold">Teacher</th><th className="px-3 py-3.5 font-bold">Level</th><th className="px-3 py-3.5 font-bold">Package</th><th className="px-3 py-3.5 font-bold">Status</th><th className="px-3 py-3.5 font-bold">Recorded</th><th className="px-3 py-3.5 text-right font-bold">Action</th></tr></thead>
+                    <tbody>{pageRecords.map((item) => <tr key={item.meeting_id} className="border-t border-slate-200 bg-white transition hover:bg-slate-50"><td className="whitespace-nowrap px-3 py-3.5 font-semibold text-slate-900">{formatDate(item.session_date)}</td><td className="px-3 py-3.5 text-slate-700">{item.teaching_group_name}</td><td className="px-3 py-3.5"><p className="font-semibold text-slate-900">{item.teacher_name}</p><p className="mt-0.5 text-xs text-slate-500">{item.teacher_code}</p></td><td className="whitespace-nowrap px-3 py-3.5 text-slate-700">{item.level_name}</td><td className="whitespace-nowrap px-3 py-3.5 text-slate-700">{packageLabel(item.package_type)}</td><td className="whitespace-nowrap px-3 py-3.5"><StatusBadge status={item.teacher_status} /></td><td className="whitespace-nowrap px-3 py-3.5 text-slate-600"><div>{formatRecordedDate(item.teacher_recorded_at)}</div><div className="mt-0.5 text-xs text-slate-500">{formatRecordedTime(item.teacher_recorded_at)}</div></td><td className="whitespace-nowrap px-3 py-3.5 text-right"><button type="button" onClick={() => setDetail(item)} className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-800">View Detail <Icon name="arrow" /></button></td></tr>)}</tbody>
                   </table>
                 </div>
                 <div className="flex flex-col gap-4 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-700">{showingStart}–{showingEnd}</span> of <span className="font-semibold text-slate-700">{attendance.length}</span> records</p>
                   <nav className="flex items-center gap-1" aria-label="Attendance pagination">
+                    <button type="button" onClick={() => setPage(1)} disabled={safePage === 1} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="First page">«</button>
                     <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage === 1} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous page">‹</button>
                     {paginationPages.map((item, index) => item === 'ellipsis-left' || item === 'ellipsis-right' ? <span key={`${item}-${index}`} className="inline-flex size-9 items-center justify-center text-slate-400">…</span> : <button key={item} type="button" onClick={() => setPage(item as number)} aria-current={safePage === item ? 'page' : undefined} className={`inline-flex size-9 items-center justify-center rounded-lg border text-sm font-bold transition ${safePage === item ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{item}</button>)}
                     <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={safePage === totalPages} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next page">›</button>
+                    <button type="button" onClick={() => setPage(totalPages)} disabled={safePage === totalPages} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Last page">»</button>
                   </nav>
                 </div>
               </>
             )}
           </div>
-        </div>}
+        </div>
       </section>
 
       {detail && <AttendanceDetail record={detail} records={detailRecords} period={period} onClose={() => setDetail(null)} />}
