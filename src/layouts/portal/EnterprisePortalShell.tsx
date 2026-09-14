@@ -4,6 +4,7 @@ import { PortalSidebar } from './PortalSidebar'
 import type { PortalRole } from './portal-navigation'
 import { PortalFooter } from '../../components/portal/PortalFooter'
 import '../../student-dashboard-enterprise.css'
+import '../../portal-footer-v3.css'
 
 type EnterprisePortalShellProps = {
   role: PortalRole
