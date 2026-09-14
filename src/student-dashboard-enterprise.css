@@ -161,6 +161,62 @@
   line-height: 1.55;
 }
 
+/* Student Learning page: reuse the dashboard enterprise surface treatment. */
+.qs-student-portal [aria-labelledby='student-progress-title'] {
+  border-color: #dfe6ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035);
+}
+
+.qs-student-portal [aria-labelledby='student-progress-title'] > div:first-child {
+  min-height: 76px;
+}
+
+.qs-student-portal [aria-labelledby='student-progress-title'] #student-progress-title {
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* Remove the nested scroll container that caused cramped chapter cards. */
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+/* Historical level groups stay calm and compact, with a clear chapter rhythm. */
+.qs-student-portal #student-progress-content > div.mt-6 > section {
+  border-color: #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div {
+  gap: 0.75rem;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div {
+  min-height: 92px;
+  border-radius: 10px;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div.border-emerald-100 {
+  background: #f0fdf8 !important;
+  border-color: #d4f2e5 !important;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div.border-slate-200 {
+  background: #fff;
+}
+
+/* Align My Learning status language with the dashboard's restrained semantic palette. */
+.qs-student-portal [aria-labelledby='student-progress-title'] .text-blue-700 {
+  color: #3154a5;
+}
+
 @media (max-width: 767px) {
   .qs-student-portal .student-dashboard-shell h1 {
     font-size: 28px;
@@ -173,5 +229,9 @@
   .qs-student-portal .student-primary-surface,
   .qs-student-portal .student-secondary-surface {
     height: auto;
+  }
+
+  .qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div {
+    min-height: 84px;
   }
 }
