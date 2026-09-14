@@ -77,6 +77,23 @@
   line-height: 1 !important;
 }
 
+/* Reserve enough vertical space for the progress metric row so it cannot be covered by the next callout. */
+.qs-student-portal .student-progress-surface .student-progress-summary > div > .grid {
+  min-height: 58px;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-summary > div > .grid > div:last-child {
+  position: relative;
+  z-index: 2;
+  min-height: 44px;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-summary > div > .grid > div:last-child .text-xl.font-extrabold.text-blue-700 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .qs-student-portal .student-next-step {
   border: 1px solid #dce5f2;
   border-radius: 12px;
