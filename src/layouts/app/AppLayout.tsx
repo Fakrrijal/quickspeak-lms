@@ -61,9 +61,13 @@ export function AppLayout() {
       ? 'auth-login'
       : ''
 
+  if (isHomePage) {
+    return <Outlet />
+  }
+
   return (
-    <div className={isHomePage ? 'min-h-screen bg-white text-slate-900' : 'min-h-screen bg-[#f6f8fc] text-slate-900'}>
-      {!isHomePage && !isPartnerPage && (
+    <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
+      {!isPartnerPage && (
         <header className="border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
           <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between px-5 py-2 sm:px-6">
             <a href="/" className="inline-flex items-center gap-2.5" aria-label="QuickSpeak home">
@@ -85,7 +89,7 @@ export function AppLayout() {
         </header>
       )}
 
-      <main className={isHomePage ? '' : isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'} id={isHomePage ? 'top' : undefined}>
+      <main className={isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'} id={isAuthPage ? undefined : 'top'}>
         <Outlet />
       </main>
     </div>
