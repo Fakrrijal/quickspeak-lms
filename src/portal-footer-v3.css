@@ -1,5 +1,6 @@
 /* QuickSpeak Student Portal footer: keep support links and copyright centered as one balanced cluster. */
 .qs-student-portal > footer {
+  margin-top: 0.875rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
 }
