@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useStudentAttendance } from '../../hooks/useStudentAttendance'
 import { useAuthContext } from '../../providers/AuthProvider'
 import type { StudentAttendanceRecord } from '../../services/student-attendance.service'
@@ -131,12 +131,11 @@ export function StudentAttendancePageV3() {
   const pageRecords = attendance.slice(pageStart, pageStart + PAGE_SIZE)
   const showingStart = attendance.length ? pageStart + 1 : 0
   const showingEnd = attendance.length ? Math.min(pageStart + PAGE_SIZE, attendance.length) : 0
-
   const paginationPages = useMemo(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1)
-    if (safePage <= 4) return [1, 2, 3, 4, 5, 'ellipsis-right', totalPages] as const
-    if (safePage >= totalPages - 3) return [1, 'ellipsis-left', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages] as const
-    return [1, 'ellipsis-left', safePage - 1, safePage, safePage + 1, 'ellipsis-right', totalPages] as const
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1) as Array<number | string>
+    if (safePage <= 4) return [1, 2, 3, 4, 5, 'ellipsis-right', totalPages] as Array<number | string>
+    if (safePage >= totalPages - 3) return [1, 'ellipsis-left', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages] as Array<number | string>
+    return [1, 'ellipsis-left', safePage - 1, safePage, safePage + 1, 'ellipsis-right', totalPages] as Array<number | string>
   }, [safePage, totalPages])
 
   const download = () => {
@@ -158,7 +157,7 @@ export function StudentAttendancePageV3() {
 
   return (
     <div className="space-y-6 pb-2">
-      <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
+      <header className="border-b border-slate-200 pb-5">
         <div><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Attendance</p><h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#102449]">Attendance</h1><p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Review your attendance history, session records, and attendance rate.</p></div>
       </header>
 
@@ -181,23 +180,19 @@ export function StudentAttendancePageV3() {
           <div className="p-6 sm:p-7">
             {attendanceLoading ? <div className="space-y-3">{[1, 2, 3, 4].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}</div> : attendance.length === 0 ? <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center"><div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm"><Icon name="calendar" /></div><h3 className="mt-4 text-base font-bold text-slate-900">No attendance records</h3><p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">There are no attendance records for {period}.</p></div> : (
               <>
-                <div className="overflow-x-auto rounded-xl border border-slate-200 lg:overflow-x-visible">
-                  <table className="w-full min-w-[920px] table-fixed text-left text-sm lg:min-w-0">
-                    <colgroup><col className="w-[12%]" /><col className="w-[14%]" /><col className="w-[16%]" /><col className="w-[10%]" /><col className="w-[13%]" /><col className="w-[11%]" /><col className="w-[14%]" /><col className="w-[10%]" /></colgroup>
-                    <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500"><tr><th className="px-3 py-3.5 font-bold">Date</th><th className="px-3 py-3.5 font-bold">Teaching Group</th><th className="px-3 py-3.5 font-bold">Teacher</th><th className="px-3 py-3.5 font-bold">Level</th><th className="px-3 py-3.5 font-bold">Package</th><th className="px-3 py-3.5 font-bold">Status</th><th className="px-3 py-3.5 font-bold">Recorded Time</th><th className="px-3 py-3.5 text-right font-bold">Action</th></tr></thead>
-                    <tbody>{pageRecords.map((item) => <tr key={item.meeting_id} className="border-t border-slate-200 bg-white transition hover:bg-slate-50"><td className="px-3 py-4 font-semibold text-slate-900">{formatDate(item.session_date)}</td><td className="px-3 py-4 text-slate-700">{item.teaching_group_name}</td><td className="px-3 py-4"><p className="font-semibold text-slate-900">{item.teacher_name}</p><p className="mt-0.5 text-xs text-slate-500">{item.teacher_code}</p></td><td className="px-3 py-4 text-slate-700">{item.level_name}</td><td className="px-3 py-4 text-slate-700">{packageLabel(item.package_type)}</td><td className="px-3 py-4"><StatusBadge status={item.teacher_status} /></td><td className="px-3 py-4 whitespace-nowrap text-slate-600">{formatDateTime(item.teacher_recorded_at)}</td><td className="px-3 py-4 text-right"><button type="button" onClick={() => setDetail(item)} className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-800">View Detail <Icon name="arrow" /></button></td></tr>)}</tbody>
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="min-w-[940px] w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500"><tr><th className="px-4 py-3.5 font-bold">Date</th><th className="px-4 py-3.5 font-bold">Teaching Group</th><th className="px-4 py-3.5 font-bold">Teacher</th><th className="px-4 py-3.5 font-bold">Level</th><th className="px-4 py-3.5 font-bold">Package</th><th className="px-4 py-3.5 font-bold">Status</th><th className="px-4 py-3.5 font-bold">Recorded Time</th><th className="px-4 py-3.5 text-right font-bold">Action</th></tr></thead>
+                    <tbody>{pageRecords.map((item) => <tr key={item.meeting_id} className="border-t border-slate-200 bg-white transition hover:bg-slate-50"><td className="px-4 py-4 font-semibold text-slate-900">{formatDate(item.session_date)}</td><td className="px-4 py-4 text-slate-700">{item.teaching_group_name}</td><td className="px-4 py-4"><p className="font-semibold text-slate-900">{item.teacher_name}</p><p className="mt-0.5 text-xs text-slate-500">{item.teacher_code}</p></td><td className="px-4 py-4 text-slate-700">{item.level_name}</td><td className="px-4 py-4 text-slate-700">{packageLabel(item.package_type)}</td><td className="px-4 py-4"><StatusBadge status={item.teacher_status} /></td><td className="whitespace-nowrap px-4 py-4 text-slate-600">{formatDateTime(item.teacher_recorded_at)}</td><td className="px-4 py-4 text-right"><button type="button" onClick={() => setDetail(item)} className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-800">View Detail <Icon name="arrow" /></button></td></tr>)}</tbody>
                   </table>
                 </div>
-
-                <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs text-slate-500">Showing <span className="font-semibold text-slate-700">{showingStart}–{showingEnd}</span> of <span className="font-semibold text-slate-700">{attendance.length}</span> records</p>
-                  {totalPages > 1 && (
-                    <nav aria-label="Attendance pagination" className="flex items-center justify-end gap-1">
-                      <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage === 1} aria-label="Previous page" className="inline-flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">‹</button>
-                      {paginationPages.map((item, index) => item === 'ellipsis-left' || item === 'ellipsis-right' ? <span key={`${item}-${index}`} className="inline-flex size-9 items-center justify-center text-sm text-slate-400">…</span> : <button key={item} type="button" onClick={() => setPage(item)} aria-current={safePage === item ? 'page' : undefined} className={`inline-flex size-9 items-center justify-center rounded-md border text-sm font-semibold transition ${safePage === item ? 'border-[#102449] bg-[#102449] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{item}</button>)}
-                      <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={safePage === totalPages} aria-label="Next page" className="inline-flex size-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">›</button>
-                    </nav>
-                  )}
+                <div className="flex flex-col gap-4 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-700">{showingStart}–{showingEnd}</span> of <span className="font-semibold text-slate-700">{attendance.length}</span> records</p>
+                  <nav className="flex items-center gap-1" aria-label="Attendance pagination">
+                    <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage === 1} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous page">‹</button>
+                    {paginationPages.map((item, index) => item === 'ellipsis-left' || item === 'ellipsis-right' ? <span key={`${item}-${index}`} className="inline-flex size-9 items-center justify-center text-slate-400">…</span> : <button key={item} type="button" onClick={() => setPage(item as number)} aria-current={safePage === item ? 'page' : undefined} className={`inline-flex size-9 items-center justify-center rounded-lg border text-sm font-bold transition ${safePage === item ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{item}</button>)}
+                    <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={safePage === totalPages} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next page">›</button>
+                  </nav>
                 </div>
               </>
             )}
