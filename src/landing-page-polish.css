@@ -1,0 +1,31 @@
+/* Public landing page spacing polish. Scoped to #top so portal/auth surfaces are untouched. */
+#top {
+  padding-top: 72px !important;
+}
+
+#top > main > section:first-child {
+  padding-top: 40px !important;
+  padding-bottom: 56px !important;
+}
+
+@media (max-width: 1023px) {
+  #top {
+    padding-top: 68px !important;
+  }
+
+  #top > main > section:first-child {
+    padding-top: 32px !important;
+    padding-bottom: 48px !important;
+  }
+}
+
+@media (max-width: 639px) {
+  #top {
+    padding-top: 68px !important;
+  }
+
+  #top > main > section:first-child {
+    padding-top: 28px !important;
+    padding-bottom: 40px !important;
+  }
+}
