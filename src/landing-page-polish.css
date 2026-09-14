@@ -9,9 +9,51 @@
   padding-bottom: 3.5rem;
 }
 
+/* Softer visual transition between the warm copy background and the right-side artwork. */
+#top > main > section:first-child > div:first-of-type::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(250, 248, 245, 0.98) 0%,
+    rgba(250, 248, 245, 0.96) 34%,
+    rgba(250, 248, 245, 0.78) 46%,
+    rgba(250, 248, 245, 0.34) 57%,
+    rgba(250, 248, 245, 0) 68%
+  );
+}
+
+/* Sharper visible hero description for the first viewport. */
+#top > main > section:first-child p:first-of-type {
+  font-size: 0;
+  line-height: 0;
+}
+
+#top > main > section:first-child p:first-of-type::after {
+  content: "Pembelajaran Bahasa Inggris yang terstruktur dalam 4 level, didampingi teacher profesional, untuk membantu siswa belajar dan berbicara dengan lebih percaya diri.";
+  display: block;
+  max-width: 32rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #334155;
+}
+
 @media (min-width: 1024px) {
   #top > main > section:first-child {
     padding-top: 4.5rem;
     padding-bottom: 4.5rem;
+  }
+
+  #top > main > section:first-child > div:first-of-type::after {
+    background: linear-gradient(
+      90deg,
+      rgba(250, 248, 245, 0.98) 0%,
+      rgba(250, 248, 245, 0.96) 34%,
+      rgba(250, 248, 245, 0.76) 46%,
+      rgba(250, 248, 245, 0.28) 58%,
+      rgba(250, 248, 245, 0) 69%
+    );
   }
 }
