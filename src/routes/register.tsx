@@ -86,10 +86,8 @@ function RegisterPage() {
 
   const [studentStartingLevelId, setStudentStartingLevelId] = useState('')
   const [studentClassType, setStudentClassType] = useState<'private' | 'semi_private'>('private')
-
   const [teacherClassType, setTeacherClassType] = useState<'private' | 'semi_private'>('private')
   const [supportedLevelIds, setSupportedLevelIds] = useState<string[]>([])
-
   const [levels, setLevels] = useState<Level[]>([])
   const [loadingLevels, setLoadingLevels] = useState(true)
 
@@ -254,7 +252,7 @@ function RegisterPage() {
     const resendBlocked = resendLoading || resendCooldown > 0 || resendAttemptsRemaining === 0
 
     return (
-      <div className="mx-auto max-w-md py-2">
+      <div className="mx-auto max-w-lg py-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-[0_18px_50px_rgba(15,35,75,0.08)] sm:p-9">
           <div className="text-center">
             <img src="/favicon.svg" alt="QuickSpeak" className="mx-auto h-14 w-14" />
@@ -307,7 +305,7 @@ function RegisterPage() {
     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
 
   return (
-    <div className="mx-auto max-w-md py-2">
+    <div className="mx-auto max-w-lg py-2">
       <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-[0_18px_50px_rgba(15,35,75,0.08)] sm:p-9">
         <div className="text-center">
           <img src="/favicon.svg" alt="QuickSpeak" className="mx-auto h-14 w-14" />
