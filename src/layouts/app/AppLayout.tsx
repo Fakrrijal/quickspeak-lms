@@ -54,6 +54,11 @@ export function AppLayout() {
 
   const isPartnerPage = pathname === '/partner'
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname)
+  const authPageClass = pathname === '/register'
+    ? 'auth-register'
+    : pathname === '/login'
+      ? 'auth-login'
+      : ''
 
   return (
     <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
@@ -92,7 +97,7 @@ export function AppLayout() {
         </header>
       )}
 
-      <main className={isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'}>
+      <main className={`${isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'} ${authPageClass}`}>
         <Outlet />
       </main>
     </div>
