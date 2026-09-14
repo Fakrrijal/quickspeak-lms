@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import './../../../src/student-typography.css'
+import '../../student-typography.css'
 import { PortalHeader } from './PortalHeader'
 import { PortalSidebar } from './PortalSidebar'
 import type { PortalRole } from './portal-navigation'
