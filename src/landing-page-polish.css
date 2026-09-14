@@ -58,13 +58,13 @@
   line-height: 1.5rem;
 }
 
-/* Give the Level Journey and Learning Experience sections a clear separation. */
+/* Keep the Level Journey and Learning Experience sections connected without overlap. */
 #top > main > section:nth-of-type(3) {
-  padding-bottom: 7rem;
+  padding-bottom: 4rem;
 }
 
 #top > main > section:nth-of-type(4) {
-  padding-top: 8rem;
+  padding-top: 4.5rem;
 }
 
 @media (min-width: 1024px) {
