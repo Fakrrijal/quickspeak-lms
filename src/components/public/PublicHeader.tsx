@@ -14,7 +14,7 @@ export function PublicHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-sm">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <img src="/branding/quickspeak-logo.png" alt="QuickSpeak Logo" className="h-10 w-auto" />
+          <img src="/favicon.svg" alt="QuickSpeak" className="h-11 w-11 object-contain" />
         </div>
 
         <div className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
@@ -55,7 +55,6 @@ export function PublicHeader() {
         </button>
       </nav>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="border-t border-slate-200 bg-white/95 backdrop-blur-sm lg:hidden">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
