@@ -115,6 +115,34 @@
   text-align: center;
 }
 
+/* Recovery pages intentionally opt out of legacy auth pseudo-elements. */
+.auth-recovery-page,
+.auth-recovery-page * {
+  position: relative;
+}
+
+.auth-recovery-page label::before,
+.auth-recovery-page label::after,
+.auth-recovery-page input::before,
+.auth-recovery-page input::after,
+.auth-recovery-page form > div::before,
+.auth-recovery-page form > div::after {
+  content: none !important;
+  display: none !important;
+}
+
+.auth-recovery-page .auth-recovery-input {
+  appearance: none;
+  -webkit-appearance: none;
+  text-indent: 0;
+  line-height: 1.25rem;
+}
+
+.auth-recovery-page .auth-recovery-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
 @media (max-width: 640px) {
   .auth-register {
     padding-left: 1rem !important;
@@ -125,5 +153,12 @@
 
   .auth-register .max-w-md > div {
     padding: 1.5rem;
+  }
+
+  .auth-recovery-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
   }
 }
