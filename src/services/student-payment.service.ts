@@ -91,15 +91,6 @@ const maximumProofFileSize = 5242880
 const maximumSourceImageSize = 26214400
 const paymentProofBucket = 'payment_proofs'
 const acceptedProofExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'] as const
-const acceptedProofTypes = {
-  'application/pdf': ['pdf'],
-  'image/jpeg': ['jpg', 'jpeg'],
-  'image/png': ['png'],
-  'image/webp': ['webp'],
-  'image/heic': ['heic'],
-  'image/heif': ['heif'],
-  'image/jpg': ['jpg', 'jpeg'],
-} as const
 
 const relevantEnrollmentStatuses = [
   'pending',
