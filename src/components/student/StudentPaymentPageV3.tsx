@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getActivePaymentSettings, type PaymentSettings } from '../../services/payment-settings.service'
@@ -69,6 +69,7 @@ function Icon({ name }: { name: 'check' | 'close' | 'download' | 'invoice' | 'ca
 export function StudentPaymentPageV3() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
+  const proofInputRef = useRef<HTMLInputElement>(null)
   const [paymentDetails, setPaymentDetails] = useState<StudentPaymentDetails | null>(null)
   const [paymentHistory, setPaymentHistory] = useState<StudentPaymentHistoryItem[]>([])
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null)
@@ -136,6 +137,7 @@ export function StudentPaymentPageV3() {
       await submitStudentPaymentProof(paymentDetails.enrollment.student_id, paymentDetails.payment.id, selectedProof)
       await loadPaymentPage()
       setSelectedProof(null)
+      if (proofInputRef.current) proofInputRef.current.value = ''
       setProofMessage('Payment proof submitted successfully. Your payment is now waiting for verification.')
     } catch (uploadError) {
       await reportSystemError({ feature: 'PAYMENT_UPLOAD', action: 'UPLOAD_PROOF', error: uploadError })
@@ -144,6 +146,7 @@ export function StudentPaymentPageV3() {
         if (details?.payment?.status === 'proof_submitted') {
           setPaymentDetails(details)
           setSelectedProof(null)
+          if (proofInputRef.current) proofInputRef.current.value = ''
           setProofMessage('Payment proof submitted successfully. Your payment is now waiting for verification.')
           return
         }
@@ -162,6 +165,7 @@ export function StudentPaymentPageV3() {
     setProofError(null)
     setProofMessage(null)
     setSelectedProof(null)
+    if (proofInputRef.current) proofInputRef.current.value = ''
     try {
       await retryStudentPayment(paymentDetails.enrollment.id)
       await loadPaymentPage()
@@ -302,7 +306,27 @@ export function StudentPaymentPageV3() {
                   <p className="mt-1.5 text-sm leading-6 text-slate-600">Complete the payment, then upload your proof below.</p>
                   {paymentSettings && <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm"><div><span className="text-xs text-slate-500">Bank</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.bank_name}</p></div><div><span className="text-xs text-slate-500">Account Number</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_number}</p></div><div><span className="text-xs text-slate-500">Account Name</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_name}</p></div></div>}
                   {isRejected && <button type="button" onClick={() => void handleRetryPayment()} disabled={isRetrying} className="mt-4 inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50">{isRetrying ? 'Creating New Payment...' : 'Pay Again'}</button>}
-                  {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5"><label className="block text-sm font-bold text-slate-800">Upload Payment Proof<input type="file" accept="image/*,.pdf" onChange={handleProofSelection} disabled={isUploading} className="mt-2.5 block w-full text-xs text-slate-600" /></label><p className="mt-1.5 text-[11px] text-slate-500">Images or PDF · maximum 5 MiB.</p>{selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}<button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || !!proofError || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button></div>}
+                  {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5">
+                    <label htmlFor="student-payment-proof-input" className="block text-sm font-bold text-slate-800">Upload Payment Proof</label>
+                    <input
+                      id="student-payment-proof-input"
+                      ref={proofInputRef}
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={handleProofSelection}
+                      disabled={isUploading}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="student-payment-proof-input"
+                      className="mt-2.5 inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                    >
+                      Choose from Gallery / File
+                    </label>
+                    {selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}
+                    <p className="mt-1.5 text-[11px] text-slate-500">Images or PDF · maximum 5 MiB.</p>
+                    <button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || !!proofError || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button>
+                  </div>}
                 </div>
               )}
             </aside>
