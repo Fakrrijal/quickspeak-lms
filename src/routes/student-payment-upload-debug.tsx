@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/student-payment-upload-debug')({
@@ -39,9 +39,17 @@ function describeSelection(label: string, event: ChangeEvent<HTMLInputElement>):
 }
 
 function StudentPaymentUploadDebugPage() {
+  const galleryInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
   const [selection, setSelection] = useState<SelectionState>(emptySelection)
   const [inputEvents, setInputEvents] = useState(0)
   const [changeEvents, setChangeEvents] = useState(0)
+  const [clickAttempts, setClickAttempts] = useState(0)
+
+  const openPicker = (input: HTMLInputElement | null) => {
+    setClickAttempts((current) => current + 1)
+    input?.click()
+  }
 
   const handleInput = () => {
     setInputEvents((current) => current + 1)
@@ -52,38 +60,58 @@ function StudentPaymentUploadDebugPage() {
     setSelection(describeSelection(label, event))
   }
 
+  const resetDiagnostic = () => {
+    setSelection(emptySelection)
+    setInputEvents(0)
+    setChangeEvents(0)
+    setClickAttempts(0)
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-xl bg-slate-50 px-4 py-8 text-slate-900">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">QuickSpeak Diagnostic</p>
         <h1 className="mt-2 text-2xl font-extrabold text-[#102449]">Payment File Picker Test</h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          This page does not upload or save anything. It only checks whether the browser delivers a File object after Gallery/File or Camera selection.
+          This page does not upload or save anything. It only checks whether the browser opens a picker and delivers a File object.
         </p>
 
-        <div className="mt-6 space-y-4">
-          <label className="block rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold">
-            Gallery / File
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              onInput={handleInput}
-              onChange={handleChange('Gallery / File')}
-              className="mt-3 block w-full text-xs font-normal text-slate-600"
-            />
-          </label>
+        <div className="mt-6 grid gap-3">
+          <button
+            type="button"
+            onClick={() => openPicker(galleryInputRef.current)}
+            className="w-full rounded-xl bg-[#1b5dd7] px-4 py-3 text-sm font-extrabold text-white active:scale-[0.99]"
+          >
+            Choose Gallery / File
+          </button>
+          <input
+            ref={galleryInputRef}
+            type="file"
+            onInput={handleInput}
+            onChange={handleChange('Gallery / File')}
+            className="sr-only"
+            aria-label="Gallery or file picker"
+          />
 
-          <label className="block rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold">
-            Camera
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onInput={handleInput}
-              onChange={handleChange('Camera')}
-              className="mt-3 block w-full text-xs font-normal text-slate-600"
-            />
-          </label>
+          <button
+            type="button"
+            onClick={() => openPicker(cameraInputRef.current)}
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 active:scale-[0.99]"
+          >
+            Open Camera
+          </button>
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onInput={handleInput}
+            onChange={handleChange('Camera')}
+            className="sr-only"
+            aria-label="Camera file picker"
+          />
         </div>
 
         <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
@@ -101,17 +129,14 @@ function StudentPaymentUploadDebugPage() {
 
         <div className="mt-4 rounded-xl border border-slate-200 p-4 text-sm">
           <p className="font-extrabold text-[#102449]">Event counters</p>
-          <p className="mt-2">input events: <span className="font-bold">{inputEvents}</span></p>
+          <p className="mt-2">picker click attempts: <span className="font-bold">{clickAttempts}</span></p>
+          <p>input events: <span className="font-bold">{inputEvents}</span></p>
           <p>change events: <span className="font-bold">{changeEvents}</span></p>
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            setSelection(emptySelection)
-            setInputEvents(0)
-            setChangeEvents(0)
-          }}
+          onClick={resetDiagnostic}
           className="mt-5 inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
         >
           Reset Diagnostic
