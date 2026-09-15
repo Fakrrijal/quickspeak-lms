@@ -4,17 +4,7 @@ import { StudentPaymentPageV3 } from '../components/student/StudentPaymentPageV3
 
 function StudentPaymentRoute() {
   useLayoutEffect(() => {
-    const blockPickerReturnHandlers = (event: Event) => {
-      event.stopImmediatePropagation()
-    }
-
-    window.addEventListener('focus', blockPickerReturnHandlers, true)
-    window.addEventListener('pageshow', blockPickerReturnHandlers, true)
-
-    return () => {
-      window.removeEventListener('focus', blockPickerReturnHandlers, true)
-      window.removeEventListener('pageshow', blockPickerReturnHandlers, true)
-    }
+    document.getElementById('student-payment-proof-input')?.removeAttribute('accept')
   }, [])
 
   return <StudentPaymentPageV3 />
