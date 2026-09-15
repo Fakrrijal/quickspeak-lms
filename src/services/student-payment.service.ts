@@ -88,11 +88,13 @@ export type PaymentRetryResult = {
 }
 
 const maximumProofFileSize = 5242880
+const maximumSourceImageSize = 26214400
 const paymentProofBucket = 'payment_proofs'
 const acceptedProofTypes = {
   'application/pdf': ['pdf'],
   'image/jpeg': ['jpg', 'jpeg'],
   'image/png': ['png'],
+  'image/jpg': ['jpg', 'jpeg'],
 } as const
 
 const relevantEnrollmentStatuses = [
@@ -295,21 +297,133 @@ function getProofExtension(file: File) {
   return extension
 }
 
+function getProofMimeType(file: File, extension: string) {
+  const suppliedType = file.type.toLowerCase()
+
+  if (suppliedType === 'application/pdf' && extension === 'pdf') return 'application/pdf'
+  if ((suppliedType === 'image/jpeg' || suppliedType === 'image/jpg') && ['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
+  if (suppliedType === 'image/png' && extension === 'png') return 'image/png'
+
+  if (!suppliedType) {
+    if (extension === 'pdf') return 'application/pdf'
+    if (['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
+    if (extension === 'png') return 'image/png'
+  }
+
+  throw new Error('Upload a PDF, JPG, JPEG, or PNG file whose extension matches its file type.')
+}
+
 export function validatePaymentProofFile(file: File) {
   const extension = getProofExtension(file)
-  const allowedExtensions = acceptedProofTypes[
-    file.type as keyof typeof acceptedProofTypes
-  ]
+  const mimeType = getProofMimeType(file, extension)
 
-  if (!allowedExtensions || !allowedExtensions.includes(extension as never)) {
+  if (!acceptedProofTypes[mimeType as keyof typeof acceptedProofTypes]?.includes(extension as never)) {
     throw new Error('Upload a PDF, JPG, JPEG, or PNG file whose extension matches its file type.')
   }
 
-  if (file.size <= 0 || file.size > maximumProofFileSize) {
-    throw new Error('Payment proof files must be between 1 byte and 5 MiB.')
+  if (mimeType === 'application/pdf') {
+    if (file.size <= 0 || file.size > maximumProofFileSize) {
+      throw new Error('PDF payment proof files must be between 1 byte and 5 MiB.')
+    }
+  } else if (file.size <= 0 || file.size > maximumSourceImageSize) {
+    throw new Error('Image payment proof files must be between 1 byte and 25 MiB. Large photos are compressed automatically before upload.')
   }
 
   return extension
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const image = new Image()
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('This image could not be decoded by the browser. Please choose a JPG or PNG photo instead.'))
+    }
+    image.src = objectUrl
+  })
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('The selected image could not be prepared for upload.'))
+        return
+      }
+      resolve(blob)
+    }, 'image/jpeg', quality)
+  })
+}
+
+async function compressImageForUpload(file: File): Promise<File> {
+  if (file.size <= maximumProofFileSize && file.type === 'image/jpeg') {
+    return file
+  }
+
+  const image = await loadImage(file)
+  const maxDimension = 2400
+  const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+  const context = canvas.getContext('2d')
+  if (!context) {
+    throw new Error('Your browser could not prepare the image for upload.')
+  }
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+  let quality = 0.82
+  let blob = await canvasToBlob(canvas, quality)
+
+  while (blob.size > maximumProofFileSize && quality > 0.5) {
+    quality -= 0.08
+    blob = await canvasToBlob(canvas, quality)
+  }
+
+  if (blob.size > maximumProofFileSize) {
+    throw new Error('This photo is still larger than 5 MiB after compression. Please choose a smaller photo.')
+  }
+
+  return new File([blob], `payment-proof-${crypto.randomUUID()}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: Date.now(),
+  })
+}
+
+async function preparePaymentProofFile(file: File) {
+  const extension = validatePaymentProofFile(file)
+  const mimeType = getProofMimeType(file, extension)
+
+  if (mimeType === 'application/pdf') {
+    return {
+      file,
+      extension: 'pdf',
+      mimeType,
+    }
+  }
+
+  if (file.size <= maximumProofFileSize && mimeType === 'image/jpeg') {
+    return {
+      file,
+      extension: extension === 'jpg' ? 'jpg' : 'jpeg',
+      mimeType: 'image/jpeg',
+    }
+  }
+
+  const compressedFile = await compressImageForUpload(file)
+  return {
+    file: compressedFile,
+    extension: 'jpg',
+    mimeType: 'image/jpeg',
+  }
 }
 
 export async function submitStudentPaymentProof(
@@ -317,13 +431,13 @@ export async function submitStudentPaymentProof(
   paymentId: string,
   file: File,
 ) {
-  const extension = validatePaymentProofFile(file)
-  const storagePath = `${studentId}/${paymentId}/${crypto.randomUUID()}.${extension}`
+  const prepared = await preparePaymentProofFile(file)
+  const storagePath = `${studentId}/${paymentId}/${crypto.randomUUID()}.${prepared.extension}`
 
   const { error: uploadError } = await supabase.storage
     .from(paymentProofBucket)
-    .upload(storagePath, file, {
-      contentType: file.type,
+    .upload(storagePath, prepared.file, {
+      contentType: prepared.mimeType,
       upsert: false,
     })
 
@@ -336,8 +450,8 @@ export async function submitStudentPaymentProof(
       p_payment_id: paymentId,
       p_storage_path: storagePath,
       p_original_filename: file.name,
-      p_mime_type: file.type,
-      p_file_size: file.size,
+      p_mime_type: prepared.mimeType,
+      p_file_size: prepared.file.size,
     })
 
     if (error) {
