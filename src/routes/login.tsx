@@ -127,74 +127,93 @@ function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-xl border bg-white p-8 shadow-sm">
-        <h2 className="text-2xl font-bold text-slate-900">
-          Login
-        </h2>
-
-        <p className="mt-2 text-sm text-slate-600">
-          Login to your QuickSpeak account.
-        </p>
-
-        <form onSubmit={handleLogin} className="mt-6 space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              setResendSuccess(false)
-            }}
-            className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2"
+    <div className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-md items-center justify-center py-4 sm:py-6">
+      <section className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,35,75,0.08)] sm:p-8">
+        <div className="text-center">
+          <img
+            src="/favicon.svg"
+            alt="QuickSpeak"
+            className="mx-auto h-14 w-14"
           />
+          <div className="mt-2 text-[18px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
+          <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.3em] text-[#1b5dd7]">English</div>
 
-          <div className="relative">
+          <h1 className="mt-5 text-3xl font-bold tracking-[-0.03em] text-[#102449]">
+            Welcome back
+          </h1>
+          <p className="mt-1.5 text-sm leading-6 text-slate-600">
+            Sign in to your QuickSpeak account.
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="mt-7 space-y-4">
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-slate-700">Email</span>
             <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border px-4 py-3 pr-12 outline-none focus:ring-2"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setResendSuccess(false)
+              }}
+              autoComplete="email"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1b5dd7] focus:ring-4 focus:ring-blue-100"
+              required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((visible) => !visible)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              title={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-500 hover:text-slate-900"
-            >
-              {showPassword ? (
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M10.6 10.6a2 2 0 102.8 2.8M9.9 4.2A10.7 10.7 0 0112 4c5.2 0 9.1 3.2 10.5 8a10.9 10.9 0 01-3.1 5M6.1 6.1C3.9 7.6 2.3 9.5 1.5 12 2.9 16.8 6.8 20 12 20c1.7 0 3.2-.3 4.6-.9" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" />
-                  <circle cx="12" cy="12" r="2.5" />
-                </svg>
-              )}
-            </button>
-          </div>
+          </label>
 
-          <div className="text-right">
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-slate-700">Password</span>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1b5dd7] focus:ring-4 focus:ring-blue-100"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-slate-400 transition hover:text-[#102449]"
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M10.6 10.6a2 2 0 102.8 2.8M9.9 4.2A10.7 10.7 0 0112 4c5.2 0 9.1 3.2 10.5 8a10.9 10.9 0 01-3.1 5M6.1 6.1C3.9 7.6 2.3 9.5 1.5 12 2.9 16.8 6.8 20 12 20c1.7 0 3.2-.3 4.6-.9" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </label>
+
+          <div className="flex justify-end">
             <Link
               to="/forgot-password"
-              className="text-sm font-medium underline"
+              className="text-sm font-semibold text-[#1b5dd7] transition hover:text-[#154fb7] hover:underline"
             >
-              Forgot Password?
+              Forgot password?
             </Link>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
               {error}
-            </p>
+            </div>
           )}
 
           {showResendConfirmation && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm text-amber-900">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm leading-5 text-amber-900">
                 Your email has not been confirmed yet. Send a new confirmation email to continue.
               </p>
 
@@ -202,9 +221,9 @@ function LoginPage() {
                 type="button"
                 onClick={handleResendConfirmation}
                 disabled={resendLoading}
-                className="mt-3 w-full rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-medium text-amber-900 disabled:opacity-50"
+                className="mt-3 w-full rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 disabled:opacity-50"
               >
-                {resendLoading ? 'Sending...' : 'Resend Confirmation Email'}
+                {resendLoading ? 'Sending...' : 'Resend confirmation email'}
               </button>
 
               {resendSuccess && (
@@ -218,22 +237,22 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-slate-900 px-4 py-3 font-medium text-white disabled:opacity-50"
+            className="h-11 w-full rounded-xl bg-[#1b5dd7] px-4 font-semibold text-white shadow-sm transition hover:bg-[#154fb7] focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Login'}
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-slate-600">
-          Don't have an account?{' '}
+        <p className="mt-6 text-center text-sm text-slate-600">
+          Don&apos;t have an account?{' '}
           <Link
             to="/register"
-            className="font-medium underline"
+            className="font-semibold text-[#1b5dd7] transition hover:text-[#154fb7] hover:underline"
           >
             Register
           </Link>
         </p>
-      </div>
+      </section>
     </div>
   )
 }

@@ -24,6 +24,14 @@ export type SignUpInput = {
   supported_level_ids?: string[]
 }
 
+function getEmailConfirmationRedirect() {
+  if (typeof window !== 'undefined' && window.location.hostname === 'quickspeakindonesia.net') {
+    return 'https://quickspeakindonesia.net/email-confirmed'
+  }
+
+  return getAuthRedirect('/email-confirmed')
+}
+
 export const authService = {
   async signIn({ email, password }: SignInInput) {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -53,7 +61,7 @@ export const authService = {
       email,
       password,
       options: {
-        emailRedirectTo: getAuthRedirect('/email-confirmed'),
+        emailRedirectTo: getEmailConfirmationRedirect(),
         data: {
           full_name,
           phone,
@@ -78,7 +86,7 @@ export const authService = {
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: getAuthRedirect('/email-confirmed'),
+        emailRedirectTo: getEmailConfirmationRedirect(),
       },
     })
 

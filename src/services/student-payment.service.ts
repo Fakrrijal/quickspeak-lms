@@ -88,12 +88,9 @@ export type PaymentRetryResult = {
 }
 
 const maximumProofFileSize = 5242880
+const maximumSourceImageSize = 26214400
 const paymentProofBucket = 'payment_proofs'
-const acceptedProofTypes = {
-  'application/pdf': ['pdf'],
-  'image/jpeg': ['jpg', 'jpeg'],
-  'image/png': ['png'],
-} as const
+const acceptedProofExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'] as const
 
 const relevantEnrollmentStatuses = [
   'pending',
@@ -121,13 +118,8 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
     .limit(1)
     .maybeSingle()
 
-  if (enrollmentError) {
-    throw enrollmentError
-  }
-
-  if (!enrollment) {
-    return null
-  }
+  if (enrollmentError) throw enrollmentError
+  if (!enrollment) return null
 
   const { data: invoice, error: invoiceError } = await supabase
     .from('invoices')
@@ -137,17 +129,8 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
     .limit(1)
     .maybeSingle()
 
-  if (invoiceError) {
-    throw invoiceError
-  }
-
-  if (!invoice) {
-    return {
-      enrollment: enrollment as StudentPaymentEnrollment,
-      invoice: null,
-      payment: null,
-    }
-  }
+  if (invoiceError) throw invoiceError
+  if (!invoice) return { enrollment: enrollment as StudentPaymentEnrollment, invoice: null, payment: null }
 
   const { data: payment, error: paymentError } = await supabase
     .from('payments')
@@ -157,9 +140,7 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
     .limit(1)
     .maybeSingle()
 
-  if (paymentError) {
-    throw paymentError
-  }
+  if (paymentError) throw paymentError
 
   return {
     enrollment: enrollment as StudentPaymentEnrollment,
@@ -168,22 +149,15 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
   }
 }
 
-export async function getStudentPaymentHistory(
-  enrollmentId: string,
-): Promise<StudentPaymentHistoryItem[]> {
+export async function getStudentPaymentHistory(enrollmentId: string): Promise<StudentPaymentHistoryItem[]> {
   const { data: invoices, error: invoiceError } = await supabase
     .from('invoices')
     .select('id, invoice_number, amount, status, created_at')
     .eq('enrollment_id', enrollmentId)
     .order('created_at', { ascending: false })
 
-  if (invoiceError) {
-    throw invoiceError
-  }
-
-  if (!invoices || invoices.length === 0) {
-    return []
-  }
+  if (invoiceError) throw invoiceError
+  if (!invoices || invoices.length === 0) return []
 
   const invoiceIds = invoices.map((invoice) => invoice.id)
   const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]))
@@ -194,16 +168,11 @@ export async function getStudentPaymentHistory(
     .in('invoice_id', invoiceIds)
     .order('created_at', { ascending: false })
 
-  if (paymentError) {
-    throw paymentError
-  }
+  if (paymentError) throw paymentError
 
   return (payments ?? []).flatMap((payment) => {
     const invoice = invoiceById.get(payment.invoice_id)
-
-    if (!invoice) {
-      return []
-    }
+    if (!invoice) return []
 
     return [{
       id: payment.id,
@@ -223,143 +192,182 @@ export async function getStudentPaymentHistory(
 
 export async function getMyStudentContinuationStatus(): Promise<StudentContinuationStatus | null> {
   const { data, error } = await supabase.rpc('get_my_student_continuation_status')
-
-  if (error) {
-    throw error
-  }
-
+  if (error) throw error
   const status = Array.isArray(data) ? data[0] : data
   return (status as StudentContinuationStatus | null) ?? null
 }
 
-export async function requestNextLevelEnrollment(
-  packageType: 'private' | 'semi_private',
-): Promise<NextLevelEnrollmentRequest> {
-  const { data, error } = await supabase.rpc('request_next_level_enrollment', {
-    p_package_type: packageType,
-  })
-
-  if (error) {
-    throw error
-  }
-
+export async function requestNextLevelEnrollment(packageType: 'private' | 'semi_private'): Promise<NextLevelEnrollmentRequest> {
+  const { data, error } = await supabase.rpc('request_next_level_enrollment', { p_package_type: packageType })
+  if (error) throw error
   const enrollment = Array.isArray(data) ? data[0] : data
-  if (!enrollment) {
-    throw new Error('Continuation enrollment did not return a result.')
-  }
-
+  if (!enrollment) throw new Error('Continuation enrollment did not return a result.')
   return enrollment as NextLevelEnrollmentRequest
 }
 
 export async function initializeEnrollmentPayment(enrollmentId: string) {
-  const { data, error } = await supabase.rpc('initialize_enrollment_payment', {
-    p_enrollment_id: enrollmentId,
-  })
-
-  if (error) {
-    throw error
-  }
-
+  const { data, error } = await supabase.rpc('initialize_enrollment_payment', { p_enrollment_id: enrollmentId })
+  if (error) throw error
   const payment = Array.isArray(data) ? data[0] : data
-  if (!payment) {
-    throw new Error('Payment initialization did not return payment details.')
-  }
-
+  if (!payment) throw new Error('Payment initialization did not return payment details.')
   return payment
 }
 
 export async function retryStudentPayment(enrollmentId: string): Promise<PaymentRetryResult> {
-  const { data, error } = await supabase.rpc('retry_student_payment', {
-    p_enrollment_id: enrollmentId,
-  })
-
-  if (error) {
-    throw error
-  }
-
+  const { data, error } = await supabase.rpc('retry_student_payment', { p_enrollment_id: enrollmentId })
+  if (error) throw error
   const payment = Array.isArray(data) ? data[0] : data
-  if (!payment) {
-    throw new Error('Payment retry did not return a new payment attempt.')
-  }
-
+  if (!payment) throw new Error('Payment retry did not return a new payment attempt.')
   return payment as PaymentRetryResult
 }
 
 function getProofExtension(file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase()
-
-  if (!extension) {
-    throw new Error('Payment proof files must include an extension.')
+  if (extension && acceptedProofExtensions.includes(extension as (typeof acceptedProofExtensions)[number])) {
+    return extension
   }
 
-  return extension
+  const suppliedType = file.type.toLowerCase()
+  if (suppliedType === 'application/pdf') return 'pdf'
+  if (suppliedType === 'image/jpeg' || suppliedType === 'image/jpg') return 'jpg'
+  if (suppliedType === 'image/png') return 'png'
+  if (suppliedType === 'image/webp') return 'webp'
+  if (suppliedType === 'image/heic') return 'heic'
+  if (suppliedType === 'image/heif') return 'heif'
+  if (suppliedType.startsWith('image/')) return 'jpg'
+
+  throw new Error('Upload a PDF or image file (JPG, PNG, WEBP, HEIC, or HEIF).')
+}
+
+function getProofMimeType(file: File, extension: string) {
+  const suppliedType = file.type.toLowerCase()
+
+  if (suppliedType === 'application/pdf' && extension === 'pdf') return 'application/pdf'
+  if ((suppliedType === 'image/jpeg' || suppliedType === 'image/jpg') && ['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
+  if (suppliedType === 'image/png' && extension === 'png') return 'image/png'
+  if (suppliedType === 'image/webp' && extension === 'webp') return 'image/webp'
+  if (suppliedType === 'image/heic' && extension === 'heic') return 'image/heic'
+  if (suppliedType === 'image/heif' && extension === 'heif') return 'image/heif'
+
+  if (!suppliedType) {
+    if (extension === 'pdf') return 'application/pdf'
+    if (['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
+    if (extension === 'png') return 'image/png'
+    if (extension === 'webp') return 'image/webp'
+    if (extension === 'heic') return 'image/heic'
+    if (extension === 'heif') return 'image/heif'
+  }
+
+  if (suppliedType.startsWith('image/')) return suppliedType
+
+  throw new Error('Upload a PDF or image file (JPG, PNG, WEBP, HEIC, or HEIF).')
 }
 
 export function validatePaymentProofFile(file: File) {
   const extension = getProofExtension(file)
-  const allowedExtensions = acceptedProofTypes[
-    file.type as keyof typeof acceptedProofTypes
-  ]
+  const mimeType = getProofMimeType(file, extension)
 
-  if (!allowedExtensions || !allowedExtensions.includes(extension as never)) {
-    throw new Error('Upload a PDF, JPG, JPEG, or PNG file whose extension matches its file type.')
-  }
-
-  if (file.size <= 0 || file.size > maximumProofFileSize) {
-    throw new Error('Payment proof files must be between 1 byte and 5 MiB.')
+  if (file.size <= 0 || file.size > (mimeType === 'application/pdf' ? maximumProofFileSize : maximumSourceImageSize)) {
+    throw new Error(mimeType === 'application/pdf'
+      ? 'PDF payment proof files must be between 1 byte and 5 MiB.'
+      : 'Image payment proof files must be between 1 byte and 25 MiB. Large photos are compressed automatically before upload.')
   }
 
   return extension
 }
 
-export async function submitStudentPaymentProof(
-  studentId: string,
-  paymentId: string,
-  file: File,
-) {
-  const extension = validatePaymentProofFile(file)
-  const storagePath = `${studentId}/${paymentId}/${crypto.randomUUID()}.${extension}`
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const image = new Image()
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('This image format cannot be processed by this browser. Please choose a JPG or PNG image.'))
+    }
+    image.src = objectUrl
+  })
+}
 
-  const { error: uploadError } = await supabase.storage
-    .from(paymentProofBucket)
-    .upload(storagePath, file, {
-      contentType: file.type,
-      upsert: false,
-    })
+function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('The selected image could not be prepared for upload.'))
+        return
+      }
+      resolve(blob)
+    }, 'image/jpeg', quality)
+  })
+}
 
-  if (uploadError) {
-    throw uploadError
+async function compressImageForUpload(file: File): Promise<File> {
+  const image = await loadImage(file)
+  const maxDimension = 2400
+  const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Your browser could not prepare the image for upload.')
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height)
+  let quality = 0.82
+  let blob = await canvasToBlob(canvas, quality)
+
+  while (blob.size > maximumProofFileSize && quality > 0.5) {
+    quality -= 0.08
+    blob = await canvasToBlob(canvas, quality)
   }
+
+  if (blob.size > maximumProofFileSize) {
+    throw new Error('This photo is still larger than 5 MiB after compression. Please choose a smaller photo.')
+  }
+
+  return new File([blob], `payment-proof-${crypto.randomUUID()}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
+}
+
+async function preparePaymentProofFile(file: File) {
+  const extension = validatePaymentProofFile(file)
+  const mimeType = getProofMimeType(file, extension)
+
+  if (mimeType === 'application/pdf') return { file, extension: 'pdf', mimeType }
+
+  const compressedFile = await compressImageForUpload(file)
+  return { file: compressedFile, extension: 'jpg', mimeType: 'image/jpeg' }
+}
+
+export async function submitStudentPaymentProof(studentId: string, paymentId: string, file: File) {
+  const prepared = await preparePaymentProofFile(file)
+  const storagePath = `${studentId}/${paymentId}/${crypto.randomUUID()}.${prepared.extension}`
+
+  const { error: uploadError } = await supabase.storage.from(paymentProofBucket).upload(storagePath, prepared.file, {
+    contentType: prepared.mimeType,
+    upsert: false,
+  })
+
+  if (uploadError) throw uploadError
 
   try {
     const { data, error } = await supabase.rpc('submit_payment_proof', {
       p_payment_id: paymentId,
       p_storage_path: storagePath,
       p_original_filename: file.name,
-      p_mime_type: file.type,
-      p_file_size: file.size,
+      p_mime_type: prepared.mimeType,
+      p_file_size: prepared.file.size,
     })
 
-    if (error) {
-      throw error
-    }
-
+    if (error) throw error
     const submission = Array.isArray(data) ? data[0] : data
-
-    if (!submission) {
-      throw new Error('Payment proof submission did not return a result.')
-    }
-
+    if (!submission) throw new Error('Payment proof submission did not return a result.')
     return submission as PaymentProofSubmission
   } catch (error) {
-    const { error: cleanupError } = await supabase.storage
-      .from(paymentProofBucket)
-      .remove([storagePath])
-
-    if (cleanupError) {
-      console.error('Unable to clean up payment proof upload:', cleanupError)
-    }
-
+    const { error: cleanupError } = await supabase.storage.from(paymentProofBucket).remove([storagePath])
+    if (cleanupError) console.error('Unable to clean up payment proof upload:', cleanupError)
     throw error
   }
 }
