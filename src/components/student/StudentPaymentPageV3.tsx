@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getActivePaymentSettings, type PaymentSettings } from '../../services/payment-settings.service'
@@ -115,7 +115,7 @@ export function StudentPaymentPageV3() {
     if (canViewPayment) void loadPaymentPage()
   }, [canViewPayment, loadPaymentPage])
 
-  const handleProofSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProofSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0] ?? null
     setProofMessage(null)
     setProofError(null)
