@@ -223,45 +223,41 @@ export async function retryStudentPayment(enrollmentId: string): Promise<Payment
 
 function getProofExtension(file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase()
-  if (!extension) throw new Error('Payment proof files must include an extension.')
-  if (!acceptedProofExtensions.includes(extension as (typeof acceptedProofExtensions)[number])) {
-    throw new Error('Upload a PDF or image file (JPG, PNG, WEBP, HEIC, or HEIF).')
-  }
-  return extension
+  if (extension && acceptedProofExtensions.includes(extension as (typeof acceptedProofExtensions)[number])) return extension
+
+  const suppliedType = file.type.toLowerCase()
+  if (suppliedType === 'application/pdf') return 'pdf'
+  if (suppliedType === 'image/jpeg' || suppliedType === 'image/jpg') return 'jpg'
+  if (suppliedType === 'image/png') return 'png'
+  if (suppliedType === 'image/webp') return 'webp'
+  if (suppliedType === 'image/heic') return 'heic'
+  if (suppliedType === 'image/heif') return 'heif'
+  if (suppliedType.startsWith('image/')) return 'jpg'
+
+  throw new Error('Upload a PDF or image file (JPG, PNG, WEBP, HEIC, or HEIF).')
 }
 
 function getProofMimeType(file: File, extension: string) {
   const suppliedType = file.type.toLowerCase()
 
-  if (suppliedType === 'application/pdf' && extension === 'pdf') return 'application/pdf'
-  if (suppliedType === 'image/jpeg' && ['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
-  if (suppliedType === 'image/png' && extension === 'png') return 'image/png'
-  if (suppliedType === 'image/webp' && extension === 'webp') return 'image/webp'
-  if (suppliedType === 'image/heic' && extension === 'heic') return 'image/heic'
-  if (suppliedType === 'image/heif' && extension === 'heif') return 'image/heif'
-  if (suppliedType === 'image/jpg' && ['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
+  if (extension === 'pdf') return 'application/pdf'
+  if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg'
+  if (extension === 'png') return 'image/png'
+  if (extension === 'webp') return 'image/webp'
+  if (extension === 'heic') return 'image/heic'
+  if (extension === 'heif') return 'image/heif'
 
-  if (!suppliedType) {
-    if (extension === 'pdf') return 'application/pdf'
-    if (['jpg', 'jpeg'].includes(extension)) return 'image/jpeg'
-    if (extension === 'png') return 'image/png'
-    if (extension === 'webp') return 'image/webp'
-    if (extension === 'heic') return 'image/heic'
-    if (extension === 'heif') return 'image/heif'
-  }
-
-  if (suppliedType.startsWith('image/') && acceptedProofExtensions.includes(extension as (typeof acceptedProofExtensions)[number])) {
-    return suppliedType
-  }
-
+  if (suppliedType.startsWith('image/')) return suppliedType
   throw new Error('Upload a PDF or image file (JPG, PNG, WEBP, HEIC, or HEIF).')
 }
 
 export function validatePaymentProofFile(file: File) {
+  if (!file || file.size <= 0) throw new Error('The selected payment proof is empty. Please choose another file.')
+
   const extension = getProofExtension(file)
   const mimeType = getProofMimeType(file, extension)
 
-  if (file.size <= 0 || file.size > (mimeType === 'application/pdf' ? maximumProofFileSize : maximumSourceImageSize)) {
+  if (file.size > (mimeType === 'application/pdf' ? maximumProofFileSize : maximumSourceImageSize)) {
     throw new Error(mimeType === 'application/pdf'
       ? 'PDF payment proof files must be between 1 byte and 5 MiB.'
       : 'Image payment proof files must be between 1 byte and 25 MiB. Large photos are compressed automatically before upload.')
