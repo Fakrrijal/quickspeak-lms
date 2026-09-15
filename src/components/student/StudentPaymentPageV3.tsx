@@ -69,8 +69,7 @@ function Icon({ name }: { name: 'check' | 'close' | 'download' | 'invoice' | 'ca
 export function StudentPaymentPageV3() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
-  const galleryProofInputRef = useRef<HTMLInputElement>(null)
-  const cameraProofInputRef = useRef<HTMLInputElement>(null)
+  const proofInputRef = useRef<HTMLInputElement>(null)
   const [paymentDetails, setPaymentDetails] = useState<StudentPaymentDetails | null>(null)
   const [paymentHistory, setPaymentHistory] = useState<StudentPaymentHistoryItem[]>([])
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null)
@@ -123,12 +122,6 @@ export function StudentPaymentPageV3() {
     setSelectedProof(file)
   }
 
-  const clearProofInputs = () => {
-    setSelectedProof(null)
-    if (galleryProofInputRef.current) galleryProofInputRef.current.value = ''
-    if (cameraProofInputRef.current) cameraProofInputRef.current.value = ''
-  }
-
   const handleProofUpload = async () => {
     if (!selectedProof || !paymentDetails?.payment) return
     setIsUploading(true)
@@ -138,7 +131,8 @@ export function StudentPaymentPageV3() {
       validatePaymentProofFile(selectedProof)
       await submitStudentPaymentProof(paymentDetails.enrollment.student_id, paymentDetails.payment.id, selectedProof)
       await loadPaymentPage()
-      clearProofInputs()
+      setSelectedProof(null)
+      if (proofInputRef.current) proofInputRef.current.value = ''
       setProofMessage('Payment proof submitted successfully. Your payment is now waiting for verification.')
     } catch (uploadError) {
       await reportSystemError({ feature: 'PAYMENT_UPLOAD', action: 'UPLOAD_PROOF', error: uploadError })
@@ -146,7 +140,8 @@ export function StudentPaymentPageV3() {
         const details = await getCurrentStudentPaymentDetails()
         if (details?.payment?.status === 'proof_submitted') {
           setPaymentDetails(details)
-          clearProofInputs()
+          setSelectedProof(null)
+          if (proofInputRef.current) proofInputRef.current.value = ''
           setProofMessage('Payment proof submitted successfully. Your payment is now waiting for verification.')
           return
         }
@@ -164,7 +159,8 @@ export function StudentPaymentPageV3() {
     setIsRetrying(true)
     setProofError(null)
     setProofMessage(null)
-    clearProofInputs()
+    setSelectedProof(null)
+    if (proofInputRef.current) proofInputRef.current.value = ''
     try {
       await retryStudentPayment(paymentDetails.enrollment.id)
       await loadPaymentPage()
@@ -233,36 +229,64 @@ export function StudentPaymentPageV3() {
 
       {isLoading && <section className="border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">Loading current payment...</section>}
       {error && <section className="border border-rose-200 bg-rose-50 p-5 text-sm text-slate-700"><p className="font-bold">Unable to load payment details</p><p className="mt-1">{error}</p><button type="button" onClick={() => void loadPaymentPage()} className="mt-3 font-bold underline">Retry</button></section>}
-
       {!isLoading && !error && !paymentDetails && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Payment</p><h2 className="mt-2 text-xl font-extrabold text-[#102449]">No enrollment found</h2><p className="mt-2 text-sm leading-6 text-slate-600">Choose a learning package before viewing payment details.</p><Link to="/student/learning" className="mt-5 inline-flex rounded-xl bg-[#102449] px-5 py-2.5 text-sm font-bold text-white">Open My Learning</Link></section>}
       {!isLoading && !error && paymentDetails && !invoice && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-extrabold text-[#102449]">Invoice not available</h2><p className="mt-2 text-sm text-slate-600">Your enrollment exists, but its payment invoice is not available yet.</p></section>}
       {!isLoading && !error && paymentDetails && invoice && !payment && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-extrabold text-[#102449]">Payment record not available</h2><p className="mt-2 text-sm text-slate-600">Your invoice exists, but its payment record is not available yet.</p></section>}
 
       {!isLoading && !error && paymentDetails && invoice && payment && (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Current Payment</p><h2 className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{formatPeriod(invoice.created_at)} Payment</h2><p className="mt-1 text-sm text-slate-500">Invoice {invoice.invoice_number}</p></div><span className={`inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-extrabold ${statusClass(payment.status)}`}>{formatStatus(payment.status)}</span></div>
+          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Current Payment</p><h2 className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{formatPeriod(invoice.created_at)} Payment</h2><p className="mt-1 text-sm text-slate-500">Invoice {invoice.invoice_number}</p></div>
+            <span className={`inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-extrabold ${statusClass(payment.status)}`}>{formatStatus(payment.status)}</span>
+          </div>
           <div className="grid gap-6 p-5 lg:grid-cols-[1.15fr_.85fr] lg:p-7">
-            <div><div className="border-b border-slate-200 pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Amount paid</p><p className="mt-1 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">Rp{payment.amount.toLocaleString('id-ID')}</p></div>
-              <dl className="grid gap-x-8 sm:grid-cols-2">{[['Invoice', invoice.invoice_number, 'invoice'], ['Payment Date', formatDateTime(payment.created_at), 'calendar'], ['Period', formatPeriod(invoice.created_at), 'calendar'], ['Package', formatPackage(paymentDetails.enrollment.package_type), 'package'], ['Payment Method', formatMethod(payment.payment_method), 'method']].map(([label, value, icon]) => <div key={label} className="border-b border-slate-100 py-4 last:border-b-0"><dt className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500"><span className="text-slate-400"><Icon name={icon as 'invoice'} /></span>{label}</dt><dd className={`mt-1.5 break-words ${label === 'Invoice' ? 'text-xs font-semibold text-slate-700' : 'text-sm font-bold text-slate-950'}`}>{value}</dd></div>)}</dl>
-              {isRejected && payment.rejection_reason && <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-bold">Payment rejected</p><p className="mt-1 leading-6">{payment.rejection_reason}</p></div>}{proofMessage && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{proofMessage}</div>}{proofError && <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{proofError}</div>}
+            <div>
+              <div className="border-b border-slate-200 pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Amount paid</p><p className="mt-1 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">Rp{payment.amount.toLocaleString('id-ID')}</p></div>
+              <dl className="grid gap-x-8 sm:grid-cols-2">
+                {[['Invoice', invoice.invoice_number, 'invoice'], ['Payment Date', formatDateTime(payment.created_at), 'calendar'], ['Period', formatPeriod(invoice.created_at), 'calendar'], ['Package', formatPackage(paymentDetails.enrollment.package_type), 'package'], ['Payment Method', formatMethod(payment.payment_method), 'method']].map(([label, value, icon]) => <div key={label} className="border-b border-slate-100 py-4 last:border-b-0"><dt className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500"><span className="text-slate-400"><Icon name={icon as 'invoice'} /></span>{label}</dt><dd className={`mt-1.5 break-words ${label === 'Invoice' ? 'text-xs font-semibold text-slate-700' : 'text-sm font-bold text-slate-950'}`}>{value}</dd></div>)}
+              </dl>
+              {isRejected && payment.rejection_reason && <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p className="font-bold">Payment rejected</p><p className="mt-1 leading-6">{payment.rejection_reason}</p></div>}
+              {proofMessage && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{proofMessage}</div>}
+              {proofError && <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{proofError}</div>}
             </div>
 
             <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              {isPaid && currentReceipt ? <div><div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Icon name="check" /></div><h3 className="mt-4 text-lg font-extrabold text-[#102449]">Payment complete</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Your payment has been approved and recorded in your payment history.</p><button type="button" onClick={() => downloadReceipt(currentReceipt)} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]"><Icon name="download" />Download Receipt</button></div> : isProofSubmitted ? <div><div className="flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><span className="text-base font-bold">…</span></div><h3 className="mt-4 text-lg font-extrabold text-[#102449]">Proof submitted</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Your {formatMethod(payment.payment_method)} payment proof is waiting for verification.</p></div> : <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Next step</p><h3 className="mt-1 text-lg font-extrabold text-[#102449]">Bank Transfer</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Complete the payment, then upload your proof below.</p>
-                {paymentSettings && <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm"><div><span className="text-xs text-slate-500">Bank</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.bank_name}</p></div><div><span className="text-xs text-slate-500">Account Number</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_number}</p></div><div><span className="text-xs text-slate-500">Account Name</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_name}</p></div></div>}
-                {isRejected && <button type="button" onClick={() => void handleRetryPayment()} disabled={isRetrying} className="mt-4 inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50">{isRetrying ? 'Creating New Payment...' : 'Pay Again'}</button>}
-                {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5"><p className="block text-sm font-bold text-slate-800">Upload Payment Proof</p>
-                  <input id="student-payment-proof-gallery-input" ref={galleryProofInputRef} type="file" onChange={handleProofSelection} disabled={isUploading} className="sr-only" aria-label="Choose payment proof from gallery or files" />
-                  <input id="student-payment-proof-camera-input" ref={cameraProofInputRef} type="file" accept="image/*" capture="environment" onChange={handleProofSelection} disabled={isUploading} className="sr-only" aria-label="Take payment proof photo with camera" />
-                  <div className="mt-2.5 grid gap-2 sm:grid-cols-2"><button type="button" onClick={() => galleryProofInputRef.current?.click()} disabled={isUploading} className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">Choose Gallery / File</button><button type="button" onClick={() => cameraProofInputRef.current?.click()} disabled={isUploading} className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60">Take Photo</button></div>
-                  {selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}<p className="mt-1.5 text-[11px] text-slate-500">Gallery/File: images or PDF · Camera: image · maximum 5 MiB.</p><button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || !!proofError || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button>
-                </div>}</div>}
+              {isPaid && currentReceipt ? (
+                <div><div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Icon name="check" /></div><h3 className="mt-4 text-lg font-extrabold text-[#102449]">Payment complete</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Your payment has been approved and recorded in your payment history.</p><button type="button" onClick={() => downloadReceipt(currentReceipt)} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]"><Icon name="download" />Download Receipt</button></div>
+              ) : isProofSubmitted ? (
+                <div><div className="flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><span className="text-base font-bold">…</span></div><h3 className="mt-4 text-lg font-extrabold text-[#102449]">Proof submitted</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Your {formatMethod(payment.payment_method)} payment proof is waiting for verification.</p></div>
+              ) : (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Next step</p><h3 className="mt-1 text-lg font-extrabold text-[#102449]">Bank Transfer</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Complete the payment, then upload your proof below.</p>
+                  {paymentSettings && <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm"><div><span className="text-xs text-slate-500">Bank</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.bank_name}</p></div><div><span className="text-xs text-slate-500">Account Number</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_number}</p></div><div><span className="text-xs text-slate-500">Account Name</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_name}</p></div></div>}
+                  {isRejected && <button type="button" onClick={() => void handleRetryPayment()} disabled={isRetrying} className="mt-4 inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50">{isRetrying ? 'Creating New Payment...' : 'Pay Again'}</button>}
+                  {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5">
+                    <p className="block text-sm font-bold text-slate-800">Upload Payment Proof</p>
+                    <input
+                      id="student-payment-proof-input"
+                      ref={proofInputRef}
+                      type="file"
+                      onChange={handleProofSelection}
+                      disabled={isUploading}
+                      className="mt-2.5 block w-full cursor-pointer rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 file:mr-3 file:cursor-pointer file:border-0 file:border-r file:border-slate-200 file:bg-slate-50 file:px-4 file:py-2.5 file:font-bold file:text-slate-700 hover:file:bg-slate-100"
+                      aria-label="Choose payment proof from gallery or file"
+                    />
+                    {selectedProof && <p className="mt-2 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}
+                    <p className="mt-1.5 text-[11px] text-slate-500">Choose an image or PDF · maximum 5 MiB.</p>
+                    <button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || !!proofError || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button>
+                  </div>}
+                </div>
+              )}
             </aside>
           </div>
         </section>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-5 py-5 sm:px-7"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">History</p><h2 className="mt-1 text-xl font-extrabold text-[#102449]">Payment History</h2><p className="mt-1 text-sm text-slate-600">Your recorded payment transactions.</p></div><div className="overflow-x-auto"><table className="min-w-[760px] w-full text-left text-sm"><thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500"><tr><th className="px-5 py-3.5 sm:px-7">Invoice</th><th className="px-5 py-3.5">Payment Date</th><th className="px-5 py-3.5">Period</th><th className="px-5 py-3.5">Amount</th><th className="px-5 py-3.5">Payment Method</th><th className="px-5 py-3.5">Status</th><th className="px-5 py-3.5">Action</th></tr></thead><tbody className="divide-y divide-slate-100">{pageRecords.map((item) => <tr key={item.id} className="align-top"><td className="px-5 py-4 sm:px-7"><p className="font-semibold text-slate-900">{item.invoice_number}</p></td><td className="px-5 py-4 whitespace-nowrap text-slate-700">{formatPaymentDate(item.created_at)}</td><td className="px-5 py-4 whitespace-nowrap text-slate-700">{item.period}</td><td className="px-5 py-4 whitespace-nowrap font-bold text-slate-900">Rp{item.amount.toLocaleString('id-ID')}</td><td className="px-5 py-4 whitespace-nowrap text-slate-700">{formatMethod(item.payment_method)}</td><td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${statusClass(item.status)}`}>{formatStatus(item.status)}</span></td><td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => setSelectedHistory(item)} className="font-bold text-blue-700 underline-offset-2 hover:underline">View</button><button type="button" onClick={() => downloadReceipt(item)} className="font-bold text-slate-700 underline-offset-2 hover:underline">Download</button></div></td></tr>)}{!pageRecords.length && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-slate-500 sm:px-7">No payment transactions recorded.</td></tr>}</tbody></table></div><div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-7"><p>Showing {showingStart}–{showingEnd} of {paymentHistory.length} transactions</p><div className="flex items-center gap-1.5">{paginationPages.map((page) => page === 'ellipsis-left' || page === 'ellipsis-right' ? <span key={page} className="px-2">…</span> : <button key={page} type="button" onClick={() => setHistoryPage(Number(page))} className={`size-8 rounded-lg text-xs font-bold ${safePage === page ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{page}</button>)}</div></div></section>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-5 py-5 sm:px-7"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">History</p><h2 className="mt-1 text-xl font-extrabold text-[#102449]">Payment History</h2><p className="mt-1 text-sm text-slate-600">Your recorded payment transactions.</p></div>
+        <div className="overflow-x-auto"><table className="min-w-[760px] w-full text-left text-sm"><thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500"><tr><th className="px-5 py-3.5 sm:px-7">Invoice</th><th className="px-5 py-3.5">Payment Date</th><th className="px-5 py-3.5">Period</th><th className="px-5 py-3.5">Amount</th><th className="px-5 py-3.5">Payment Method</th><th className="px-5 py-3.5">Status</th><th className="px-5 py-3.5">Action</th></tr></thead>
+          <tbody className="divide-y divide-slate-100">{pageRecords.map((item) => <tr key={item.id} className="align-top"><td className="px-5 py-4 sm:px-7"><p className="font-semibold text-slate-900">{item.invoice_number}</p></td><td className="px-5 py-4 whitespace-nowrap text-slate-700">{formatPaymentDate(item.created_at)}</td><td className="px-5 py-4 whitespace-nowrap text-slate-700">{item.period}</td><td className="px-5 py-4 whitespace-nowrap font-bold text-slate-900">Rp{item.amount.toLocaleString('id-ID')}</td><td className="px-5 py-4 whitespace-nowrap text-slate-700">{formatMethod(item.payment_method)}</td><td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${statusClass(item.status)}`}>{formatStatus(item.status)}</span></td><td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => setSelectedHistory(item)} className="font-bold text-blue-700 underline-offset-2 hover:underline">View</button><button type="button" onClick={() => downloadReceipt(item)} className="font-bold text-slate-700 underline-offset-2 hover:underline">Download</button></div></td></tr>)}{!pageRecords.length && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-slate-500 sm:px-7">No payment transactions recorded.</td></tr>}</tbody></table></div>
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-7"><p>Showing {showingStart}–{showingEnd} of {paymentHistory.length} transactions</p><div className="flex items-center gap-1.5">{paginationPages.map((page) => page === 'ellipsis-left' || page === 'ellipsis-right' ? <span key={page} className="px-2">…</span> : <button key={page} type="button" onClick={() => setHistoryPage(Number(page))} className={`size-8 rounded-lg text-xs font-bold ${safePage === page ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{page}</button>)}</div></div>
+      </section>
       {selectedHistory && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Payment Details</p><h2 className="mt-1 text-xl font-extrabold text-[#102449]">{selectedHistory.invoice_number}</h2></div><button type="button" onClick={() => setSelectedHistory(null)} aria-label="Close" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"><Icon name="close" /></button></div><dl className="mt-5 space-y-3 text-sm"><div className="flex justify-between gap-4"><dt className="text-slate-500">Amount</dt><dd className="font-bold text-slate-900">Rp{selectedHistory.amount.toLocaleString('id-ID')}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Status</dt><dd className="font-bold text-slate-900">{formatStatus(selectedHistory.status)}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Method</dt><dd className="font-bold text-slate-900">{formatMethod(selectedHistory.payment_method)}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Date</dt><dd className="font-bold text-slate-900">{formatDateTime(selectedHistory.created_at)}</dd></div></dl><button type="button" onClick={() => setSelectedHistory(null)} className="mt-6 w-full rounded-xl bg-[#102449] px-4 py-3 text-sm font-bold text-white">Close</button></div></div>}
     </div>
   )
