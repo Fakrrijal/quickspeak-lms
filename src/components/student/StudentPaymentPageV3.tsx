@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getActivePaymentSettings, type PaymentSettings } from '../../services/payment-settings.service'
@@ -115,44 +115,12 @@ export function StudentPaymentPageV3() {
     if (canViewPayment) void loadPaymentPage()
   }, [canViewPayment, loadPaymentPage])
 
-  const syncSelectedProof = useCallback(() => {
-    const file = proofInputRef.current?.files?.[0] ?? null
+  const handleProofSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0] ?? null
     setProofMessage(null)
     setProofError(null)
-    if (!file) {
-      setSelectedProof(null)
-      return
-    }
-    try {
-      validatePaymentProofFile(file)
-      setSelectedProof(file)
-    } catch (validationError) {
-      setSelectedProof(null)
-      setProofError(getErrorMessage(validationError, 'The selected file is invalid.'))
-      if (proofInputRef.current) proofInputRef.current.value = ''
-    }
-  }, [])
-
-  const handleProofSelection = (_event: ChangeEvent<HTMLInputElement>) => {
-    syncSelectedProof()
+    setSelectedProof(file)
   }
-
-  useEffect(() => {
-    const handleWindowFocus = () => {
-      window.setTimeout(syncSelectedProof, 0)
-    }
-    const handlePageShow = () => {
-      window.setTimeout(syncSelectedProof, 0)
-    }
-
-    window.addEventListener('focus', handleWindowFocus)
-    window.addEventListener('pageshow', handlePageShow)
-
-    return () => {
-      window.removeEventListener('focus', handleWindowFocus)
-      window.removeEventListener('pageshow', handlePageShow)
-    }
-  }, [syncSelectedProof])
 
   const handleProofUpload = async () => {
     const currentFile = proofInputRef.current?.files?.[0] ?? selectedProof
@@ -161,6 +129,7 @@ export function StudentPaymentPageV3() {
     setProofError(null)
     setProofMessage(null)
     try {
+      validatePaymentProofFile(currentFile)
       await submitStudentPaymentProof(paymentDetails.enrollment.student_id, paymentDetails.payment.id, currentFile)
       await loadPaymentPage()
       setSelectedProof(null)
@@ -339,8 +308,6 @@ export function StudentPaymentPageV3() {
                       id="student-payment-proof-input"
                       ref={proofInputRef}
                       type="file"
-                      accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
-                      onInput={syncSelectedProof}
                       onChange={handleProofSelection}
                       disabled={isUploading}
                       className="sr-only"
