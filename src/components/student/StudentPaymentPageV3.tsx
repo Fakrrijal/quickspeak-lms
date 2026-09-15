@@ -115,20 +115,15 @@ export function StudentPaymentPageV3() {
   }, [canViewPayment, loadPaymentPage])
 
   const handleProofSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null
+    const file = event.currentTarget.files?.[0] ?? null
     setProofMessage(null)
     setProofError(null)
-    if (!file) {
-      setSelectedProof(null)
-      return
-    }
+    setSelectedProof(file)
+    if (!file) return
     try {
       validatePaymentProofFile(file)
-      setSelectedProof(file)
     } catch (validationError) {
-      setSelectedProof(null)
       setProofError(getErrorMessage(validationError, 'The selected file is invalid.'))
-      event.target.value = ''
     }
   }
 
@@ -307,7 +302,7 @@ export function StudentPaymentPageV3() {
                   <p className="mt-1.5 text-sm leading-6 text-slate-600">Complete the payment, then upload your proof below.</p>
                   {paymentSettings && <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm"><div><span className="text-xs text-slate-500">Bank</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.bank_name}</p></div><div><span className="text-xs text-slate-500">Account Number</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_number}</p></div><div><span className="text-xs text-slate-500">Account Name</span><p className="mt-0.5 font-bold text-slate-950">{paymentSettings.account_name}</p></div></div>}
                   {isRejected && <button type="button" onClick={() => void handleRetryPayment()} disabled={isRetrying} className="mt-4 inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50">{isRetrying ? 'Creating New Payment...' : 'Pay Again'}</button>}
-                  {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5"><label className="block text-sm font-bold text-slate-800">Upload Payment Proof<input type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={handleProofSelection} disabled={isUploading} className="mt-2.5 block w-full text-xs text-slate-600" /></label><p className="mt-1.5 text-[11px] text-slate-500">PDF, JPG, JPEG, or PNG · maximum 5 MiB.</p>{selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}<button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button></div>}
+                  {canUploadProof && <div className="mt-5 border-t border-slate-200 pt-5"><label className="block text-sm font-bold text-slate-800">Upload Payment Proof<input type="file" accept="image/*,.pdf" onChange={handleProofSelection} disabled={isUploading} className="mt-2.5 block w-full text-xs text-slate-600" /></label><p className="mt-1.5 text-[11px] text-slate-500">Images or PDF · maximum 5 MiB.</p>{selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}<button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || !!proofError || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button></div>}
                 </div>
               )}
             </aside>
