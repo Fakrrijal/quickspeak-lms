@@ -122,6 +122,23 @@ export function StudentPaymentPageV3() {
     setSelectedProof(file)
   }
 
+  useEffect(() => {
+    const paymentStatus = paymentDetails?.payment?.status
+    if (paymentStatus !== 'unpaid' && paymentStatus !== 'rejected') return
+    const input = proofInputRef.current
+    if (!input) return
+
+    const handleNativeProofChange = () => {
+      const file = input.files?.[0] ?? null
+      setProofMessage(null)
+      setProofError(null)
+      setSelectedProof(file)
+    }
+
+    input.addEventListener('change', handleNativeProofChange)
+    return () => input.removeEventListener('change', handleNativeProofChange)
+  }, [paymentDetails?.payment?.status])
+
   const handleProofUpload = async () => {
     if (!selectedProof || !paymentDetails?.payment) return
     setIsUploading(true)
