@@ -115,26 +115,53 @@ export function StudentPaymentPageV3() {
     if (canViewPayment) void loadPaymentPage()
   }, [canViewPayment, loadPaymentPage])
 
-  const handleProofSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0] ?? null
+  const syncSelectedProof = useCallback(() => {
+    const file = proofInputRef.current?.files?.[0] ?? null
     setProofMessage(null)
     setProofError(null)
-    setSelectedProof(file)
-    if (!file) return
+    if (!file) {
+      setSelectedProof(null)
+      return
+    }
     try {
       validatePaymentProofFile(file)
+      setSelectedProof(file)
     } catch (validationError) {
+      setSelectedProof(null)
       setProofError(getErrorMessage(validationError, 'The selected file is invalid.'))
+      if (proofInputRef.current) proofInputRef.current.value = ''
     }
+  }, [])
+
+  const handleProofSelection = (_event: ChangeEvent<HTMLInputElement>) => {
+    syncSelectedProof()
   }
 
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      window.setTimeout(syncSelectedProof, 0)
+    }
+    const handlePageShow = () => {
+      window.setTimeout(syncSelectedProof, 0)
+    }
+
+    window.addEventListener('focus', handleWindowFocus)
+    window.addEventListener('pageshow', handlePageShow)
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus)
+      window.removeEventListener('pageshow', handlePageShow)
+    }
+  }, [syncSelectedProof])
+
   const handleProofUpload = async () => {
-    if (!selectedProof || !paymentDetails?.payment) return
+    const currentFile = proofInputRef.current?.files?.[0] ?? selectedProof
+    if (!currentFile || !paymentDetails?.payment) return
     setIsUploading(true)
     setProofError(null)
     setProofMessage(null)
     try {
-      await submitStudentPaymentProof(paymentDetails.enrollment.student_id, paymentDetails.payment.id, selectedProof)
+      await submitStudentPaymentProof(paymentDetails.enrollment.student_id, paymentDetails.payment.id, currentFile)
       await loadPaymentPage()
       setSelectedProof(null)
       if (proofInputRef.current) proofInputRef.current.value = ''
@@ -312,6 +339,8 @@ export function StudentPaymentPageV3() {
                       id="student-payment-proof-input"
                       ref={proofInputRef}
                       type="file"
+                      accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
+                      onInput={syncSelectedProof}
                       onChange={handleProofSelection}
                       disabled={isUploading}
                       className="sr-only"
