@@ -118,7 +118,7 @@ function StudentPaymentUploadDebugPage() {
         </button>
 
         <p className="mt-5 text-xs leading-5 text-slate-500">
-          Return to Payment after testing: <Link to="/student/payment" className="font-bold text-blue-700 underline">Student Payment</Link>
+          Return to Payment after testing: <Link to="/student-payment" className="font-bold text-blue-700 underline">Student Payment</Link>
         </p>
       </section>
     </main>
