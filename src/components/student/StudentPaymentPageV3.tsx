@@ -312,17 +312,19 @@ export function StudentPaymentPageV3() {
                       id="student-payment-proof-input"
                       ref={proofInputRef}
                       type="file"
-                      accept="image/*,.pdf"
                       onChange={handleProofSelection}
                       disabled={isUploading}
                       className="sr-only"
+                      aria-label="Payment proof file picker"
                     />
-                    <label
-                      htmlFor="student-payment-proof-input"
-                      className="mt-2.5 inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                    <button
+                      type="button"
+                      onClick={() => proofInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="mt-2.5 inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Choose from Gallery / File
-                    </label>
+                    </button>
                     {selectedProof && <p className="mt-1.5 break-all text-[11px] font-bold text-slate-700">Selected: {selectedProof.name}</p>}
                     <p className="mt-1.5 text-[11px] text-slate-500">Images or PDF · maximum 5 MiB.</p>
                     <button type="button" onClick={() => void handleProofUpload()} disabled={!selectedProof || !!proofError || isUploading} className="mt-3 inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Uploading...' : 'Submit Payment Proof'}</button>
@@ -334,42 +336,52 @@ export function StudentPaymentPageV3() {
         </section>
       )}
 
-      {!isLoading && !error && paymentDetails && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">History</p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Payment History</h2>
-            <p className="mt-1 text-sm text-slate-600">Your recorded payment transactions.</p>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-7">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">History</p>
+          <h2 className="mt-1 text-xl font-extrabold text-[#102449]">Payment History</h2>
+          <p className="mt-1 text-sm text-slate-600">Your recorded payment transactions.</p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-[760px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+              <tr>
+                <th className="px-5 py-3.5 sm:px-7">Invoice</th>
+                <th className="px-5 py-3.5">Payment Date</th>
+                <th className="px-5 py-3.5">Period</th>
+                <th className="px-5 py-3.5">Amount</th>
+                <th className="px-5 py-3.5">Payment Method</th>
+                <th className="px-5 py-3.5">Status</th>
+                <th className="px-5 py-3.5">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {pageRecords.map((item) => (
+                <tr key={item.id} className="align-top">
+                  <td className="px-5 py-4 sm:px-7"><p className="font-semibold text-slate-900">{item.invoice_number}</p></td>
+                  <td className="px-5 py-4 whitespace-nowrap text-slate-700">{formatPaymentDate(item.created_at)}</td>
+                  <td className="px-5 py-4 whitespace-nowrap text-slate-700">{item.period}</td>
+                  <td className="px-5 py-4 whitespace-nowrap font-bold text-slate-900">Rp{item.amount.toLocaleString('id-ID')}</td>
+                  <td className="px-5 py-4 whitespace-nowrap text-slate-700">{formatMethod(item.payment_method)}</td>
+                  <td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${statusClass(item.status)}`}>{formatStatus(item.status)}</span></td>
+                  <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button type="button" onClick={() => setSelectedHistory(item)} className="font-bold text-blue-700 underline-offset-2 hover:underline">View</button><button type="button" onClick={() => downloadReceipt(item)} className="font-bold text-slate-700 underline-offset-2 hover:underline">Download</button></div></td>
+                </tr>
+              ))}
+              {!pageRecords.length && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-slate-500 sm:px-7">No payment transactions recorded.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <p>Showing {showingStart}–{showingEnd} of {paymentHistory.length} transactions</p>
+          <div className="flex items-center gap-1.5">
+            {paginationPages.map((page) => page === 'ellipsis-left' || page === 'ellipsis-right' ? <span key={page} className="px-2">…</span> : <button key={page} type="button" onClick={() => setHistoryPage(Number(page))} className={`size-8 rounded-lg text-xs font-bold ${safePage === page ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{page}</button>)}
           </div>
+        </div>
+      </section>
 
-          {paymentHistory.length === 0 ? <div className="p-6 text-center text-sm text-slate-500">No payment history yet.</div> : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[860px] text-left text-sm">
-                  <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.12em] text-slate-500"><tr><th className="px-4 py-3.5 font-bold">Invoice</th><th className="px-4 py-3.5 font-bold">Payment Date</th><th className="px-4 py-3.5 font-bold">Period</th><th className="px-4 py-3.5 font-bold">Amount</th><th className="px-4 py-3.5 font-bold">Payment Method</th><th className="px-4 py-3.5 font-bold">Status</th><th className="px-4 py-3.5 text-right font-bold">Action</th></tr></thead>
-                  <tbody>{pageRecords.map((item) => <tr key={item.id} className="border-t border-slate-200 hover:bg-slate-50"><td className="max-w-[220px] break-all px-4 py-3.5 font-bold text-slate-950">{item.invoice_number}</td><td className="whitespace-nowrap px-4 py-3.5 text-slate-600">{formatPaymentDate(item.created_at)}</td><td className="px-4 py-3.5 text-slate-600">{item.period}</td><td className="whitespace-nowrap px-4 py-3.5 font-bold text-slate-950">Rp{item.amount.toLocaleString('id-ID')}</td><td className="px-4 py-3.5 text-slate-600">{formatMethod(item.payment_method)}</td><td className="whitespace-nowrap px-4 py-3.5"><span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${statusClass(item.status)}`}>{formatStatus(item.status)}</span></td><td className="whitespace-nowrap px-4 py-3.5 text-right"><div className="inline-flex items-center gap-3"><button type="button" onClick={() => setSelectedHistory(item)} className="text-xs font-bold text-blue-700 hover:text-blue-800">View</button><button type="button" onClick={() => downloadReceipt(item)} className="text-xs font-bold text-slate-700 hover:text-slate-950">Download</button></div></td></tr>)}</tbody>
-                </table>
-              </div>
-              <div className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-                <p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-700">{showingStart}–{showingEnd}</span> of <span className="font-semibold text-slate-700">{paymentHistory.length}</span> transactions</p>
-                {totalPages === 1 ? (
-                  <span className="inline-flex size-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-sm font-bold text-white" aria-current="page">1</span>
-                ) : (
-                  <nav className="flex items-center gap-1" aria-label="Payment history pagination">
-                    <button type="button" onClick={() => setHistoryPage(1)} disabled={safePage === 1} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:cursor-not-allowed disabled:opacity-40" aria-label="First page">«</button>
-                    <button type="button" onClick={() => setHistoryPage((current) => Math.max(1, current - 1))} disabled={safePage === 1} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Previous page">‹</button>
-                    {paginationPages.map((item, index) => item === 'ellipsis-left' || item === 'ellipsis-right' ? <span key={`${item}-${index}`} className="inline-flex size-9 items-center justify-center text-slate-400">…</span> : <button key={item} type="button" onClick={() => setHistoryPage(item as number)} aria-current={safePage === item ? 'page' : undefined} className={`inline-flex size-9 items-center justify-center rounded-lg border text-sm font-bold ${safePage === item ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{item}</button>)}
-                    <button type="button" onClick={() => setHistoryPage((current) => Math.min(totalPages, current + 1))} disabled={safePage === totalPages} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Next page">›</button>
-                    <button type="button" onClick={() => setHistoryPage(totalPages)} disabled={safePage === totalPages} className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Last page">»</button>
-                  </nav>
-                )}
-              </div>
-            </>
-          )}
-        </section>
-      )}
-
-      {selectedHistory && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="payment-detail-title"><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl"><div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 sm:px-6"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Payment Detail</p><h2 id="payment-detail-title" className="mt-1 break-all text-lg font-extrabold text-[#102449]">{selectedHistory.invoice_number}</h2></div><button type="button" onClick={() => setSelectedHistory(null)} aria-label="Close payment detail" className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><Icon name="close" /></button></div><div className="space-y-3 px-5 py-5 sm:px-6"><dl className="grid gap-3 sm:grid-cols-2">{[['Invoice', selectedHistory.invoice_number], ['Payment Date', formatDateTime(selectedHistory.created_at)], ['Period', selectedHistory.period], ['Amount', `Rp${selectedHistory.amount.toLocaleString('id-ID')}`], ['Payment Method', formatMethod(selectedHistory.payment_method)], ['Status', formatStatus(selectedHistory.status)]].map(([label, value]) => <div key={label} className="rounded-xl bg-slate-50 p-3.5"><dt className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</dt><dd className="mt-1.5 break-words text-sm font-bold text-slate-950">{value}</dd></div>)}</dl>{selectedHistory.rejection_reason && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-800"><p className="font-bold">Rejection Reason</p><p className="mt-1 leading-6">{selectedHistory.rejection_reason}</p></div>}</div><div className="flex flex-col-reverse gap-2 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end sm:px-6"><button type="button" onClick={() => setSelectedHistory(null)} className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Close</button><button type="button" onClick={() => downloadReceipt(selectedHistory)} className="rounded-xl bg-[#102449] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Download Receipt</button></div></div></div>}
+      {selectedHistory && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Payment Details</p><h2 className="mt-1 text-xl font-extrabold text-[#102449]">{selectedHistory.invoice_number}</h2></div><button type="button" onClick={() => setSelectedHistory(null)} aria-label="Close" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"><Icon name="close" /></button></div><dl className="mt-5 space-y-3 text-sm"><div className="flex justify-between gap-4"><dt className="text-slate-500">Amount</dt><dd className="font-bold text-slate-900">Rp{selectedHistory.amount.toLocaleString('id-ID')}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Status</dt><dd className="font-bold text-slate-900">{formatStatus(selectedHistory.status)}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Method</dt><dd className="font-bold text-slate-900">{formatMethod(selectedHistory.payment_method)}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Date</dt><dd className="font-bold text-slate-900">{formatDateTime(selectedHistory.created_at)}</dd></div></dl><button type="button" onClick={() => setSelectedHistory(null)} className="mt-6 w-full rounded-xl bg-[#102449] px-4 py-3 text-sm font-bold text-white">Close</button></div></div>}
     </div>
   )
 }
