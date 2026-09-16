@@ -34,7 +34,6 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
           label: 'Attendance',
           to: '/student/attendance',
         },
-        { label: 'Profile', to: '/student/profile' },
       ],
     },
     {
@@ -54,7 +53,6 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
         { label: 'Books', to: '/teacher/books' },
         { label: 'Attendance', to: '/teacher/attendance' },
         { label: 'Fee', to: '/teacher/fee' },
-        { label: 'Profile', to: '/teacher/profile' },
       ],
     },
   ],
