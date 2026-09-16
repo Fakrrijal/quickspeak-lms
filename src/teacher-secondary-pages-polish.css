@@ -48,14 +48,22 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   margin-bottom: var(--qs-section-gap) !important;
 }
 
-/* Teacher Fee is intentionally narrower on desktop to create clear left/right reading boundaries. */
+/* Teacher Fee uses an intentionally bounded report canvas with visible left/right reading rules. */
 @media (min-width: 1024px) {
-  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > div {
+  .qs-fee-report-frame {
     width: min(100%, 1140px) !important;
     max-width: 1140px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    border-left: 1px solid var(--qs-border) !important;
+    border-right: 1px solid var(--qs-border) !important;
   }
+}
+
+.qs-fee-report-frame {
+  box-sizing: border-box !important;
 }
 
 /* Search/filter surfaces should feel like compact controls, not large hero cards. */
