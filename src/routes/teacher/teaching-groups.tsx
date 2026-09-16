@@ -1,12 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from '@tanstack/react-router'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendanceGroups } from '../../services/teacher-attendance.service'
 
 export const Route = createFileRoute('/teacher/teaching-groups')({ component: TeacherTeachingGroupsPage })
 
+const PAGE_SIZE = 10
+
 function formatPackageType(value: string) {
   return value === 'semi_private' ? 'Semi-Private' : 'Private'
+}
+
+function Pagination({ page, totalItems, onPageChange }: { page: number; totalItems: number; onPageChange: (page: number) => void }) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
+  if (totalItems <= PAGE_SIZE) return null
+
+  return (
+    <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs font-semibold text-slate-500">
+        Showing {Math.min((page - 1) * PAGE_SIZE + 1, totalItems)}–{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems}
+      </p>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => onPageChange(page - 1)} disabled={page === 1} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+        <span className="min-w-20 text-center text-xs font-bold text-slate-600">Page {page} of {totalPages}</span>
+        <button type="button" onClick={() => onPageChange(page + 1)} disabled={page === totalPages} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+      </div>
+    </div>
+  )
 }
 
 function TeacherTeachingGroupsPage() {
@@ -18,6 +38,8 @@ function TeacherTeachingGroupsPage() {
   const [search, setSearch] = useState('')
   const [groupType, setGroupType] = useState<'all' | 'private' | 'semi_private'>('all')
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
+  const [groupPage, setGroupPage] = useState(1)
+  const [studentPage, setStudentPage] = useState(1)
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
 
@@ -75,13 +97,34 @@ function TeacherTeachingGroupsPage() {
     })
   }, [groupType, grouped, search])
 
+  const paginatedGroups = useMemo(() => filteredGroups.slice((groupPage - 1) * PAGE_SIZE, groupPage * PAGE_SIZE), [filteredGroups, groupPage])
+
   const selectedGroup = grouped.find((group) => group.id === selectedGroupId) ?? null
+  const paginatedStudents = useMemo(() => selectedGroup?.students.slice((studentPage - 1) * PAGE_SIZE, studentPage * PAGE_SIZE) ?? [], [selectedGroup, studentPage])
 
   useEffect(() => {
     if (selectedGroupId && !grouped.some((group) => group.id === selectedGroupId)) {
       setSelectedGroupId(null)
     }
   }, [grouped, selectedGroupId])
+
+  useEffect(() => {
+    setGroupPage(1)
+  }, [groupType, search])
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredGroups.length / PAGE_SIZE))
+    if (groupPage > totalPages) setGroupPage(totalPages)
+  }, [filteredGroups.length, groupPage])
+
+  useEffect(() => {
+    setStudentPage(1)
+  }, [selectedGroupId])
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil((selectedGroup?.students.length ?? 0) / PAGE_SIZE))
+    if (studentPage > totalPages) setStudentPage(totalPages)
+  }, [selectedGroup?.students.length, studentPage])
 
   if (authLoading || profileLoading) return <p>Loading...</p>
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
@@ -148,9 +191,9 @@ function TeacherTeachingGroupsPage() {
                 </div>
                 <span className="text-sm font-semibold text-slate-500">{selectedGroup.students.length} student{selectedGroup.students.length === 1 ? '' : 's'}</span>
               </div>
-              <div className="mt-3 max-h-[470px] overflow-y-auto rounded-xl border border-slate-200">
+              <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
                 <div className="divide-y divide-slate-100">
-                  {selectedGroup.students.map((student) => (
+                  {paginatedStudents.map((student) => (
                     <div key={student.id} className="flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-slate-50">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-extrabold text-blue-700">{student.name.slice(0, 1).toUpperCase()}</span>
@@ -160,6 +203,7 @@ function TeacherTeachingGroupsPage() {
                     </div>
                   ))}
                 </div>
+                <Pagination page={studentPage} totalItems={selectedGroup.students.length} onPageChange={setStudentPage} />
               </div>
             </div>
           </div>
@@ -196,7 +240,7 @@ function TeacherTeachingGroupsPage() {
               <select
                 value={groupType}
                 onChange={(event) => setGroupType(event.target.value as 'all' | 'private' | 'semi_private')}
-                className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 aria-label="Filter group type"
               >
                 <option value="all">All Types</option>
@@ -214,7 +258,7 @@ function TeacherTeachingGroupsPage() {
             </section>
           ) : (
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="max-h-[520px] overflow-y-auto">
+              <div>
                 <div className="sticky top-0 z-10 hidden grid-cols-[minmax(180px,1.4fr)_120px_150px_120px_44px] border-b border-slate-200 bg-white px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
                   <span>Teaching Group</span>
                   <span>Level</span>
@@ -223,7 +267,7 @@ function TeacherTeachingGroupsPage() {
                   <span aria-hidden="true" />
                 </div>
                 <div className="divide-y divide-slate-100">
-                  {filteredGroups.map((group) => (
+                  {paginatedGroups.map((group) => (
                     <button
                       key={group.id}
                       type="button"
@@ -238,6 +282,7 @@ function TeacherTeachingGroupsPage() {
                     </button>
                   ))}
                 </div>
+                <Pagination page={groupPage} totalItems={filteredGroups.length} onPageChange={setGroupPage} />
               </div>
             </section>
           )}
