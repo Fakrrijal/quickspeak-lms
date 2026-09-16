@@ -29,6 +29,7 @@ export function EnterprisePortalShell({
 }: EnterprisePortalShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isStudentPortal = role === 'student'
+  const isAdminPortal = role === 'admin'
   const isSupportPortal = role === 'student' || role === 'teacher'
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function EnterprisePortalShell({
   }, [])
 
   return (
-    <div className={`qs-portal-shell min-h-screen bg-slate-50 text-slate-900 ${isStudentPortal ? 'qs-student-portal' : ''}`}>
+    <div className={`qs-portal-shell min-h-screen bg-slate-50 text-slate-900 ${isStudentPortal ? 'qs-student-portal' : ''} ${isAdminPortal ? 'qs-admin-portal' : ''}`}>
       <a
         href="#portal-content"
         className="sr-only z-50 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
