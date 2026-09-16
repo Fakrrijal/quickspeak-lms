@@ -5,8 +5,6 @@ type PortalSidebarProps = {
   id?: string
   role: PortalRole
   pathname: string
-  userName?: string
-  avatarUrl?: string | null
   onNavigate?: () => void
 }
 
@@ -14,66 +12,10 @@ function isActivePath(pathname: string, to: string, activePrefixes: string[] = [
   return pathname === to || activePrefixes.some((prefix) => pathname.startsWith(prefix))
 }
 
-function getInitials(userName: string) {
-  return userName
-    .trim()
-    .split(/\s+/)
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
-
-function ProfileIdentity({
-  role,
-  userName,
-  avatarUrl,
-}: {
-  role: 'student' | 'teacher'
-  userName: string
-  avatarUrl?: string | null
-}) {
-  const roleLabel = role === 'student' ? 'Student' : 'Teacher'
-  const heading = role === 'student' ? 'Profil' : 'Teacher'
-
-  return (
-    <div className="relative overflow-hidden rounded-xl bg-[#102449] px-4 py-4 text-white shadow-sm">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-12 -right-8 size-32 rounded-full bg-white/[0.07]"
-      />
-      <p className="relative text-sm font-bold text-white">{heading}</p>
-      <div className="relative mt-4 flex items-center gap-3">
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt=""
-            className="size-11 shrink-0 rounded-full object-cover ring-2 ring-white/70"
-          />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-bold text-white ring-1 ring-white/30"
-          >
-            {getInitials(userName)}
-          </div>
-        )}
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-white">{userName}</p>
-          <p className="mt-0.5 text-xs font-medium text-blue-100">{roleLabel}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export function PortalSidebar({
   id,
   role,
   pathname,
-  userName = 'QuickSpeak user',
-  avatarUrl,
   onNavigate,
 }: PortalSidebarProps) {
   return (
@@ -83,18 +25,11 @@ export function PortalSidebar({
       data-portal-sidebar={role}
       className="flex min-h-full flex-col overflow-y-auto bg-white px-4 py-4 lg:overflow-visible"
     >
-      <div className="shrink-0">
-        {role === 'student' || role === 'teacher' ? (
-          <ProfileIdentity role={role} userName={userName} avatarUrl={avatarUrl} />
-        ) : (
-          <div className="rounded-xl bg-[#102449] px-4 py-4 text-white shadow-sm">
-            <p className="text-sm font-bold text-white">
-              {role.charAt(0).toUpperCase()}
-              {role.slice(1)}
-            </p>
-            <p className="mt-1 text-xs text-blue-100">QuickSpeak</p>
-          </div>
-        )}
+      <div className="shrink-0 rounded-xl bg-[#102449] px-4 py-4 text-white shadow-sm">
+        <p className="text-sm font-bold text-white">
+          {role === 'student' ? 'Student' : role === 'teacher' ? 'Teacher' : 'Admin'}
+        </p>
+        <p className="mt-1 text-xs text-blue-100">QuickSpeak Portal</p>
       </div>
 
       <div className="mt-6 space-y-6">
