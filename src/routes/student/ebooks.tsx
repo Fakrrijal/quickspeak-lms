@@ -99,7 +99,7 @@ function StudentEbooksPage() {
                   <h2 className="line-clamp-2 text-base font-extrabold text-[#102449]">{ebook?.title ?? `Level ${levelNumber} Ebook`}</h2>
                   <p className="mt-1 text-sm text-slate-500">{ebook?.level_name ?? `Level ${levelNumber}`}</p>
                   {unlocked && ebook ? (
-                    <a href={ebook.heyzine_url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-700 hover:text-blue-800">Open Ebook <ArrowIcon /></a>
+                    <a href={ebook.heyzine_url} rel="noreferrer" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-700 hover:text-blue-800">Open Ebook <ArrowIcon /></a>
                   ) : (
                     <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-500"><LockIcon /> Locked</p>
                   )}
