@@ -30,6 +30,10 @@ function getProfilePath(role: PortalRole) {
   return role === 'student' ? '/student/profile' : '/teacher/profile'
 }
 
+function getChangePasswordPath(role: PortalRole) {
+  return role === 'student' ? '/student/change-password' : '/teacher/change-password'
+}
+
 export function PortalHeader({
   role,
   userName,
@@ -44,6 +48,7 @@ export function PortalHeader({
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const isProfileMenuEnabled = role === 'student' || role === 'teacher'
   const profilePath = isProfileMenuEnabled ? getProfilePath(role) : null
+  const changePasswordPath = isProfileMenuEnabled ? getChangePasswordPath(role) : null
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1)
 
   useEffect(() => {
@@ -120,7 +125,7 @@ export function PortalHeader({
                 </svg>
               </button>
 
-              {isProfileMenuOpen && profilePath && (
+              {isProfileMenuOpen && profilePath && changePasswordPath && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl" role="menu">
                   <div className="border-b border-slate-100 px-3 py-2.5 sm:hidden">
                     <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
@@ -134,14 +139,14 @@ export function PortalHeader({
                   >
                     Profil
                   </Link>
-                  <a
-                    href={`${profilePath}#account-security-title`}
+                  <Link
+                    to={changePasswordPath as never}
                     onClick={() => setIsProfileMenuOpen(false)}
                     role="menuitem"
                     className="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#102449]"
                   >
                     Ganti Password
-                  </a>
+                  </Link>
                   <button
                     type="button"
                     onClick={handleLogout}
