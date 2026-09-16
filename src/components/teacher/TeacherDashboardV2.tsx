@@ -124,22 +124,27 @@ export function TeacherDashboardV2() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   return (
-    <div className="teacher-dashboard-v2 mx-auto max-w-7xl space-y-5">
+    <div className="teacher-dashboard-v2 mx-auto max-w-7xl space-y-4">
       <header className="border-b border-slate-200 pb-5">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">Teacher Portal</p>
           <h1 className="mt-1 text-[30px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449] sm:text-[30px]">Welcome back, {profile.full_name || 'Teacher'}.</h1>
           <p className="mt-2 text-[15px] leading-6 text-slate-600">Here is your current teaching operations overview.</p>
         </div>
-
-        <div className="mt-4 flex justify-end">
-          <div className="flex flex-wrap items-center gap-2">
-            <DatePicker ariaLabel="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
-            <DatePicker ariaLabel="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
-          </div>
-        </div>
-        {dateRange.from > dateRange.to && <p className="mt-3 text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>}
       </header>
+
+      <section className="teacher-period-filter flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5" aria-label="Reporting period">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Reporting Period</p>
+          <p className="mt-0.5 text-sm text-slate-600">Select the date range for your teaching activity.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <DatePicker ariaLabel="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
+          <DatePicker ariaLabel="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
+        </div>
+      </section>
+
+      {dateRange.from > dateRange.to && <p className="text-sm font-semibold text-rose-700">From Date cannot be later than To Date.</p>}
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <div key={item} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="h-4 w-24 animate-pulse rounded bg-slate-200" /><div className="mt-4 h-8 w-20 animate-pulse rounded bg-slate-200" /></div>)}</div>
