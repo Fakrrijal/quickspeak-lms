@@ -65,7 +65,7 @@ export function EnterprisePortalShell({
       <div className="flex">
         <aside
           className={[
-            'hidden w-[248px] shrink-0 self-start border-r border-slate-200 bg-white lg:block',
+            'hidden w-[240px] shrink-0 self-start border-r border-slate-200 bg-white lg:block',
             isStudentPortal ? 'self-stretch' : '',
           ].join(' ')}
         >
@@ -80,7 +80,7 @@ export function EnterprisePortalShell({
               onClick={() => setIsMenuOpen(false)}
               className="absolute inset-0 bg-slate-950/20"
             />
-            <aside className="relative h-full w-[min(248px,85vw)] border-r border-slate-200 bg-white shadow-sm">
+            <aside className="relative h-full w-[min(240px,85vw)] border-r border-slate-200 bg-white shadow-sm">
               <PortalSidebar
                 id="portal-navigation-mobile"
                 role={role}
