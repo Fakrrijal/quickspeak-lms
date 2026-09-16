@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { AccountSecurity } from '../../components/AccountSecurity'
 import { ProfileForm } from '../../components/ProfileForm'
 import { useProfile } from '../../hooks/useProfile'
 import { useAuthContext } from '../../providers/AuthProvider'
@@ -33,7 +32,7 @@ function StudentProfilePage() {
       <header className="border-b border-slate-200 pb-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Profile</p>
         <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#102449]">Profile</h1>
-        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Manage your contact details, profile photo, and account security.</p>
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Manage your contact details and profile photo.</p>
       </header>
 
       {error && (
@@ -51,8 +50,6 @@ function StudentProfilePage() {
         </div>
         <ProfileForm avatarUrl={avatarUrl} profile={profile} saving={saving} levelTitle="Current Level" levelLabel={currentLevel} onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })} />
       </section>
-
-      <AccountSecurity email={user?.email ?? profile?.email ?? null} />
     </section>
   )
 }
