@@ -150,6 +150,19 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-
   font-weight: 700 !important;
 }
 
+/* Fee summary strip: keep the three reconciliation cards informative but compact. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section:last-child {
+  padding: 1rem !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section:last-child > div {
+  padding: 0.75rem !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section:last-child p {
+  line-height: 1.35 !important;
+}
+
 /* Shared pagination language. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .border-t.border-slate-200,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .border-t.border-slate-200,
