@@ -6,6 +6,45 @@
   font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Welcome area: match the Student Portal palette while keeping the teacher dashboard operational. */
+.teacher-dashboard-v2 > header {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #dce7f5 !important;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #edf5ff 0%, #f8fbff 72%, #ffffff 100%);
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035), 0 10px 24px rgb(47 102 208 / 0.045);
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.teacher-dashboard-v2 > header::after {
+  content: '';
+  position: absolute;
+  top: -4.5rem;
+  right: -2.5rem;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(47 102 208 / 0.10) 0%, rgb(47 102 208 / 0.035) 48%, transparent 72%);
+  pointer-events: none;
+}
+
+.teacher-dashboard-v2 > header > div:first-child {
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep the date controls visually connected to the welcome card without overpowering it. */
+.teacher-dashboard-v2 > header > div:nth-child(2) {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.125rem;
+  padding: 0.375rem;
+  border: 1px solid #dce7f5;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.72);
+}
+
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) section[class~="xl:grid-cols-4"] > article:nth-child(-n+2) > div > span {
   display: none;
 }
@@ -16,4 +55,15 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="pa
 
 .teacher-dashboard-v2 .qs-date-input {
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .teacher-dashboard-v2 > header {
+    border-radius: 14px;
+    padding: 1rem 1.125rem 1.125rem;
+  }
+
+  .teacher-dashboard-v2 > header > div:nth-child(2) {
+    margin-top: 1rem;
+  }
 }
