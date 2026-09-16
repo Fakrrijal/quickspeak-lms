@@ -62,6 +62,56 @@
   box-shadow: 0 2px 6px rgb(15 35 70 / 0.055);
 }
 
+/* Premium summary icons: custom QuickSpeak treatment, while retaining the semantic blue/green palette. */
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg,
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg {
+  position: relative;
+  width: 44px !important;
+  height: 44px !important;
+  flex: 0 0 44px;
+  border: 1px solid transparent;
+  box-shadow: 0 5px 14px rgb(15 35 70 / 0.08);
+  overflow: hidden;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg {
+  background: linear-gradient(145deg, #eff6ff 0%, #dfeaff 100%) !important;
+  border-color: #c9dbff;
+  color: #2458c6 !important;
+}
+
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg {
+  background: linear-gradient(145deg, #effcf7 0%, #ddf7ec 100%) !important;
+  border-color: #bfead7;
+  color: #07845f !important;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg svg,
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg svg {
+  display: none;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg::before,
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 25px;
+  height: 25px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232458c6' stroke-width='1.85' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 5.75A2.75 2.75 0 0 1 7.25 3H19v15.75H7.25A2.75 2.75 0 0 0 4.5 21.5v-15.75Z'/%3E%3Cpath d='M4.5 6v15.5'/%3E%3Cpath d='M8.5 7.25h6.25M8.5 10.75h5.25'/%3E%3Cpath d='m16.25 5.1.55 1.35 1.35.55-1.35.55-.55 1.35-.55-1.35-1.35-.55 1.35-.55.55-1.35Z'/%3E%3C/svg%3E");
+}
+
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2307845f' stroke-width='1.85' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2.5'/%3E%3Cpath d='M8 3v4M16 3v4M3.5 9.5h17'/%3E%3Cpath d='m8 14 2.1 2.1L16.5 10'/%3E%3Cpath d='M7.5 12.5h.01M12 12.5h.01'/%3E%3C/svg%3E");
+}
+
 /* Keep the status badge subordinate to the Level headline. */
 .qs-student-portal .student-primary-surface span.bg-blue-50.text-blue-700 {
   background: #f4f7ff !important;
