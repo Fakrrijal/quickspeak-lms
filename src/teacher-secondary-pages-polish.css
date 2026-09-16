@@ -10,6 +10,9 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   --qs-meta: 12px;
   --qs-border: #dfe6ef;
   --qs-navy: #102449;
+  --qs-section-gap: 32px;
+  --qs-card-padding: 24px;
+  --qs-title-description-gap: 8px;
 }
 
 /* Shared page header. */
@@ -37,6 +40,23 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > header p:not(:first-child) {
   font-size: var(--qs-body) !important;
   line-height: 1.55 !important;
+  margin-top: var(--qs-title-description-gap) !important;
+}
+
+/* Global vertical rhythm for Teacher secondary pages: one consistent 32px separation between major blocks. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > :not([hidden]) ~ :not([hidden]),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > :not([hidden]) ~ :not([hidden]),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > :not([hidden]) ~ :not([hidden]),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--qs-section-gap) !important;
+}
+
+/* Keep stacked content cards from visually merging when the page uses nested section spacing. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > section,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > section,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > section,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section {
+  scroll-margin-top: 24px;
 }
 
 /* Search/filter surfaces should feel like compact controls, not large hero cards. */
