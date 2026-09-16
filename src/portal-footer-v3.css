@@ -27,8 +27,14 @@
   order: 2;
 }
 
-/* Defensive guard: a portal shell must never present the same footer twice. */
-.qs-portal-shell > footer + footer {
+/* EnterprisePortalShell owns the canonical footer. Prevent any route-level footer
+   rendered inside the portal content from duplicating it. */
+.qs-portal-shell #portal-content footer {
+  display: none !important;
+}
+
+/* Defensive guard for accidental duplicate shell footers. */
+.qs-portal-shell > footer ~ footer {
   display: none !important;
 }
 
