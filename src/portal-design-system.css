@@ -106,6 +106,54 @@
   line-height: 1.2;
 }
 
+/* Admin typography explicitly follows the Teacher portal scale. */
+.qs-admin-portal main > div > section > h2,
+.qs-admin-portal main > div > section > div > h2 {
+  font-size: 30px !important;
+  line-height: 1.15 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--qs-navy) !important;
+}
+
+.qs-admin-portal main > div > section h3 {
+  font-size: 20px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.qs-admin-portal main > div > section p,
+.qs-admin-portal main > div > section label,
+.qs-admin-portal main > div > section td,
+.qs-admin-portal main > div > section th,
+.qs-admin-portal main > div > section li {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+.qs-admin-portal main > div > section table th {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.qs-admin-portal main > div > section table td {
+  font-size: 14px !important;
+}
+
+.qs-admin-portal main > div > section input,
+.qs-admin-portal main > div > section select,
+.qs-admin-portal main > div > section button,
+.qs-admin-portal main > div > section a {
+  font-size: 14px !important;
+}
+
+.qs-admin-portal main > div > section [class*='text-3xl'] {
+  font-size: 32px !important;
+  line-height: 1.15 !important;
+}
+
 @media (max-width: 767px) {
   .qs-portal-shell :where(h1) {
     font-size: 28px;
@@ -121,5 +169,14 @@
 
   .qs-portal-shell [data-portal-sidebar] a {
     min-height: 40px;
+  }
+
+  .qs-admin-portal main > div > section > h2,
+  .qs-admin-portal main > div > section > div > h2 {
+    font-size: 28px !important;
+  }
+
+  .qs-admin-portal main > div > section h3 {
+    font-size: 19px !important;
   }
 }
