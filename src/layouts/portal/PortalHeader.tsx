@@ -112,7 +112,7 @@ export function PortalHeader({
                   </span>
                 )}
                 <span className="hidden min-w-0 sm:block">
-                  <span className="block truncate text-sm font-semibold text-slate-900">{userName}</span>
+                  <span className="block truncate text-base font-semibold text-slate-900">{userName}</span>
                   <span className="block text-xs text-slate-500">{roleLabel}</span>
                 </span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className={`size-4 shrink-0 text-slate-500 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}>
@@ -157,7 +157,7 @@ export function PortalHeader({
           ) : (
             <div className="flex items-center gap-3">
               <div className="hidden min-w-0 text-right sm:block">
-                <p className="truncate text-sm font-medium text-slate-900">{userName}</p>
+                <p className="truncate text-base font-semibold text-slate-900">{userName}</p>
                 <p className="text-xs text-slate-500">{roleLabel}</p>
               </div>
               <button
