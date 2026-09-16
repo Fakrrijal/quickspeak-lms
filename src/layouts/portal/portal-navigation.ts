@@ -102,6 +102,7 @@ export function isPortalPath(pathname: string) {
     || pathname === '/student/ebooks'
     || pathname === '/student/attendance'
     || pathname === '/student/profile'
+    || pathname === '/student/change-password'
     || pathname === '/student-payment'
     || pathname === '/notifications'
     || pathname.startsWith('/student/ebooks/')
@@ -113,6 +114,7 @@ export function isPortalPath(pathname: string) {
     || pathname === '/teacher/attendance'
     || pathname === '/teacher/fee'
     || pathname === '/teacher/profile'
+    || pathname === '/teacher/change-password'
     || pathname === '/admin'
     || pathname.startsWith('/admin/')
   )
