@@ -13,12 +13,11 @@ function formatPackageType(value: string) {
 
 function Pagination({ page, totalItems, onPageChange }: { page: number; totalItems: number; onPageChange: (page: number) => void }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
-  if (totalItems <= PAGE_SIZE) return null
 
   return (
     <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs font-semibold text-slate-500">
-        Showing {Math.min((page - 1) * PAGE_SIZE + 1, totalItems)}–{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems}
+        Showing {totalItems === 0 ? 0 : Math.min((page - 1) * PAGE_SIZE + 1, totalItems)}–{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems}
       </p>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => onPageChange(page - 1)} disabled={page === 1} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
