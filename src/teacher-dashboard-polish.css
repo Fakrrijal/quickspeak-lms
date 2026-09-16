@@ -32,15 +32,15 @@
   z-index: 1;
 }
 
-/* Keep the date controls visually connected to the welcome card without leaving excessive vertical space. */
+/* Date controls sit directly on the welcome surface; only the individual inputs keep a white field. */
 .teacher-dashboard-v2 > header > div:nth-child(2) {
   position: relative;
   z-index: 1;
   margin-top: 0.75rem;
-  padding: 0.25rem;
-  border: 1px solid #dce7f5;
-  border-radius: 12px;
-  background: rgb(255 255 255 / 0.72);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) section[class~="xl:grid-cols-4"] > article:nth-child(-n+2) > div > span {
