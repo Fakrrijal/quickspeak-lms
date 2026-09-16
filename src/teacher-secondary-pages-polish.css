@@ -1,0 +1,175 @@
+/* QuickSpeak Teacher secondary pages: shared typography, density, surfaces, and table language. */
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) {
+  --qs-page-title: 30px;
+  --qs-section-title: 20px;
+  --qs-body: 15px;
+  --qs-meta: 12px;
+  --qs-border: #dfe6ef;
+  --qs-navy: #102449;
+}
+
+/* Shared page header. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > header,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > header,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > header,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > header {
+  border-color: var(--qs-border) !important;
+  padding-bottom: 1rem !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > header h1,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > header h1,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > header h1,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > header h1 {
+  font-size: var(--qs-page-title) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.025em !important;
+  color: var(--qs-navy) !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > header p:not(:first-child),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > header p:not(:first-child),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > header p:not(:first-child),
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > header p:not(:first-child) {
+  font-size: var(--qs-body) !important;
+  line-height: 1.55 !important;
+}
+
+/* Search/filter surfaces should feel like compact controls, not large hero cards. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > form,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > section,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section {
+  border-color: var(--qs-border) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035) !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form {
+  position: static !important;
+  backdrop-filter: none !important;
+  padding: 0.75rem !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form input,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form button {
+  height: 42px !important;
+}
+
+/* Section headings. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div h2,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div h2,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div h2,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div h2 {
+  font-size: var(--qs-section-title) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.015em !important;
+}
+
+/* Common data surfaces. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .overflow-hidden.rounded-xl,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .overflow-hidden.rounded-xl,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div .overflow-hidden.rounded-xl,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div .overflow-hidden.rounded-xl {
+  border-color: var(--qs-border) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035) !important;
+}
+
+/* Table headers. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .bg-slate-50,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .bg-slate-50,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div thead {
+  background: #f8fafc !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .uppercase.tracking-\[0\.12em\],
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .uppercase.tracking-\[0\.12em\],
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div thead th {
+  font-size: 11px !important;
+  letter-spacing: 0.12em !important;
+}
+
+/* Keep desktop rows compact and easy to scan. */
+@media (min-width: 768px) {
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button {
+    min-height: 58px;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div table td,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div table th {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Premium row action icon: replace the plain text arrow with a compact QuickSpeak control. */
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button > span:last-child,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button > span:last-child {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cfe0fb;
+    border-radius: 8px;
+    background: #f7faff;
+    color: #2f66d0;
+    font-size: 0 !important;
+    line-height: 1;
+    transition: all 160ms ease;
+  }
+
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button:hover > span:last-child,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button:hover > span:last-child {
+    border-color: #b9cff7;
+    background: #edf5ff;
+    transform: translateX(1px);
+  }
+
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button > span:last-child::after,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button > span:last-child::after {
+    content: '→';
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+/* Attendance action buttons should read as compact secondary actions. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div table button {
+  min-height: 36px !important;
+  border-radius: 9px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+/* Shared pagination language. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .border-t.border-slate-200,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .border-t.border-slate-200,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div .border-t.border-slate-200,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div .border-t.border-slate-200 {
+  border-color: var(--qs-border) !important;
+}
+
+/* Metric/support cards on Fee and Attendance pages follow the same surface treatment. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div .rounded-2xl.border,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div .rounded-2xl.border {
+  border-color: var(--qs-border) !important;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035) !important;
+}
+
+@media (max-width: 767px) {
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > header h1,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > header h1,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > header h1,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > header h1 {
+    font-size: 28px !important;
+  }
+}
