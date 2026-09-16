@@ -43,6 +43,11 @@
   background: transparent;
 }
 
+/* Give the separate reporting-period card a deliberate breathing space below the welcome card. */
+.teacher-dashboard-v2 .teacher-period-filter {
+  margin-top: 0.5rem;
+}
+
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) section[class~="xl:grid-cols-4"] > article:nth-child(-n+2) > div > span {
   display: none;
 }
@@ -63,5 +68,9 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="pa
 
   .teacher-dashboard-v2 > header > div:nth-child(2) {
     margin-top: 0.625rem;
+  }
+
+  .teacher-dashboard-v2 .teacher-period-filter {
+    margin-top: 0.375rem;
   }
 }
