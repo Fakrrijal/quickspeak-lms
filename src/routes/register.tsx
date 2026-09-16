@@ -84,6 +84,7 @@ function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  const [showExistingEmailRecovery, setShowExistingEmailRecovery] = useState(false)
   const [studentStartingLevelId, setStudentStartingLevelId] = useState('')
   const [studentClassType, setStudentClassType] = useState<'private' | 'semi_private'>('private')
   const [teacherClassType, setTeacherClassType] = useState<'private' | 'semi_private'>('private')
@@ -132,7 +133,9 @@ function RegisterPage() {
     setLoading(true)
     setError(null)
     setSuccess(false)
-    setResendSuccess(false)
+    
+    setShowExistingEmailRecovery(false)
+setResendSuccess(false)
 
     try {
       if (role === 'student') {
@@ -170,8 +173,16 @@ function RegisterPage() {
         throw new Error('Registration could not be completed')
       }
 
+      
+      if (Array.isArray(signUpResult.user.identities) && signUpResult.user.identities.length === 0) {
+        setShowExistingEmailRecovery(true)
+        setError(null)
+        setSuccess(false)
+        return
+      }
+
       setSuccess(true)
-    } catch (err) {
+} catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
       await reportSystemError({
         feature: 'REGISTER',
@@ -437,6 +448,34 @@ function RegisterPage() {
                 </div>
               </div>
             </>
+          )}
+
+                    {showExistingEmailRecovery && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-bold text-amber-900">Email sudah terdaftar</p>
+              <p className="mt-1 text-sm leading-5 text-amber-800">
+                Akun dengan email ini sudah pernah dibuat. Jika email Anda belum diverifikasi, kirim ulang email verifikasi. Jika sudah diverifikasi, silakan Login.
+              </p>
+              <button
+                type="button"
+                onClick={() => void handleResendConfirmation()}
+                disabled={resendLoading}
+                className="mt-3 h-11 w-full rounded-lg border border-amber-300 bg-white px-4 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {resendLoading ? 'Mengirim...' : 'Kirim Ulang Email Verifikasi'}
+              </button>
+              {resendSuccess && (
+                <p className="mt-2 text-sm text-green-700">
+                  Email verifikasi baru sudah dikirim. Silakan periksa inbox Anda.
+                </p>
+              )}
+              <Link
+                to="/login"
+                className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-[#1b5dd7] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#154fb7]"
+              >
+                Login
+              </Link>
+            </div>
           )}
 
           {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">{error}</div>}
