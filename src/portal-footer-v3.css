@@ -1,11 +1,13 @@
-/* QuickSpeak Student Portal footer: keep support links and copyright centered as one balanced cluster. */
-.qs-student-portal > footer {
+/* QuickSpeak portal footer polish. */
+.qs-student-portal > footer,
+.qs-portal-shell > footer {
   margin-top: 0.875rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
 }
 
-.qs-student-portal > footer > div {
+.qs-student-portal > footer > div,
+.qs-portal-shell > footer > div {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
@@ -13,18 +15,26 @@
   line-height: 1rem;
 }
 
-.qs-student-portal > footer > div > nav {
+.qs-student-portal > footer > div > nav,
+.qs-portal-shell > footer > div > nav {
   order: 1;
   column-gap: 1rem;
   row-gap: 0.25rem;
 }
 
-.qs-student-portal > footer > div > div {
+.qs-student-portal > footer > div > div,
+.qs-portal-shell > footer > div > div {
   order: 2;
 }
 
+/* Defensive guard: a portal shell must never present the same footer twice. */
+.qs-portal-shell > footer + footer {
+  display: none !important;
+}
+
 @media (min-width: 640px) {
-  .qs-student-portal > footer > div {
+  .qs-student-portal > footer > div,
+  .qs-portal-shell > footer > div {
     flex-direction: row !important;
     gap: 0.75rem;
   }
