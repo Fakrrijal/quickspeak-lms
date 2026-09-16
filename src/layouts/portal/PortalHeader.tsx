@@ -27,9 +27,7 @@ function getInitials(userName: string) {
 }
 
 function getProfilePath(role: PortalRole) {
-  if (role === 'student') return '/student/profile'
-  if (role === 'teacher') return '/teacher/profile'
-  return '/admin/dashboard'
+  return role === 'student' ? '/student/profile' : '/teacher/profile'
 }
 
 export function PortalHeader({
@@ -44,7 +42,8 @@ export function PortalHeader({
 }: PortalHeaderProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
-  const profilePath = getProfilePath(role)
+  const isProfileMenuEnabled = role === 'student' || role === 'teacher'
+  const profilePath = isProfileMenuEnabled ? getProfilePath(role) : null
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1)
 
   useEffect(() => {
@@ -62,6 +61,10 @@ export function PortalHeader({
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
+
+  useEffect(() => {
+    if (!isProfileMenuEnabled) setIsProfileMenuOpen(false)
+  }, [isProfileMenuEnabled])
 
   const handleLogout = () => {
     setIsProfileMenuOpen(false)
@@ -92,64 +95,81 @@ export function PortalHeader({
           {logoutError && <p role="alert" className="hidden text-sm text-red-700 md:block">{logoutError}</p>}
           <NotificationCenter />
 
-          <div ref={profileMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setIsProfileMenuOpen((open) => !open)}
-              aria-haspopup="menu"
-              aria-expanded={isProfileMenuOpen}
-              className="inline-flex max-w-[min(16rem,70vw)] items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="size-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200" />
-              ) : (
-                <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#102449] text-xs font-extrabold text-white">
-                  {getInitials(userName)}
+          {isProfileMenuEnabled ? (
+            <div ref={profileMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsProfileMenuOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={isProfileMenuOpen}
+                className="inline-flex max-w-[min(16rem,70vw)] items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="size-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200" />
+                ) : (
+                  <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#102449] text-xs font-extrabold text-white">
+                    {getInitials(userName)}
+                  </span>
+                )}
+                <span className="hidden min-w-0 sm:block">
+                  <span className="block truncate text-sm font-semibold text-slate-900">{userName}</span>
+                  <span className="block text-xs text-slate-500">{roleLabel}</span>
                 </span>
-              )}
-              <span className="hidden min-w-0 sm:block">
-                <span className="block truncate text-sm font-semibold text-slate-900">{userName}</span>
-                <span className="block text-xs text-slate-500">{roleLabel}</span>
-              </span>
-              <svg aria-hidden="true" viewBox="0 0 24 24" className={`size-4 shrink-0 text-slate-500 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}>
-                <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+                <svg aria-hidden="true" viewBox="0 0 24 24" className={`size-4 shrink-0 text-slate-500 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}>
+                  <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
 
-            {isProfileMenuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl" role="menu">
-                <div className="border-b border-slate-100 px-3 py-2.5 sm:hidden">
-                  <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{roleLabel}</p>
+              {isProfileMenuOpen && profilePath && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl" role="menu">
+                  <div className="border-b border-slate-100 px-3 py-2.5 sm:hidden">
+                    <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{roleLabel}</p>
+                  </div>
+                  <Link
+                    to={profilePath as never}
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    role="menuitem"
+                    className="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#102449]"
+                  >
+                    Profil
+                  </Link>
+                  <a
+                    href={`${profilePath}#account-security-title`}
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    role="menuitem"
+                    className="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#102449]"
+                  >
+                    Ganti Password
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    role="menuitem"
+                    className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </button>
                 </div>
-                <Link
-                  to={profilePath as never}
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  role="menuitem"
-                  className="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#102449]"
-                >
-                  Profil
-                </Link>
-                <a
-                  href={`${profilePath}#account-security-title`}
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  role="menuitem"
-                  className="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-[#102449]"
-                >
-                  Ganti Password
-                </a>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  role="menuitem"
-                  className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="hidden min-w-0 text-right sm:block">
+                <p className="truncate text-sm font-medium text-slate-900">{userName}</p>
+                <p className="text-xs text-slate-500">{roleLabel}</p>
               </div>
-            )}
-          </div>
+              <button
+                type="button"
+                onClick={onLogout}
+                disabled={isLoggingOut}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoggingOut ? 'Logging out...' : 'Logout'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {logoutError && <p role="alert" className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700 md:hidden">{logoutError}</p>}
