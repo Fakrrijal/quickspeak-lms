@@ -54,6 +54,7 @@ export function EnterprisePortalShell({
       <PortalHeader
         role={role}
         userName={userName}
+        avatarUrl={avatarUrl}
         isMenuOpen={isMenuOpen}
         isLoggingOut={isLoggingOut}
         logoutError={logoutError}
@@ -68,7 +69,7 @@ export function EnterprisePortalShell({
             isStudentPortal ? 'self-stretch' : '',
           ].join(' ')}
         >
-          <PortalSidebar role={role} pathname={pathname} userName={userName} avatarUrl={avatarUrl} />
+          <PortalSidebar role={role} pathname={pathname} />
         </aside>
 
         {isMenuOpen && (
@@ -84,8 +85,6 @@ export function EnterprisePortalShell({
                 id="portal-navigation-mobile"
                 role={role}
                 pathname={pathname}
-                userName={userName}
-                avatarUrl={avatarUrl}
                 onNavigate={() => setIsMenuOpen(false)}
               />
             </aside>
