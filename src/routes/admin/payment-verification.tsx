@@ -229,31 +229,31 @@ function AdminPaymentVerificationPage() {
       )}
 
       <div className="mt-8 overflow-hidden rounded-xl border bg-white shadow-sm">
-        <table className="w-full table-fixed divide-y divide-slate-200 text-left text-sm">
+        <table className="w-full table-fixed divide-y divide-slate-200 text-xs">
           <colgroup>
-            <col style={{ width: '24%' }} />
-            <col style={{ width: '16%' }} />
-            <col style={{ width: '11%' }} />
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '10%' }} />
             <col style={{ width: '10%' }} />
             <col style={{ width: '12%' }} />
             <col style={{ width: '12%' }} />
-            <col style={{ width: '15%' }} />
+            <col style={{ width: '14%' }} />
           </colgroup>
           <thead className="bg-slate-50 text-slate-700">
             <tr>
-              <th className="px-3 py-3 font-semibold">Student</th>
-              <th className="px-3 py-3 font-semibold">Invoice</th>
-              <th className="px-3 py-3 font-semibold">Package</th>
-              <th className="px-3 py-3 font-semibold">Amount</th>
-              <th className="px-3 py-3 font-semibold">Submitted</th>
-              <th className="px-3 py-3 font-semibold">Proof</th>
-              <th className="px-3 py-3 font-semibold">Action</th>
+              <th className="px-2 py-2.5 font-semibold">Student</th>
+              <th className="px-2 py-2.5 font-semibold">Invoice</th>
+              <th className="px-2 py-2.5 font-semibold">Package</th>
+              <th className="px-2 py-2.5 font-semibold">Amount</th>
+              <th className="px-2 py-2.5 font-semibold">Submitted</th>
+              <th className="px-2 py-2.5 font-semibold">Proof</th>
+              <th className="px-2 py-2.5 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {isLoading && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-slate-600">
+                <td colSpan={7} className="px-2 py-5 text-slate-600">
                   Loading pending payments...
                 </td>
               </tr>
@@ -261,7 +261,7 @@ function AdminPaymentVerificationPage() {
 
             {!isLoading && payments.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-slate-600">
+                <td colSpan={7} className="px-2 py-5 text-slate-600">
                   There are no pending payment proofs.
                 </td>
               </tr>
@@ -273,36 +273,36 @@ function AdminPaymentVerificationPage() {
 
               return (
                 <tr key={payment.payment_id} className="align-top">
-                  <td className="break-words px-3 py-4">
+                  <td className="break-words px-2 py-2.5">
                     <p className="font-medium text-slate-900">{payment.student_name}</p>
-                    <p className="break-all text-slate-600">{payment.student_email}</p>
+                    <p className="break-words text-slate-600">{payment.student_email}</p>
                   </td>
-                  <td className="break-all px-3 py-4 text-slate-700">{payment.invoice_number}</td>
-                  <td className="break-words px-3 py-4 text-slate-700">{payment.package_type}</td>
-                  <td className="px-3 py-4 text-slate-700">{formatAmount(payment.amount)}</td>
-                  <td className="px-3 py-4 text-slate-700">
+                  <td className="break-words px-2 py-2.5 text-slate-700">{payment.invoice_number}</td>
+                  <td className="break-words px-2 py-2.5 text-slate-700">{payment.package_type}</td>
+                  <td className="px-2 py-2.5 text-slate-700">{formatAmount(payment.amount)}</td>
+                  <td className="px-2 py-2.5 text-slate-700">
                     {formatSubmittedAt(payment.proof_uploaded_at)}
                   </td>
-                  <td className="break-words px-3 py-4">
+                  <td className="break-words px-2 py-2.5">
                     <button
                       type="button"
                       onClick={() => void handleReview(payment)}
                       disabled={isProcessing}
-                      className="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 disabled:opacity-50"
+                      className="rounded-md border border-slate-300 px-2 py-1.5 font-medium text-slate-700 disabled:opacity-50"
                     >
                       Review
                     </button>
-                    <p className="mt-1 break-words text-xs text-slate-500">
+                    <p className="mt-1 break-words text-[11px] leading-4 text-slate-500">
                       {payment.proof_original_filename ?? 'Uploaded proof'}
                     </p>
                   </td>
-                  <td className="px-3 py-4">
-                    <div className="flex flex-wrap gap-2">
+                  <td className="px-2 py-2.5">
+                    <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
                         onClick={() => void handleDecision(payment, 'approve')}
                         disabled={isProcessing}
-                        className="rounded-lg bg-emerald-700 px-3 py-2 font-medium text-white disabled:opacity-50"
+                        className="rounded-md bg-emerald-700 px-2.5 py-1.5 font-medium text-white disabled:opacity-50"
                       >
                         {isProcessing ? 'Processing...' : 'Approve'}
                       </button>
@@ -314,30 +314,30 @@ function AdminPaymentVerificationPage() {
                           setError(null)
                         }}
                         disabled={isProcessing}
-                        className="rounded-lg bg-red-700 px-3 py-2 font-medium text-white disabled:opacity-50"
+                        className="rounded-md bg-red-700 px-2.5 py-1.5 font-medium text-white disabled:opacity-50"
                       >
                         Reject
                       </button>
                     </div>
 
                     {isRejecting && (
-                      <div className="mt-3 w-full min-w-0 space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
-                        <label className="block text-xs font-medium text-slate-700">
+                      <div className="mt-2 w-full min-w-0 space-y-2 rounded-md border border-red-200 bg-red-50 p-2">
+                        <label className="block text-[11px] font-medium text-slate-700">
                           Rejection reason
                           <textarea
                             value={rejectionReason}
                             onChange={(event) => setRejectionReason(event.target.value)}
                             disabled={isProcessing}
-                            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm"
+                            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                             rows={3}
                           />
                         </label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           <button
                             type="button"
                             onClick={() => void handleDecision(payment, 'reject')}
                             disabled={isProcessing || !rejectionReason.trim()}
-                            className="rounded bg-red-700 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+                            className="rounded bg-red-700 px-2.5 py-1.5 text-[11px] font-medium text-white disabled:opacity-50"
                           >
                             Confirm rejection
                           </button>
@@ -348,7 +348,7 @@ function AdminPaymentVerificationPage() {
                               setRejectionReason('')
                             }}
                             disabled={isProcessing}
-                            className="rounded border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700"
+                            className="rounded border border-slate-300 px-2.5 py-1.5 text-[11px] font-medium text-slate-700"
                           >
                             Cancel
                           </button>
