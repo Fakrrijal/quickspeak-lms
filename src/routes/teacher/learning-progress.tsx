@@ -47,14 +47,14 @@ function Pagination({ page, totalItems, onPageChange }: { page: number; totalIte
   const showingStart = totalItems === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const showingEnd = Math.min(page * PAGE_SIZE, totalItems)
   return (
-    <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs font-semibold text-slate-500">Showing {showingStart}–{showingEnd} of {totalItems}</p>
       <nav aria-label="Pagination" className="flex items-center gap-1">
-        <button type="button" aria-label="Previous page" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">‹</button>
+        <button type="button" aria-label="Previous page" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">‹</button>
         {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-          <button key={pageNumber} type="button" aria-label={`Page ${pageNumber}`} aria-current={page === pageNumber ? 'page' : undefined} onClick={() => onPageChange(pageNumber)} className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium ${page === pageNumber ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{pageNumber}</button>
+          <button key={pageNumber} type="button" aria-label={`Page ${pageNumber}`} aria-current={page === pageNumber ? 'page' : undefined} onClick={() => onPageChange(pageNumber)} className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-sm font-medium ${page === pageNumber ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{pageNumber}</button>
         ))}
-        <button type="button" aria-label="Next page" onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">›</button>
+        <button type="button" aria-label="Next page" onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">›</button>
       </nav>
     </div>
   )
@@ -65,7 +65,6 @@ function buildStudentSummaries(rows: TeacherLearningProgressRow[]) {
 
   for (const row of rows) {
     const existing = students.get(row.student_id)
-
     if (!existing) {
       students.set(row.student_id, {
         studentId: row.student_id,
@@ -80,13 +79,8 @@ function buildStudentSummaries(rows: TeacherLearningProgressRow[]) {
 
     if (row.completed_at && row.chapter_number !== null && row.chapter_title) {
       const existingCompletion = rows.find(
-        (candidate) =>
-          candidate.student_id === existing.studentId &&
-          candidate.chapter_number === existing.latestChapterNumber &&
-          candidate.chapter_title === existing.latestChapterTitle &&
-          candidate.completed_at,
+        (candidate) => candidate.student_id === existing.studentId && candidate.chapter_number === existing.latestChapterNumber && candidate.chapter_title === existing.latestChapterTitle && candidate.completed_at,
       )?.completed_at
-
       if (!existingCompletion || String(row.completed_at) > String(existingCompletion)) {
         existing.latestChapterNumber = row.chapter_number
         existing.latestChapterTitle = row.chapter_title
@@ -114,12 +108,7 @@ function buildLevels(rows: TeacherLearningProgressRow[], studentId: string | nul
     }
 
     if (row.chapter_id && row.chapter_number !== null && row.chapter_title) {
-      level.chapters.push({
-        id: row.chapter_id,
-        number: row.chapter_number,
-        title: row.chapter_title,
-        completedAt: row.completed_at,
-      })
+      level.chapters.push({ id: row.chapter_id, number: row.chapter_number, title: row.chapter_title, completedAt: row.completed_at })
     }
 
     levelMap.set(row.level_number, level)
@@ -168,7 +157,6 @@ function TeacherLearningProgressPage() {
     let cancelled = false
     setLoading(true)
     setError(null)
-
     getMyTeacherLearningProgress(activeSearch)
       .then((data) => {
         if (cancelled) return
@@ -183,7 +171,6 @@ function TeacherLearningProgressPage() {
         setError(loadError instanceof Error ? loadError.message : 'Unable to load learning progress')
         setLoading(false)
       })
-
     return () => { cancelled = true }
   }, [activeSearch, canLoad])
 
@@ -198,9 +185,7 @@ function TeacherLearningProgressPage() {
   const levels = useMemo(() => buildLevels(rows, selectedStudentId), [rows, selectedStudentId])
   const activeLevel = levels.find((level) => level.levelNumber === selectedLevelNumber) ?? null
   const latestSavedAchievement = useMemo(() => {
-    const completed = rows
-      .filter((row) => row.student_id === selectedStudentId && row.material_id && row.completed_at)
-      .sort((a, b) => String(b.completed_at).localeCompare(String(a.completed_at)))
+    const completed = rows.filter((row) => row.student_id === selectedStudentId && row.material_id && row.completed_at).sort((a, b) => String(b.completed_at).localeCompare(String(a.completed_at)))
     return completed[0] ?? null
   }, [rows, selectedStudentId])
 
@@ -286,48 +271,48 @@ function TeacherLearningProgressPage() {
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <header className="border-b border-slate-200 pb-5">
+    <div className="mx-auto max-w-7xl space-y-4">
+      <header className="border-b border-slate-200 pb-4">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Learning Progress</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Select a student, open the level, then save each completed chapter.</p>
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Select a student, open the level, then save each completed chapter.</p>
       </header>
 
-      <form onSubmit={submitSearch} className="sticky top-0 z-20 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center">
+      <form onSubmit={submitSearch} className="sticky top-0 z-20 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
           <label className="sr-only" htmlFor="teacher-learning-progress-search">Search student name</label>
-          <input id="teacher-learning-progress-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student name..." className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+          <input id="teacher-learning-progress-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student name..." className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
         </div>
-        <button type="submit" className="h-11 rounded-xl bg-[#102449] px-5 text-sm font-bold text-white transition hover:bg-[#17325f]">Search</button>
-        {(activeSearch || search) && <button type="button" onClick={clearSearch} className="h-11 rounded-xl border border-slate-300 px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Clear</button>}
+        <button type="submit" className="h-10 rounded-xl bg-[#102449] px-4 text-sm font-bold text-white transition hover:bg-[#17325f]">Search</button>
+        {(activeSearch || search) && <button type="button" onClick={clearSearch} className="h-10 rounded-xl border border-slate-300 px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Clear</button>}
       </form>
 
       {loading ? (
-        <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">{[1, 2, 3, 4].map((item) => <div key={item} className="h-14 animate-pulse rounded-xl bg-slate-100" />)}</div>
+        <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">{[1, 2, 3, 4].map((item) => <div key={item} className="h-12 animate-pulse rounded-xl bg-slate-100" />)}</div>
       ) : error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900">{error}</div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</div>
       ) : students.length === 0 ? (
-        <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
           <h2 className="text-lg font-bold text-[#102449]">No students found</h2>
           <p className="mt-2 text-sm text-slate-600">Only students in your active teaching groups are shown.</p>
         </section>
       ) : !selectedStudent ? (
         <section>
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
             <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Students</p><h2 className="mt-1 text-xl font-extrabold text-[#102449]">Learning Progress</h2></div>
             <p className="text-sm font-semibold text-slate-500">{visibleStudents.length} student{visibleStudents.length === 1 ? '' : 's'}</p>
           </div>
 
           {visibleStudents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm"><h2 className="text-lg font-bold text-[#102449]">Student not found</h2><p className="mt-2 text-sm text-slate-600">Try another student name.</p></div>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm"><h2 className="text-lg font-bold text-[#102449]">Student not found</h2><p className="mt-2 text-sm text-slate-600">Try another student name.</p></div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="hidden grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_130px_44px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
+              <div className="hidden grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_130px_44px] border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
                 <span>Student</span><span>Latest Progress</span><span>Level</span><span aria-hidden="true" />
               </div>
               <div className="divide-y divide-slate-100">
                 {paginatedStudents.map((student) => (
-                  <button key={student.studentId} type="button" onClick={() => selectStudent(student.studentId)} className="grid w-full grid-cols-1 gap-2 px-4 py-4 text-left transition hover:bg-slate-50 sm:grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_130px_44px] sm:items-center">
+                  <button key={student.studentId} type="button" onClick={() => selectStudent(student.studentId)} className="grid w-full grid-cols-1 gap-1.5 px-4 py-3 text-left transition hover:bg-slate-50 sm:grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_130px_44px] sm:items-center">
                     <span className="min-w-0 truncate text-sm font-bold text-[#102449]">{student.studentName}</span>
                     <span className="min-w-0 truncate text-sm text-slate-600">{student.latestChapterTitle ? `Chapter ${student.latestChapterNumber} — ${student.latestChapterTitle}` : 'Belum ada chapter yang disimpan'}</span>
                     <span className="text-sm font-semibold text-slate-600">Level {student.currentLevelNumber}</span>
@@ -340,35 +325,35 @@ function TeacherLearningProgressPage() {
           )}
         </section>
       ) : !selectedLevelNumber ? (
-        <section className="space-y-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Learning Progress</p>
                 <h2 className="mt-1 text-2xl font-extrabold text-[#102449]">{selectedStudent.studentName}</h2>
                 <p className="mt-1 text-sm text-slate-500">Current level: {selectedStudent.currentLevelName}</p>
               </div>
-              <button type="button" onClick={backToStudents} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to students</button>
+              <button type="button" onClick={backToStudents} className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to students</button>
             </div>
 
             {latestSavedAchievement && (
-              <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-4">
+              <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-3">
                 <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-bold text-[#102449]">{latestSavedAchievement.student_name}</p><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">{latestSavedAchievement.level_name}</span></div>
-                <p className="mt-2 text-sm text-slate-600">Chapter {latestSavedAchievement.chapter_number} — {latestSavedAchievement.chapter_title}</p>
+                <p className="mt-1.5 text-sm text-slate-600">Chapter {latestSavedAchievement.chapter_number} — {latestSavedAchievement.chapter_title}</p>
                 <p className="mt-1 text-sm font-bold text-emerald-700">✓ {latestSavedAchievement.material_title}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">{latestSavedAchievement.teaching_group_name ?? 'Group not available'} · {latestSavedAchievement.teacher_name ?? latestSavedAchievement.teacher_code ?? 'Teacher not available'}</p>
               </div>
             )}
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
               {levels.map((level) => {
                 const unlocked = level.levelNumber <= selectedStudent.currentLevelNumber
                 return (
-                  <button key={level.levelNumber} type="button" disabled={!unlocked} onClick={() => unlocked && selectLevel(level.levelNumber)} className={`rounded-xl border p-4 text-left transition ${!unlocked ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60' : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'}`}>
-                    <div className="flex items-center justify-between gap-3"><span className="text-sm font-bold text-slate-500">Level {level.levelNumber}</span><span className="text-lg" aria-hidden="true">{unlocked ? '→' : '🔒'}</span></div>
-                    {unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">{level.teachingGroupName ?? 'Group not available'} · {level.teacherName ?? level.teacherCode ?? 'Teacher not available'}</p>}
+                  <button key={level.levelNumber} type="button" disabled={!unlocked} onClick={() => unlocked && selectLevel(level.levelNumber)} className={`rounded-xl border p-3.5 text-left transition ${!unlocked ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60' : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50'}`}>
+                    <div className="flex items-center justify-between gap-2.5"><span className="text-sm font-bold text-slate-500">Level {level.levelNumber}</span><span className="text-lg" aria-hidden="true">{unlocked ? '→' : '🔒'}</span></div>
+                    {unlocked && <p className="mt-1.5 text-xs font-semibold text-slate-500">{level.teachingGroupName ?? 'Group not available'} · {level.teacherName ?? level.teacherCode ?? 'Teacher not available'}</p>}
                     {unlocked && <p className="mt-1 text-xs font-semibold text-slate-500">{level.chapters.length} chapters</p>}
-                    {!unlocked && <p className="mt-2 text-xs font-semibold text-slate-500">Not taken yet</p>}
+                    {!unlocked && <p className="mt-1.5 text-xs font-semibold text-slate-500">Not taken yet</p>}
                   </button>
                 )
               })}
@@ -376,30 +361,30 @@ function TeacherLearningProgressPage() {
           </div>
         </section>
       ) : (
-        <section className="space-y-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-200 pb-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{activeLevel?.teachingGroupName ?? 'Group not available'} · {activeLevel?.teacherName ?? activeLevel?.teacherCode ?? 'Teacher not available'}</p>
                 <h3 className="mt-1 text-xl font-extrabold text-[#102449]">Level {activeLevel?.levelNumber}</h3>
                 {activeLevel?.ebookTitle && <p className="mt-1 text-sm text-slate-500">{activeLevel.ebookTitle}</p>}
               </div>
-              <button type="button" onClick={backToLevels} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to levels</button>
+              <button type="button" onClick={backToLevels} className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">← Back to levels</button>
             </div>
 
             {activeLevel?.chapters.length === 0 ? (
-              <p className="mt-5 text-sm text-slate-600">No chapters configured for this level.</p>
+              <p className="mt-4 text-sm text-slate-600">No chapters configured for this level.</p>
             ) : (
-              <div className="mt-5 max-h-[560px] space-y-3 overflow-y-auto pr-2">
+              <div className="mt-4 max-h-[560px] space-y-2.5 overflow-y-auto pr-1">
                 {activeLevel.chapters.map((chapter) => {
                   const saving = savingChapterId === chapter.id
                   return (
-                    <div key={chapter.id} className={`flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${chapter.completedAt ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/60'}`}>
+                    <div key={chapter.id} className={`flex flex-col gap-3 rounded-xl border p-3.5 sm:flex-row sm:items-center sm:justify-between ${chapter.completedAt ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/60'}`}>
                       <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Chapter {chapter.number}</p><p className="mt-1 text-base font-bold text-[#102449]">{chapter.title}</p></div>
                       {chapter.completedAt ? (
-                        <div className="flex shrink-0 items-center gap-2"><span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700">✓ Saved</span><button type="button" disabled={saving} onClick={() => undoChapter(selectedStudent.studentId, chapter.id)} className="rounded-lg border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving...' : 'Undo'}</button></div>
+                        <div className="flex shrink-0 items-center gap-2"><span className="rounded-full bg-emerald-100 px-2.5 py-1.5 text-xs font-bold text-emerald-700">✓ Saved</span><button type="button" disabled={saving} onClick={() => undoChapter(selectedStudent.studentId, chapter.id)} className="rounded-lg border border-emerald-200 bg-white px-3.5 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving...' : 'Undo'}</button></div>
                       ) : (
-                        <button type="button" disabled={saving} onClick={() => saveChapter(selectedStudent.studentId, chapter.id)} className="shrink-0 rounded-lg bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving...' : 'Save'}</button>
+                        <button type="button" disabled={saving} onClick={() => saveChapter(selectedStudent.studentId, chapter.id)} className="shrink-0 rounded-lg bg-[#102449] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving...' : 'Save'}</button>
                       )}
                     </div>
                   )
