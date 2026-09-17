@@ -19,15 +19,21 @@ type SummaryCardProps = {
   label: string
   value: string | number
   detail?: string
+  to: string
 }
 
-function SummaryCard({ label, value, detail }: SummaryCardProps) {
+function SummaryCard({ label, value, detail, to }: SummaryCardProps) {
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-600">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-slate-900">{value}</p>
-      {detail && <p className="mt-2 text-sm text-slate-500">{detail}</p>}
-    </article>
+    <Link
+      to={to}
+      className="group block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <article>
+        <p className="text-sm font-medium text-slate-600">{label}</p>
+        <p className="mt-2 text-3xl font-bold text-slate-900">{value}</p>
+        {detail && <p className="mt-2 text-sm text-slate-500">{detail}</p>}
+      </article>
+    </Link>
   )
 }
 
@@ -70,60 +76,38 @@ function AdminDashboardPage() {
           <section className="mt-8">
             <h3 className="text-lg font-semibold text-slate-900">Students</h3>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <SummaryCard label="Total Students" value={summary.totalStudents} />
-              <SummaryCard label="Active Students" value={summary.activeStudents} />
-              <SummaryCard label="Waiting Students" value={summary.waitingStudents} />
+              <SummaryCard label="Total Students" value={summary.totalStudents} to="/admin" />
+              <SummaryCard label="Active Students" value={summary.activeStudents} to="/admin" />
+              <SummaryCard label="Waiting Students" value={summary.waitingStudents} to="/admin" />
             </div>
           </section>
 
           <section className="mt-8">
             <h3 className="text-lg font-semibold text-slate-900">Teachers</h3>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <SummaryCard label="Total Teachers" value={summary.totalTeachers} />
-              <SummaryCard label="Active Teachers" value={summary.activeTeachers} />
-              <SummaryCard label="Waiting Teachers" value={summary.waitingTeachers} />
+              <SummaryCard label="Total Teachers" value={summary.totalTeachers} to="/admin/teachers" />
+              <SummaryCard label="Active Teachers" value={summary.activeTeachers} to="/admin/teachers" />
+              <SummaryCard label="Waiting Teachers" value={summary.waitingTeachers} to="/admin/waiting-teachers" />
             </div>
           </section>
 
           <section className="mt-8 grid gap-4 lg:grid-cols-3">
-            <SummaryCard label="Active Teaching Groups" value={summary.activeTeachingGroups} />
+            <SummaryCard label="Active Teaching Groups" value={summary.activeTeachingGroups} to="/admin/teaching-groups" />
             <SummaryCard
               label="Enrollments"
               value={summary.approvedEnrollmentsAwaitingAssignment}
               detail={`${summary.pendingPaymentVerifications} payment proof${summary.pendingPaymentVerifications === 1 ? '' : 's'} awaiting verification`}
+              to="/admin/approved-enrollments"
             />
             <SummaryCard
               label="Outstanding Teacher Fees"
               value={formatAmount(dashboard.outstandingTeacherFees)}
               detail={`${dashboard.unpaidTeacherPeriods} unpaid teacher period${dashboard.unpaidTeacherPeriods === 1 ? '' : 's'} this month`}
+              to="/admin/teacher-fees"
             />
           </section>
         </>
       )}
-
-      <section className="mt-10 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-xl font-semibold text-slate-900">Waiting Actions</h3>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link to="/admin" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Waiting Students · View</Link>
-          <Link to="/admin/waiting-teachers" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Waiting Teachers · View</Link>
-          <Link to="/admin/teacher-fees" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teacher Fees · View</Link>
-          <Link to="/admin/teaching-groups" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teaching Groups · View</Link>
-        </div>
-      </section>
-
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-xl font-semibold text-slate-900">Quick Actions</h3>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link to="/admin" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Student Management</Link>
-          <Link to="/admin/waiting-teachers" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Waiting Teachers</Link>
-          <Link to="/admin/teaching-groups" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teaching Groups</Link>
-          <Link to="/admin/approved-enrollments" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Approved Enrollments</Link>
-          <Link to="/admin/enrollment-corrections" className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">Enrollment Corrections</Link>
-          <Link to="/admin/teacher-fees" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Teacher Fees</Link>
-          <Link to="/admin/attendance-reports" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Attendance Reports</Link>
-          <Link to="/admin/system-errors" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">System Errors</Link>
-        </div>
-      </section>
     </section>
   )
 }
