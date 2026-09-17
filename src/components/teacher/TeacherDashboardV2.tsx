@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendance, type TeacherAttendanceMeeting } from '../../services/teacher-attendance.service'
 import { getMyTeacherFeeReport, type MyTeacherFeeReport } from '../../services/teacher-fee.service'
@@ -123,6 +123,13 @@ export function TeacherDashboardV2() {
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
+  const summaryCards = [
+    { label: 'Classes', value: classes, icon: 'group' as const, color: 'text-blue-700', iconBg: 'bg-blue-50', to: '/teacher/teaching-groups' as const },
+    { label: 'Active Students', value: activeStudents, icon: 'users' as const, color: 'text-emerald-700', iconBg: 'bg-emerald-50', to: '/teacher/teaching-groups' as const },
+    { label: 'Total Attendance', value: attendanceCount, icon: 'calendar' as const, color: 'text-violet-700', iconBg: 'bg-violet-50', to: '/teacher/attendance' as const },
+    { label: 'Unpaid Fee', value: formatRupiah(unpaidFee), icon: 'wallet' as const, color: 'text-amber-800', iconBg: 'bg-amber-50', to: '/teacher/fee' as const },
+  ]
+
   return (
     <div className="teacher-dashboard-v2 mx-auto max-w-7xl space-y-4">
       <header className="border-b border-slate-200 pb-5">
@@ -153,17 +160,18 @@ export function TeacherDashboardV2() {
       ) : (
         <>
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              { label: 'Classes', value: classes, icon: 'group' as const, color: 'text-blue-700', iconBg: 'bg-blue-50' },
-              { label: 'Active Students', value: activeStudents, icon: 'users' as const, color: 'text-emerald-700', iconBg: 'bg-emerald-50' },
-              { label: 'Total Attendance', value: attendanceCount, icon: 'calendar' as const, color: 'text-violet-700', iconBg: 'bg-violet-50' },
-              { label: 'Unpaid Fee', value: formatRupiah(unpaidFee), icon: 'wallet' as const, color: 'text-amber-800', iconBg: 'bg-amber-50' },
-            ].map((card) => (
-              <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-                <div className={`flex size-10 items-center justify-center rounded-xl border border-white shadow-sm ${card.iconBg}`}><span className={card.color}><Icon name={card.icon} /></span></div>
-                <p className="mt-4 text-[14px] font-bold text-slate-600">{card.label}</p>
-                <p className="mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449]">{card.value}</p>
-              </article>
+            {summaryCards.map((card) => (
+              <Link
+                key={card.label}
+                to={card.to}
+                className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                <article>
+                  <div className={`flex size-10 items-center justify-center rounded-xl border border-white shadow-sm ${card.iconBg}`}><span className={card.color}><Icon name={card.icon} /></span></div>
+                  <p className="mt-4 text-[14px] font-bold text-slate-600">{card.label}</p>
+                  <p className="mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449]">{card.value}</p>
+                </article>
+              </Link>
             ))}
           </section>
 
