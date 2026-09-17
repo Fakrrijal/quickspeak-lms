@@ -12,6 +12,28 @@ function isActivePath(pathname: string, to: string, activePrefixes: string[] = [
   return pathname === to || activePrefixes.some((prefix) => pathname.startsWith(prefix))
 }
 
+function NavigationIcon({ to }: { to: string }) {
+  const common = 'size-4 shrink-0 fill-none stroke-current stroke-2'
+
+  if (to.includes('ebooks')) {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" /><path d="M4 5.5v16M8 7h8M8 11h8" /></svg>
+  }
+
+  if (to.includes('attendance')) {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" /></svg>
+  }
+
+  if (to.includes('payment')) {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 13h.01" /></svg>
+  }
+
+  if (to.includes('learning')) {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" /><path d="M4 5.5v16" /></svg>
+  }
+
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M4 6.5h16v13H4z" /><path d="m8 6.5 1-3h6l1 3M8 11h8M8 15h5" /></svg>
+}
+
 export function PortalSidebar({
   id,
   role,
@@ -49,13 +71,14 @@ export function PortalSidebar({
                       onClick={onNavigate}
                       aria-current={isActive ? 'page' : undefined}
                       className={[
-                        'flex min-h-10 items-center rounded-lg border-l-2 px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]',
+                        'flex min-h-10 items-center gap-3 rounded-lg border-l-2 px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]',
                         isActive
                           ? 'border-blue-600 bg-[#eaf2ff] text-blue-700'
                           : 'border-transparent text-slate-700 hover:bg-[#f3f7ff] hover:text-[#102449]',
                       ].join(' ')}
                     >
-                      {item.label}
+                      <NavigationIcon to={item.to} />
+                      <span className="min-w-0 truncate">{item.label}</span>
                     </Link>
                   </li>
                 )
