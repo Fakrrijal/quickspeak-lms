@@ -39,14 +39,18 @@ function formatRecordedDateTime(value: string) {
 
 function Pagination({ page, totalItems, onPageChange }: { page: number; totalItems: number; onPageChange: (page: number) => void }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
+  const showingStart = totalItems === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const showingEnd = Math.min(page * PAGE_SIZE, totalItems)
   return (
-    <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs font-semibold text-slate-500">Showing {totalItems === 0 ? 0 : Math.min((page - 1) * PAGE_SIZE + 1, totalItems)}–{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems}</p>
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={() => onPageChange(page - 1)} disabled={page === 1} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
-        <span className="min-w-20 text-center text-xs font-bold text-slate-600">Page {page} of {totalPages}</span>
-        <button type="button" onClick={() => onPageChange(page + 1)} disabled={page === totalPages} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
-      </div>
+    <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs font-semibold text-slate-500">Showing {showingStart}–{showingEnd} of {totalItems}</p>
+      <nav aria-label="Pagination" className="flex items-center gap-1">
+        <button type="button" aria-label="Previous page" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">‹</button>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+          <button key={pageNumber} type="button" aria-label={`Page ${pageNumber}`} aria-current={page === pageNumber ? 'page' : undefined} onClick={() => onPageChange(pageNumber)} className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium ${page === pageNumber ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{pageNumber}</button>
+        ))}
+        <button type="button" aria-label="Next page" onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">›</button>
+      </nav>
     </div>
   )
 }
