@@ -1,0 +1,164 @@
+/* Shared authentication refinements for the registration surface. */
+.auth-register {
+  --qs-navy: #102449;
+  --qs-blue: #1b5dd7;
+  --qs-blue-dark: #154fb7;
+  --qs-border: #e2e8f0;
+  --qs-bg: #f6f8fc;
+}
+
+.auth-register .max-w-md {
+  max-width: 30rem;
+}
+
+.auth-register .max-w-md > div {
+  position: relative;
+  border: 1px solid var(--qs-border);
+  border-radius: 1rem;
+  background: #fff;
+  padding: 2rem;
+  box-shadow: 0 18px 50px rgba(15, 35, 75, 0.08);
+}
+
+.auth-register .max-w-md > div::before {
+  content: "";
+  display: block;
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 0.8rem;
+  background: url('/favicon.svg') center / contain no-repeat;
+}
+
+.auth-register .max-w-md > div > h2 {
+  margin-top: 0;
+  color: var(--qs-navy);
+  text-align: center;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.auth-register .max-w-md > div > p:first-of-type {
+  margin-top: 0.5rem;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-register form {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-register form > div > p,
+.auth-register form label,
+.auth-register form label span {
+  color: #334155;
+}
+
+.auth-register input:not([type='checkbox']),
+.auth-register select {
+  min-height: 3rem;
+  width: 100%;
+  border: 1px solid var(--qs-border);
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #0f172a;
+}
+
+.auth-register input:not([type='checkbox'])::placeholder {
+  color: #94a3b8;
+}
+
+.auth-register input:not([type='checkbox']):focus,
+.auth-register select:focus {
+  border-color: var(--qs-blue);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(27, 93, 215, 0.1);
+}
+
+.auth-register form > div:first-child > div.grid > button,
+.auth-register form button[type='button'] {
+  border-radius: 0.75rem;
+}
+
+.auth-register form > div:first-child > div.grid > button:first-child,
+.auth-register form > div:first-child > div.grid > button:nth-child(2),
+.auth-register form button[type='button'] {
+  transition: 160ms ease;
+}
+
+.auth-register form > button[type='submit'] {
+  min-height: 3rem;
+  border-radius: 0.75rem;
+  background: var(--qs-blue) !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(27, 93, 215, 0.14);
+}
+
+.auth-register form > button[type='submit']:hover {
+  background: var(--qs-blue-dark) !important;
+}
+
+.auth-register .border-red-200,
+.auth-register .bg-red-50,
+.auth-register .border-amber-200,
+.auth-register .bg-amber-50 {
+  border-radius: 0.75rem;
+}
+
+.auth-register .max-w-md > div > p:last-child {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+/* Recovery pages intentionally opt out of legacy auth pseudo-elements. */
+.auth-recovery-page,
+.auth-recovery-page * {
+  position: relative;
+}
+
+.auth-recovery-page label::before,
+.auth-recovery-page label::after,
+.auth-recovery-page input::before,
+.auth-recovery-page input::after,
+.auth-recovery-page form > div::before,
+.auth-recovery-page form > div::after {
+  content: none !important;
+  display: none !important;
+}
+
+.auth-recovery-page .auth-recovery-input {
+  appearance: none;
+  -webkit-appearance: none;
+  text-indent: 0;
+  line-height: 1.25rem;
+}
+
+.auth-recovery-page .auth-recovery-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 640px) {
+  .auth-register {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .auth-register .max-w-md > div {
+    padding: 1.5rem;
+  }
+
+  .auth-recovery-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+}

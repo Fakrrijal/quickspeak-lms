@@ -258,7 +258,7 @@ export function QuickSpeakLanding() {
   }
 
   return (
-    <div id="top" className="min-h-screen overflow-x-hidden bg-[#f6f8fc] text-slate-900 pt-20">
+    <div id="top" className="min-h-screen overflow-x-hidden bg-[#f6f8fc] text-slate-900">
       <PublicHeader />
 
       <main>
@@ -716,7 +716,7 @@ export function QuickSpeakLanding() {
                 className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-[#102449] p-2 text-white shadow-lg transition hover:bg-[#143562] hover:shadow-xl active:scale-95 sm:p-3 md:-right-16 lg:-right-20 focus:outline-none focus:ring-2 focus:ring-[#1b5dd7] focus:ring-offset-2"
               >
                 <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7-7 7" />
                 </svg>
               </button>
 

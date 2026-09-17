@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { AccountSecurity } from '../../components/AccountSecurity'
 import { ProfileForm } from '../../components/ProfileForm'
 import { useProfile } from '../../hooks/useProfile'
 import { useAuthContext } from '../../providers/AuthProvider'
@@ -70,8 +69,6 @@ function TeacherProfilePage() {
           onSave={async (input, avatarFile) => saveProfile({ input, avatarFile })}
         />
       </section>
-
-      <AccountSecurity email={user?.email ?? profile?.email ?? null} />
     </div>
   )
 }

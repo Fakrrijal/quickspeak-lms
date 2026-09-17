@@ -1,0 +1,90 @@
+/* Landing page spacing: header now participates in normal document flow. */
+#top {
+  scroll-margin-top: 0;
+}
+
+/* Keep the baseline Hero composition while making the first viewport slightly denser. */
+#top > main > section:first-child {
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
+
+/* Softer visual transition between the warm copy background and the right-side artwork. */
+#top > main > section:first-child > div:first-of-type::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(250, 248, 245, 0.98) 0%,
+    rgba(250, 248, 245, 0.96) 34%,
+    rgba(250, 248, 245, 0.78) 46%,
+    rgba(250, 248, 245, 0.34) 57%,
+    rgba(250, 248, 245, 0) 68%
+  );
+}
+
+/* Sharper visible hero description for the first viewport. */
+#top > main > section:first-child p:first-of-type {
+  font-size: 0;
+  line-height: 0;
+}
+
+#top > main > section:first-child p:first-of-type::after {
+  content: "Pembelajaran Bahasa Inggris yang terstruktur dalam 4 level, didampingi teacher profesional, untuk membantu siswa belajar dan berbicara dengan lebih percaya diri.";
+  display: block;
+  max-width: 32rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #334155;
+}
+
+/* Keep the four Hero benefits balanced as a two-column desktop grid. */
+#top > main > section:first-child .space-y-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 2.5rem;
+}
+
+/* Keep the visible Hero brand language consistent. */
+#top > main > section:first-child .space-y-4 > div:nth-child(3) > span {
+  font-size: 0;
+}
+
+#top > main > section:first-child .space-y-4 > div:nth-child(3) > span::after {
+  content: "Teacher Profesional";
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+/* Keep the Level Journey and Learning Experience sections connected without overlap. */
+#top > main > section:nth-of-type(3) {
+  padding-bottom: 4rem;
+}
+
+#top > main > section:nth-of-type(4) {
+  padding-top: 4.5rem;
+}
+
+@media (min-width: 1024px) {
+  #top > main > section:first-child {
+    padding-top: 4.5rem;
+    padding-bottom: 4.5rem;
+  }
+
+  #top > main > section:first-child > div:first-of-type::after {
+    background: linear-gradient(
+      90deg,
+      rgba(250, 248, 245, 0.98) 0%,
+      rgba(250, 248, 245, 0.96) 34%,
+      rgba(250, 248, 245, 0.76) 46%,
+      rgba(250, 248, 245, 0.28) 58%,
+      rgba(250, 248, 245, 0) 69%
+    );
+  }
+
+  #top > main > section:first-child .space-y-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

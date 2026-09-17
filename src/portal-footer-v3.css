@@ -1,0 +1,47 @@
+/* QuickSpeak portal footer polish. */
+.qs-student-portal > footer,
+.qs-portal-shell > footer {
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.qs-student-portal > footer > div,
+.qs-portal-shell > footer > div {
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.qs-student-portal > footer > div > nav,
+.qs-portal-shell > footer > div > nav {
+  order: 1;
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+}
+
+.qs-student-portal > footer > div > div,
+.qs-portal-shell > footer > div > div {
+  order: 2;
+}
+
+/* EnterprisePortalShell owns the canonical footer. Prevent any route-level footer
+   rendered inside the portal content from duplicating it. */
+.qs-portal-shell #portal-content footer {
+  display: none !important;
+}
+
+/* Defensive guard for accidental duplicate shell footers. */
+.qs-portal-shell > footer ~ footer {
+  display: none !important;
+}
+
+@media (min-width: 640px) {
+  .qs-student-portal > footer > div,
+  .qs-portal-shell > footer > div {
+    flex-direction: row !important;
+    gap: 0.75rem;
+  }
+}

@@ -1,2 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+@import "./portal-design-system.css";
 @import "./teacher-dashboard-polish.css";
+@import "./auth-pages-polish.css";
+@import "./landing-page-polish.css";

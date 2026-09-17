@@ -1,0 +1,405 @@
+/* QuickSpeak Student Dashboard V3 visual system. Scoped to the student portal only. */
+.qs-student-portal {
+  font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  color: #102449;
+}
+
+.qs-student-portal button,
+.qs-student-portal input,
+.qs-student-portal textarea,
+.qs-student-portal select {
+  font-family: inherit;
+}
+
+/* Welcome area: give the dashboard a calm QuickSpeak-branded opening without introducing a new color system. */
+.qs-student-portal .student-dashboard-shell > div > header {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #dce7f5 !important;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #edf5ff 0%, #f8fbff 72%, #ffffff 100%);
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035), 0 10px 24px rgb(47 102 208 / 0.045);
+  padding: 1.25rem 1.5rem;
+}
+
+.qs-student-portal .student-dashboard-shell > div > header::after {
+  content: '';
+  position: absolute;
+  top: -4.5rem;
+  right: -2.5rem;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(47 102 208 / 0.10) 0%, rgb(47 102 208 / 0.035) 48%, transparent 72%);
+  pointer-events: none;
+}
+
+.qs-student-portal .student-dashboard-shell > div > header > div:first-child {
+  position: relative;
+  z-index: 1;
+}
+
+/* Profile is now accessed from the header account dropdown, so keep the dashboard welcome area single-purpose. */
+.qs-student-portal .student-dashboard-shell > div > header a[href='/student/profile'] {
+  display: none !important;
+}
+
+/* Primary desktop summary row: keep the two summary surfaces aligned. */
+.qs-student-portal main[aria-label='Student learning summary'] {
+  align-items: stretch !important;
+}
+
+.qs-student-portal .student-primary-surface,
+.qs-student-portal .student-secondary-surface {
+  height: 100%;
+  border-color: #dfe6ef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035);
+}
+
+.qs-student-portal .student-primary-surface:hover,
+.qs-student-portal .student-secondary-surface:hover {
+  box-shadow: 0 2px 6px rgb(15 35 70 / 0.055);
+}
+
+/* Premium summary icons: custom QuickSpeak treatment, while retaining the semantic blue/green palette. */
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg,
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg {
+  position: relative;
+  width: 44px !important;
+  height: 44px !important;
+  flex: 0 0 44px;
+  border: 1px solid transparent;
+  box-shadow: 0 5px 14px rgb(15 35 70 / 0.08);
+  overflow: hidden;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg {
+  background: linear-gradient(145deg, #eff6ff 0%, #dfeaff 100%) !important;
+  border-color: #c9dbff;
+  color: #2458c6 !important;
+}
+
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg {
+  background: linear-gradient(145deg, #effcf7 0%, #ddf7ec 100%) !important;
+  border-color: #bfead7;
+  color: #07845f !important;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg svg,
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg svg {
+  display: none;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg::before,
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 25px;
+  height: 25px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.qs-student-portal .student-primary-surface[aria-labelledby='current-learning-title'] [class*='bg-blue-50'].rounded-lg::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232458c6' stroke-width='1.85' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 5.75A2.75 2.75 0 0 1 7.25 3H19v15.75H7.25A2.75 2.75 0 0 0 4.5 21.5v-15.75Z'/%3E%3Cpath d='M4.5 6v15.5'/%3E%3Cpath d='M8.5 7.25h6.25M8.5 10.75h5.25'/%3E%3Cpath d='m16.25 5.1.55 1.35 1.35.55-1.35.55-.55 1.35-.55-1.35-1.35-.55 1.35-.55.55-1.35Z'/%3E%3C/svg%3E");
+}
+
+.qs-student-portal .student-secondary-surface[aria-labelledby='attendance-title'] [class*='bg-emerald-50'].rounded-lg::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2307845f' stroke-width='1.85' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2.5'/%3E%3Cpath d='M8 3v4M16 3v4M3.5 9.5h17'/%3E%3Cpath d='m8 14 2.1 2.1L16.5 10'/%3E%3Cpath d='M7.5 12.5h.01M12 12.5h.01'/%3E%3C/svg%3E");
+}
+
+/* Keep the status badge subordinate to the Level headline. */
+.qs-student-portal .student-primary-surface span.bg-blue-50.text-blue-700 {
+  background: #f4f7ff !important;
+  color: #3154a5 !important;
+}
+
+.qs-student-portal .student-primary-surface h3 {
+  font-size: 26px !important;
+  line-height: 1.15 !important;
+}
+
+.qs-student-portal .student-primary-surface .text-3xl {
+  font-size: 30px !important;
+  line-height: 1 !important;
+}
+
+.qs-student-portal .student-progress-surface {
+  border-color: #dfe6ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035);
+}
+
+.qs-student-portal .student-progress-surface .student-progress-header {
+  min-height: 76px;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-summary {
+  padding-top: 1.125rem;
+  padding-bottom: 1.125rem;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-bar {
+  height: 10px;
+  background: #eef2f6;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-fill {
+  background: #2f66d0;
+}
+
+/* Make the percentage a first-class metric and keep it unmistakably visible. */
+.qs-student-portal .student-progress-surface .text-xl.font-extrabold.text-blue-700 {
+  color: #102449 !important;
+  font-size: 26px !important;
+  line-height: 1 !important;
+}
+
+/* Reserve enough vertical space for the progress metric row so it cannot be covered by the next callout. */
+.qs-student-portal .student-progress-surface .student-progress-summary > div > .grid {
+  min-height: 58px;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-summary > div > .grid > div:last-child {
+  position: relative;
+  z-index: 2;
+  min-height: 44px;
+}
+
+.qs-student-portal .student-progress-surface .student-progress-summary > div > .grid > div:last-child .text-xl.font-extrabold.text-blue-700 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.qs-student-portal .student-next-step {
+  border: 1px solid #dce5f2;
+  border-radius: 12px;
+  background: #f7faff;
+}
+
+.qs-student-portal .student-next-step a {
+  border-radius: 9px;
+}
+
+/* Achievement is semantic, but intentionally quieter than the primary action. */
+.qs-student-portal .student-progress-surface .bg-emerald-50\/70 {
+  background: #f0fdf8 !important;
+}
+
+.qs-student-portal .student-progress-surface .border-emerald-100 {
+  border-color: #d4f2e5 !important;
+}
+
+.qs-student-portal .student-progress-surface .text-emerald-700 {
+  color: #087857 !important;
+}
+
+.qs-student-portal .student-progress-surface .text-emerald-800 {
+  color: #0a6b50 !important;
+}
+
+.qs-student-portal .student-account-strip {
+  border-top: 1px solid #e3e9f2;
+  padding-top: 1rem;
+  color: #64748b;
+}
+
+.qs-student-portal .student-account-strip strong {
+  color: #102449;
+}
+
+.qs-student-portal .student-dashboard-shell h1,
+.qs-student-portal .student-dashboard-shell h2,
+.qs-student-portal .student-dashboard-shell h3 {
+  font-family: inherit;
+}
+
+.qs-student-portal .student-dashboard-shell h1 {
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.qs-student-portal .student-dashboard-shell h2 {
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.qs-student-portal .student-dashboard-shell h3 {
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.qs-student-portal .student-dashboard-shell .text-sm {
+  line-height: 1.55;
+}
+
+/* Student Learning page: reuse the dashboard enterprise surface treatment. */
+.qs-student-portal [aria-labelledby='student-progress-title'] {
+  border-color: #dfe6ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035);
+}
+
+.qs-student-portal [aria-labelledby='student-progress-title'] > div:first-child {
+  min-height: 76px;
+}
+
+.qs-student-portal [aria-labelledby='student-progress-title'] #student-progress-title {
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* Remove the nested scroll container that caused cramped chapter cards. */
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+/* Historical level groups stay calm and compact, with a clear chapter rhythm. */
+.qs-student-portal #student-progress-content > div.mt-6 > section {
+  border-color: #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div {
+  gap: 0.75rem;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div {
+  min-height: 92px;
+  border-radius: 10px;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div.border-emerald-100 {
+  background: #f0fdf8 !important;
+  border-color: #d4f2e5 !important;
+}
+
+.qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div.border-slate-200 {
+  background: #fff;
+}
+
+/* Align My Learning status language with the dashboard's restrained semantic palette. */
+.qs-student-portal [aria-labelledby='student-progress-title'] .text-blue-700 {
+  color: #3154a5;
+}
+
+/* My Learning terminology: preserve accessible DOM text while presenting the canonical product label. */
+.qs-student-portal section:has(+ section[aria-labelledby='student-progress-title']) > div:first-child > div > div:first-child > p:first-child {
+  color: transparent !important;
+  position: relative;
+}
+
+.qs-student-portal section:has(+ section[aria-labelledby='student-progress-title']) > div:first-child > div > div:first-child > p:first-child::after {
+  content: 'CURRENT LEVEL';
+  color: #64748b;
+  position: absolute;
+  inset: 0;
+}
+
+/* Highlight the first incomplete chapter as the student's next learning target. */
+.qs-student-portal section[aria-labelledby='student-progress-title'] [id^='student-level-'][id$='-chapters'] > div > div:nth-child(1 of .border-slate-200.bg-white) {
+  position: relative;
+  border-color: #b9cff7 !important;
+  background: #f7faff !important;
+  box-shadow: inset 3px 0 0 #2f66d0;
+}
+
+.qs-student-portal section[aria-labelledby='student-progress-title'] [id^='student-level-'][id$='-chapters'] > div > div:nth-child(1 of .border-slate-200.bg-white)::after {
+  content: 'NEXT';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 5px;
+  background: #e8f0ff;
+  padding: 3px 6px;
+  color: #3154a5;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+/* Attendance table: keep the enterprise table compact on desktop without sacrificing mobile usability. */
+@media (min-width: 1024px) {
+  .qs-student-portal #attendance-records-content .overflow-x-auto {
+    overflow-x: visible !important;
+  }
+
+  .qs-student-portal #attendance-records-content table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed;
+  }
+
+  .qs-student-portal #attendance-records-content table th,
+  .qs-student-portal #attendance-records-content table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+  }
+
+  .qs-student-portal #attendance-records-content table th:nth-child(1),
+  .qs-student-portal #attendance-records-content table td:nth-child(1) { width: 12%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(2),
+  .qs-student-portal #attendance-records-content table td:nth-child(2) { width: 13%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(3),
+  .qs-student-portal #attendance-records-content table td:nth-child(3) { width: 15%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(4),
+  .qs-student-portal #attendance-records-content table td:nth-child(4) { width: 8%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(5),
+  .qs-student-portal #attendance-records-content table td:nth-child(5) { width: 12%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(6),
+  .qs-student-portal #attendance-records-content table td:nth-child(6) { width: 11%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(7),
+  .qs-student-portal #attendance-records-content table td:nth-child(7) { width: 16%; }
+  .qs-student-portal #attendance-records-content table th:nth-child(8),
+  .qs-student-portal #attendance-records-content table td:nth-child(8) { width: 13%; }
+
+  .qs-student-portal #attendance-records-content table th:nth-child(7),
+  .qs-student-portal #attendance-records-content table td:nth-child(7),
+  .qs-student-portal #attendance-records-content table th:nth-child(8),
+  .qs-student-portal #attendance-records-content table td:nth-child(8) {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .qs-student-portal .student-dashboard-shell h1 {
+    font-size: 28px;
+  }
+
+  .qs-student-portal .student-dashboard-shell > div > header {
+    border-radius: 14px;
+    padding: 1rem 1.125rem;
+  }
+
+  .qs-student-portal main[aria-label='Student learning summary'] {
+    align-items: initial !important;
+  }
+
+  .qs-student-portal .student-primary-surface,
+  .qs-student-portal .student-secondary-surface {
+    height: auto;
+  }
+
+  .qs-student-portal #student-progress-content [id^='student-level-'][id$='-chapters'] > div > div {
+    min-height: 84px;
+  }
+}

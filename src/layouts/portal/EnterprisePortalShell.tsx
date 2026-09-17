@@ -3,6 +3,8 @@ import { PortalHeader } from './PortalHeader'
 import { PortalSidebar } from './PortalSidebar'
 import type { PortalRole } from './portal-navigation'
 import { PortalFooter } from '../../components/portal/PortalFooter'
+import '../../student-dashboard-enterprise.css'
+import '../../portal-footer-v3.css'
 
 type EnterprisePortalShellProps = {
   role: PortalRole
@@ -27,6 +29,7 @@ export function EnterprisePortalShell({
 }: EnterprisePortalShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isStudentPortal = role === 'student'
+  const isAdminPortal = role === 'admin'
   const isSupportPortal = role === 'student' || role === 'teacher'
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export function EnterprisePortalShell({
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className={`qs-portal-shell min-h-screen bg-slate-50 text-slate-900 ${isStudentPortal ? 'qs-student-portal' : ''} ${isAdminPortal ? 'qs-admin-portal' : ''}`}>
       <a
         href="#portal-content"
         className="sr-only z-50 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -52,6 +55,7 @@ export function EnterprisePortalShell({
       <PortalHeader
         role={role}
         userName={userName}
+        avatarUrl={avatarUrl}
         isMenuOpen={isMenuOpen}
         isLoggingOut={isLoggingOut}
         logoutError={logoutError}
@@ -62,11 +66,11 @@ export function EnterprisePortalShell({
       <div className="flex">
         <aside
           className={[
-            'hidden w-[248px] shrink-0 self-start border-r border-slate-200 bg-white lg:block',
+            'hidden w-[240px] shrink-0 self-start border-r border-slate-200 bg-white lg:block',
             isStudentPortal ? 'self-stretch' : '',
           ].join(' ')}
         >
-          <PortalSidebar role={role} pathname={pathname} userName={userName} avatarUrl={avatarUrl} />
+          <PortalSidebar role={role} pathname={pathname} />
         </aside>
 
         {isMenuOpen && (
@@ -77,13 +81,11 @@ export function EnterprisePortalShell({
               onClick={() => setIsMenuOpen(false)}
               className="absolute inset-0 bg-slate-950/20"
             />
-            <aside className="relative h-full w-[min(248px,85vw)] border-r border-slate-200 bg-white shadow-sm">
+            <aside className="relative h-full w-[min(240px,85vw)] border-r border-slate-200 bg-white shadow-sm">
               <PortalSidebar
                 id="portal-navigation-mobile"
                 role={role}
                 pathname={pathname}
-                userName={userName}
-                avatarUrl={avatarUrl}
                 onNavigate={() => setIsMenuOpen(false)}
               />
             </aside>
@@ -91,7 +93,7 @@ export function EnterprisePortalShell({
         )}
 
         <main id="portal-content" className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div key={pathname} className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto w-full max-w-7xl student-dashboard-shell">
             {children}
           </div>
         </main>

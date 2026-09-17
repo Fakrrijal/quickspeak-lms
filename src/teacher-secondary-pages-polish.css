@@ -1,81 +1,5 @@
-/* Teacher dashboard visual polish: scoped to the active Teacher Dashboard route. */
-.teacher-dashboard-v2,
-.teacher-dashboard-v2 input {
-  font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
-}
+/* QuickSpeak Teacher secondary pages: shared typography, density, surfaces, table language, and spacing. */
 
-/* Welcome area: match the Student Portal palette while keeping the teacher dashboard operational. */
-.teacher-dashboard-v2 > header {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid #dce7f5 !important;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #edf5ff 0%, #f8fbff 72%, #ffffff 100%);
-  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035), 0 10px 24px rgb(47 102 208 / 0.045);
-  padding: 1.25rem 1.5rem 1.25rem;
-}
-
-.teacher-dashboard-v2 > header::after {
-  content: '';
-  position: absolute;
-  top: -4.5rem;
-  right: -2.5rem;
-  width: 12rem;
-  height: 12rem;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgb(47 102 208 / 0.10) 0%, rgb(47 102 208 / 0.035) 48%, transparent 72%);
-  pointer-events: none;
-}
-
-.teacher-dashboard-v2 > header > div:first-child {
-  position: relative;
-  z-index: 1;
-}
-
-/* Date controls sit directly on the welcome surface; only the individual inputs keep a white field. */
-.teacher-dashboard-v2 > header > div:nth-child(2) {
-  position: relative;
-  z-index: 1;
-  margin-top: 0.75rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-/* Give the separate reporting-period card a deliberate breathing space below the welcome card. */
-.teacher-dashboard-v2 .teacher-period-filter {
-  margin-top: 0.5rem;
-}
-
-body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) section[class~="xl:grid-cols-4"] > article:nth-child(-n+2) > div > span {
-  display: none;
-}
-
-body:has(nav[aria-label="Portal navigation"] a[href="/teacher"][aria-current="page"]) div[class*="lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]"] > section:first-child > div:last-child > article {
-  padding: 1.25rem 1.5rem;
-}
-
-.teacher-dashboard-v2 .qs-date-input {
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 767px) {
-  .teacher-dashboard-v2 > header {
-    border-radius: 14px;
-    padding: 1rem 1.125rem 1rem;
-  }
-
-  .teacher-dashboard-v2 > header > div:nth-child(2) {
-    margin-top: 0.625rem;
-  }
-
-  .teacher-dashboard-v2 .teacher-period-filter {
-    margin-top: 0.375rem;
-  }
-}
-
-/* QuickSpeak Teacher secondary pages: shared typography, density, surfaces, and table language. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]),
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]),
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]),
@@ -83,10 +7,13 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   --qs-page-title: 30px;
   --qs-section-title: 20px;
   --qs-body: 15px;
+  --qs-meta: 12px;
   --qs-border: #dfe6ef;
   --qs-navy: #102449;
+  --qs-section-gap: 2rem;
 }
 
+/* Shared page header. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > header,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > header,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > header,
@@ -113,13 +40,46 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   line-height: 1.55 !important;
 }
 
+/* Keep all Teacher secondary pages on the same major-section rhythm. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > *,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > *,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > *,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > * {
+  margin-bottom: var(--qs-section-gap) !important;
+}
+
+/* Teacher Fee uses an intentionally bounded report canvas with visible left/right reading rules. */
+@media (min-width: 1024px) {
+  .qs-fee-report-frame {
+    width: min(100%, 1140px) !important;
+    max-width: 1140px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    border-left: 1px solid var(--qs-border) !important;
+    border-right: 1px solid var(--qs-border) !important;
+  }
+}
+
+.qs-fee-report-frame {
+  box-sizing: border-box !important;
+}
+
+/* Search/filter surfaces should feel like compact controls, not large hero cards. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div > form,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div > section,
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section {
+  border-color: var(--qs-border) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035) !important;
+}
+
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form {
   position: static !important;
   backdrop-filter: none !important;
   padding: 0.75rem !important;
-  border-color: var(--qs-border) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 2px rgb(15 35 70 / 0.035) !important;
 }
 
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div > form input,
@@ -127,6 +87,7 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"
   height: 42px !important;
 }
 
+/* Section headings. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div h2,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div h2,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div h2,
@@ -136,6 +97,7 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   letter-spacing: -0.015em !important;
 }
 
+/* Common data surfaces. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .overflow-hidden.rounded-xl,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .overflow-hidden.rounded-xl,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div .overflow-hidden.rounded-xl,
@@ -145,6 +107,7 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   box-shadow: 0 1px 2px rgb(15 35 70 / 0.035) !important;
 }
 
+/* Table headers. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .bg-slate-50,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .bg-slate-50,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div thead {
@@ -158,6 +121,7 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   letter-spacing: 0.12em !important;
 }
 
+/* Keep desktop rows compact and easy to scan. */
 @media (min-width: 768px) {
   body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button,
   body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button {
@@ -171,8 +135,62 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
   }
+
+  /* Premium row action icon: replace the plain text arrow with a compact QuickSpeak control. */
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button > span:last-child,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button > span:last-child {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cfe0fb;
+    border-radius: 8px;
+    background: #f7faff;
+    color: #2f66d0;
+    font-size: 0 !important;
+    line-height: 1;
+    transition: all 160ms ease;
+  }
+
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button:hover > span:last-child,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button:hover > span:last-child {
+    border-color: #b9cff7;
+    background: #edf5ff;
+    transform: translateX(1px);
+  }
+
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .divide-y > button > span:last-child::after,
+  body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .divide-y > button > span:last-child::after {
+    content: '→';
+    font-size: 16px;
+    font-weight: 800;
+  }
 }
 
+/* Attendance action buttons should read as compact secondary actions. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div table button {
+  min-height: 36px !important;
+  border-radius: 9px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+/* Fee summary strip: keep the three reconciliation cards informative but compact. */
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section:last-child {
+  padding: 1rem !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section:last-child > div {
+  padding: 0.75rem !important;
+}
+
+body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div > section:last-child p {
+  line-height: 1.35 !important;
+}
+
+/* Shared pagination language. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/learning-progress"][aria-current="page"]) main > div .border-t.border-slate-200,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/teaching-groups"][aria-current="page"]) main > div .border-t.border-slate-200,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div .border-t.border-slate-200,
@@ -180,6 +198,7 @@ body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current
   border-color: var(--qs-border) !important;
 }
 
+/* Metric/support cards on Fee and Attendance pages follow the same surface treatment. */
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/attendance"][aria-current="page"]) main > div .rounded-2xl.border,
 body:has(nav[aria-label="Portal navigation"] a[href="/teacher/fee"][aria-current="page"]) main > div .rounded-2xl.border {
   border-color: var(--qs-border) !important;
