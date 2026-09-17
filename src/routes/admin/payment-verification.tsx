@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
@@ -59,6 +59,8 @@ function AdminPaymentVerificationPage() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -96,6 +98,19 @@ function AdminPaymentVerificationPage() {
       void loadPayments()
     }
   }, [canVerifyPayments, loadPayments])
+
+  const totalPages = Math.max(1, Math.ceil(payments.length / pageSize))
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+  const paginatedPayments = useMemo(
+    () => payments.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [currentPage, payments],
+  )
+  const showingStart = payments.length === 0 ? 0 : ((currentPage - 1) * pageSize) + 1
+  const showingEnd = Math.min(currentPage * pageSize, payments.length)
 
   const handleReview = async (payment: PendingPaymentVerification) => {
     setActionPaymentId(payment.payment_id)
@@ -213,23 +228,32 @@ function AdminPaymentVerificationPage() {
         </p>
       )}
 
-      <div className="mt-8 overflow-x-auto rounded-xl border bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+      <div className="mt-8 overflow-hidden rounded-xl border bg-white shadow-sm">
+        <table className="w-full table-fixed divide-y divide-slate-200 text-left text-sm">
+          <colgroup>
+            <col style={{ width: '24%' }} />
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '15%' }} />
+          </colgroup>
           <thead className="bg-slate-50 text-slate-700">
             <tr>
-              <th className="px-4 py-3 font-semibold">Student</th>
-              <th className="px-4 py-3 font-semibold">Invoice</th>
-              <th className="px-4 py-3 font-semibold">Package</th>
-              <th className="px-4 py-3 font-semibold">Amount</th>
-              <th className="px-4 py-3 font-semibold">Submitted</th>
-              <th className="px-4 py-3 font-semibold">Proof</th>
-              <th className="px-4 py-3 font-semibold">Action</th>
+              <th className="px-3 py-3 font-semibold">Student</th>
+              <th className="px-3 py-3 font-semibold">Invoice</th>
+              <th className="px-3 py-3 font-semibold">Package</th>
+              <th className="px-3 py-3 font-semibold">Amount</th>
+              <th className="px-3 py-3 font-semibold">Submitted</th>
+              <th className="px-3 py-3 font-semibold">Proof</th>
+              <th className="px-3 py-3 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {isLoading && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-slate-600">
+                <td colSpan={7} className="px-3 py-6 text-slate-600">
                   Loading pending payments...
                 </td>
               </tr>
@@ -237,29 +261,29 @@ function AdminPaymentVerificationPage() {
 
             {!isLoading && payments.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-slate-600">
+                <td colSpan={7} className="px-3 py-6 text-slate-600">
                   There are no pending payment proofs.
                 </td>
               </tr>
             )}
 
-            {!isLoading && payments.map((payment) => {
+            {!isLoading && paginatedPayments.map((payment) => {
               const isProcessing = actionPaymentId === payment.payment_id
               const isRejecting = rejectingPaymentId === payment.payment_id
 
               return (
                 <tr key={payment.payment_id} className="align-top">
-                  <td className="px-4 py-4">
+                  <td className="break-words px-3 py-4">
                     <p className="font-medium text-slate-900">{payment.student_name}</p>
-                    <p className="text-slate-600">{payment.student_email}</p>
+                    <p className="break-all text-slate-600">{payment.student_email}</p>
                   </td>
-                  <td className="px-4 py-4 text-slate-700">{payment.invoice_number}</td>
-                  <td className="px-4 py-4 text-slate-700">{payment.package_type}</td>
-                  <td className="px-4 py-4 text-slate-700">{formatAmount(payment.amount)}</td>
-                  <td className="px-4 py-4 text-slate-700">
+                  <td className="break-all px-3 py-4 text-slate-700">{payment.invoice_number}</td>
+                  <td className="break-words px-3 py-4 text-slate-700">{payment.package_type}</td>
+                  <td className="px-3 py-4 text-slate-700">{formatAmount(payment.amount)}</td>
+                  <td className="px-3 py-4 text-slate-700">
                     {formatSubmittedAt(payment.proof_uploaded_at)}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="break-words px-3 py-4">
                     <button
                       type="button"
                       onClick={() => void handleReview(payment)}
@@ -268,11 +292,11 @@ function AdminPaymentVerificationPage() {
                     >
                       Review
                     </button>
-                    <p className="mt-1 max-w-48 truncate text-xs text-slate-500">
+                    <p className="mt-1 break-words text-xs text-slate-500">
                       {payment.proof_original_filename ?? 'Uploaded proof'}
                     </p>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-3 py-4">
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -297,7 +321,7 @@ function AdminPaymentVerificationPage() {
                     </div>
 
                     {isRejecting && (
-                      <div className="mt-3 min-w-64 space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
+                      <div className="mt-3 w-full min-w-0 space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
                         <label className="block text-xs font-medium text-slate-700">
                           Rejection reason
                           <textarea
@@ -308,7 +332,7 @@ function AdminPaymentVerificationPage() {
                             rows={3}
                           />
                         </label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => void handleDecision(payment, 'reject')}
@@ -338,6 +362,44 @@ function AdminPaymentVerificationPage() {
           </tbody>
         </table>
       </div>
+
+      {!isLoading && payments.length > 0 && (
+        <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-600">Showing {showingStart}–{showingEnd} of {payments.length}</p>
+          <nav aria-label="Payment verification pagination" className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Previous page"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ‹
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                aria-label={`Page ${page}`}
+                aria-current={currentPage === page ? 'page' : undefined}
+                onClick={() => setCurrentPage(page)}
+                className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium ${currentPage === page ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              aria-label="Next page"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ›
+            </button>
+          </nav>
+        </div>
+      )}
     </section>
   )
 }
