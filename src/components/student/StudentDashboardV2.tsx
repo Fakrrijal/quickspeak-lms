@@ -5,17 +5,46 @@ import { useStudentAttendance } from '../../hooks/useStudentAttendance'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
 
-function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'arrow' | 'check' }) {
+function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'wallet' | 'arrow' | 'check' }) {
   const common = 'size-5 fill-none stroke-current stroke-2'
   if (name === 'book') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" /><path d="M4 5.5v16M8 7h8M8 11h8" /></svg>
   if (name === 'calendar') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M8 2.5v4M16 2.5v4M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" /></svg>
   if (name === 'user') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><circle cx="12" cy="7" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+  if (name === 'wallet') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M20 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 13h.01" /></svg>
   if (name === 'check') return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="m5 12 4 4L19 6" /></svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className={common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>
 }
 
 function formatPackage(value: StudentLearningState['package_type']) {
   return value === 'private' ? 'Private' : 'Semi-Private'
+}
+
+type SummaryCardProps = {
+  label: string
+  value: string | number
+  detail: string
+  to: string
+  icon: 'book' | 'calendar' | 'wallet' | 'check'
+  color: string
+  iconBg: string
+}
+
+function SummaryCard({ label, value, detail, to, icon, color, iconBg }: SummaryCardProps) {
+  return (
+    <Link
+      to={to}
+      className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <article>
+        <div className={`flex size-10 items-center justify-center rounded-xl border border-white shadow-sm ${iconBg}`}>
+          <span className={color}><Icon name={icon} /></span>
+        </div>
+        <p className="mt-4 text-[14px] font-bold text-slate-600">{label}</p>
+        <p className="mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[#102449]">{value}</p>
+        <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+      </article>
+    </Link>
+  )
 }
 
 export function StudentDashboardV2() {
@@ -81,6 +110,14 @@ export function StudentDashboardV2() {
     .filter((row) => row.completed_at && row.chapter_id)
     .sort((a, b) => String(b.completed_at).localeCompare(String(a.completed_at)))[0] ?? null
   const nextChapter = currentLevelRows.find((row) => !row.completed_at) ?? null
+  const currentLearningValue = learningState?.level_name ?? '—'
+  const currentLearningDetail = learningState
+    ? `${formatPackage(learningState.package_type)} · ${learningState.teaching_group_name ?? 'Class not assigned'}`
+    : 'No learning package yet'
+  const attendanceValue = attendanceLoading ? '…' : attendanceError ? '—%' : rate === null ? '—%' : `${rate.toFixed(0)}%`
+  const attendanceDetail = attendanceLoading ? 'Loading records' : attendanceError ? 'Unable to load records' : `${total} attendance record${total === 1 ? '' : 's'}`
+  const progressValue = `${currentCompletedRows.length}/${currentLevelRows.length}`
+  const progressDetail = progressLoading ? 'Loading progress' : `${currentProgressPercent}% completed`
 
   return (
     <div className="space-y-6 pb-2">
@@ -93,49 +130,44 @@ export function StudentDashboardV2() {
         <Link to="/student/profile" className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"><span className="flex size-7 items-center justify-center rounded-md bg-slate-100 text-slate-600"><Icon name="user" /></span><span>Profile</span></Link>
       </header>
 
-      <main className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.9fr)]" aria-label="Student learning summary">
-        <section className="student-primary-surface rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="current-learning-title">
-          <div className="border-b border-slate-200 px-6 py-4 sm:px-7 sm:py-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-start gap-3.5">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><Icon name="book" /></div>
-                <div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Current Learning</p><h2 id="current-learning-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449]">Current learning stage</h2></div>
-              </div>
-              <Link to="/student/learning" className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-bold text-blue-700 hover:text-blue-800">View details <Icon name="arrow" /></Link>
-            </div>
-          </div>
-          <div className="px-6 py-5 sm:px-7 sm:py-6">
-            {learningStateError ? (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4"><p className="text-sm font-bold text-rose-800">Unable to load your learning status.</p><p className="mt-1 text-sm leading-6 text-rose-700">Please open My Learning and try again.</p></div>
-            ) : learningState ? (
-              <div>
-                <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                  <div><p className="text-sm font-bold uppercase tracking-[0.08em] text-slate-500">Current stage</p><h3 className="mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.03em] text-[#102449]">{learningState.level_name}</h3><p className="mt-2 text-base font-bold text-blue-700">{formatPackage(learningState.package_type)}</p></div>
-                  <span className={`inline-flex w-fit items-center rounded-md px-2.5 py-1.5 text-sm font-bold ${completed ? 'bg-emerald-50 text-emerald-700' : assigned ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-800'}`}>{completed ? 'Stage completed' : assigned ? 'Active learning' : 'Waiting for class assignment'}</span>
-                </div>
-                <div className="grid sm:grid-cols-2">
-                  <div className="border-b border-slate-200 py-4 sm:border-b-0 sm:border-r sm:pr-6"><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Teaching Group</p><p className="mt-1.5 text-base font-bold text-slate-900">{learningState.teaching_group_name ?? 'Not assigned yet'}</p></div>
-                  <div className="py-4 sm:pl-6"><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Teacher</p><p className="mt-1.5 text-base font-bold text-slate-900">{learningState.teacher_code ?? 'Not assigned yet'}</p></div>
-                </div>
-                {!assigned && !completed && <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"><p className="text-sm leading-6 text-amber-900">Payment approved. Your teaching group and teacher will appear here after administrator assignment.</p></div>}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5"><p className="text-base font-bold text-slate-900">No learning package yet</p><p className="mt-1 max-w-xl text-sm leading-6 text-slate-600">Choose a learning package to start your first learning stage.</p><Link to="/student/learning" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#17325f]">Choose Learning Package <Icon name="arrow" /></Link></div>
-            )}
-          </div>
-        </section>
-
-        <section className="student-secondary-surface rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="attendance-title">
-          <div className="border-b border-slate-200 px-6 py-4 sm:px-7 sm:py-5">
-            <div className="flex items-start justify-between gap-4"><div className="flex items-start gap-3.5"><div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><Icon name="calendar" /></div><div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Attendance</p><h2 id="attendance-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449]">Attendance summary</h2></div></div><Link to="/student/attendance" className="whitespace-nowrap text-sm font-bold text-blue-700 hover:text-blue-800">View all</Link></div>
-          </div>
-          <div className="px-6 py-5 sm:px-7 sm:py-6">
-            <div className="flex items-end justify-between gap-5 border-b border-slate-200 pb-5"><div><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Overall rate</p><p className="mt-2 text-3xl font-extrabold leading-none tracking-[-0.04em] text-[#102449]">{attendanceLoading ? '…' : attendanceError ? '—%' : rate === null ? '—%' : `${rate.toFixed(0)}%`}</p></div><div className="relative flex size-16 shrink-0 items-center justify-center rounded-full" style={{ background: `conic-gradient(rgb(16 185 129) ${rate ?? 0}%, rgb(226 232 240) 0)` }}><div className="flex size-12 items-center justify-center rounded-full bg-white"><span className="text-[10px] font-bold text-slate-500">{attendanceLoading ? '…' : attendanceError ? '—' : rate === null ? '—' : `${rate.toFixed(0)}%`}</span></div></div></div>
-            <dl className="grid grid-cols-3 divide-x divide-slate-200 pt-4"><div className="pr-3"><dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Present</dt><dd className="mt-1.5 text-xl font-extrabold text-slate-900">{present}</dd></div><div className="px-3"><dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Absent</dt><dd className="mt-1.5 text-xl font-extrabold text-slate-900">{absent}</dd></div><div className="pl-3"><dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Records</dt><dd className="mt-1.5 text-xl font-extrabold text-slate-900">{total}</dd></div></dl>
-            <div className="mt-4 border-t border-slate-200 pt-3"><p className="text-sm leading-6 text-slate-600">Keep your attendance consistent to support your learning progress.</p></div>
-          </div>
-        </section>
-      </main>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Student dashboard summary">
+        <SummaryCard
+          label="Current Learning"
+          value={currentLearningValue}
+          detail={currentLearningDetail}
+          to="/student/learning"
+          icon="book"
+          color="text-blue-700"
+          iconBg="bg-blue-50"
+        />
+        <SummaryCard
+          label="Attendance"
+          value={attendanceValue}
+          detail={attendanceDetail}
+          to="/student/attendance"
+          icon="calendar"
+          color="text-emerald-700"
+          iconBg="bg-emerald-50"
+        />
+        <SummaryCard
+          label="Learning Progress"
+          value={progressValue}
+          detail={progressDetail}
+          to="/student/learning"
+          icon="book"
+          color="text-violet-700"
+          iconBg="bg-violet-50"
+        />
+        <SummaryCard
+          label="Payment"
+          value="Open"
+          detail="View payment details"
+          to="/student-payment"
+          icon="wallet"
+          color="text-amber-800"
+          iconBg="bg-amber-50"
+        />
+      </section>
 
       <section className="student-progress-surface rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="student-learning-progress-title">
         <div className="student-progress-header flex flex-col gap-3 border-b border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-5">
