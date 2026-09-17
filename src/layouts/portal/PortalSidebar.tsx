@@ -71,13 +71,14 @@ export function PortalSidebar({
                       onClick={onNavigate}
                       aria-current={isActive ? 'page' : undefined}
                       className={[
-                        'flex min-h-10 items-center gap-3 rounded-lg border-l-2 px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]',
+                        'flex min-h-10 items-center rounded-lg border-l-2 px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]',
+                        role === 'student' ? 'gap-3' : '',
                         isActive
                           ? 'border-blue-600 bg-[#eaf2ff] text-blue-700'
                           : 'border-transparent text-slate-700 hover:bg-[#f3f7ff] hover:text-[#102449]',
                       ].join(' ')}
                     >
-                      <NavigationIcon to={item.to} />
+                      {role === 'student' && <NavigationIcon to={item.to} />}
                       <span className="min-w-0 truncate">{item.label}</span>
                     </Link>
                   </li>
