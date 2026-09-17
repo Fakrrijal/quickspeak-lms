@@ -1,0 +1,44 @@
+name: One-time Teacher Fee Detail Spacing Fix
+
+on:
+  push:
+    branches:
+      - student-table-v2
+
+permissions:
+  contents: write
+
+jobs:
+  fix-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch detail table spacing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/routes/teacher/fee.tsx')
+          text = path.read_text(encoding='utf-8')
+          old = '{feeView === \'detail\' && <div className="overflow-x-auto"><table className="min-w-[1000px] w-full text-left text-sm">'
+          new = '{feeView === \'detail\' && <div className="overflow-x-auto px-5 sm:px-6"><table className="min-w-[1000px] w-full text-left text-sm">'
+
+          if old not in text:
+              raise SystemExit('Target detail table wrapper not found; no change made.')
+
+          if new in text:
+              raise SystemExit('Target detail table wrapper is already fixed; no change needed.')
+
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit patch and remove this workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/teacher/fee.tsx .github/workflows/one-time-fix-teacher-fee-detail-spacing.yml
+          git rm .github/workflows/one-time-fix-teacher-fee-detail-spacing.yml
+          git commit -m "ui: refine teacher fee detail spacing"
+          git push origin student-table-v2
