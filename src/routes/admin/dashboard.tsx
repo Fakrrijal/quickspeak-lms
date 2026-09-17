@@ -78,7 +78,7 @@ function AdminDashboardPage() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <SummaryCard label="Total Students" value={summary.totalStudents} to="/admin" />
               <SummaryCard label="Active Students" value={summary.activeStudents} to="/admin" />
-              <SummaryCard label="Waiting Students" value={summary.waitingStudents} to="/admin" />
+              <SummaryCard label="Waiting Students" value={summary.waitingStudents} to="/admin/waiting-students" />
             </div>
           </section>
 
