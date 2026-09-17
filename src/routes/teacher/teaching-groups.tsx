@@ -260,7 +260,7 @@ function TeacherTeachingGroupsPage() {
           ) : (
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div>
-                <div className="sticky top-0 z-10 hidden grid-cols-[minmax(180px,1.4fr)_120px_150px_120px_44px] border-b border-slate-200 bg-white px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
+                <div className="sticky top-0 z-10 hidden grid-cols-[minmax(180px,1.4fr)_110px_125px_90px_40px] border-b border-slate-200 bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:grid">
                   <span>Teaching Group</span>
                   <span>Level</span>
                   <span>Type</span>
@@ -273,7 +273,7 @@ function TeacherTeachingGroupsPage() {
                       key={group.id}
                       type="button"
                       onClick={() => setSelectedGroupId(group.id)}
-                      className="grid w-full grid-cols-1 gap-2 px-5 py-4 text-left transition hover:bg-slate-50 sm:grid-cols-[minmax(180px,1.4fr)_120px_150px_120px_44px] sm:items-center"
+                      className="grid w-full grid-cols-1 gap-2 px-4 py-3 text-left transition hover:bg-slate-50 sm:grid-cols-[minmax(180px,1.4fr)_110px_125px_90px_40px] sm:items-center"
                     >
                       <span className="min-w-0 truncate text-sm font-bold text-[#102449]">{group.name}</span>
                       <span className="text-sm font-semibold text-slate-600">{group.level}</span>
