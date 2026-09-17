@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
@@ -47,6 +47,8 @@ function AdminSystemErrorsPage() {
   const [statusFilter, setStatusFilter] = useState<SystemErrorStatus>('open')
   const [actionErrorId, setActionErrorId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -84,6 +86,13 @@ function AdminSystemErrorsPage() {
       void loadErrors()
     }
   }, [canViewErrors, loadErrors])
+
+  useEffect(() => { setCurrentPage(1) }, [statusFilter])
+  const totalPages = Math.max(1, Math.ceil(errors.length / pageSize))
+  useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages) }, [currentPage, totalPages])
+  const paginatedErrors = useMemo(() => errors.slice((currentPage - 1) * pageSize, currentPage * pageSize), [currentPage, errors])
+  const showingStart = errors.length === 0 ? 0 : ((currentPage - 1) * pageSize) + 1
+  const showingEnd = Math.min(currentPage * pageSize, errors.length)
 
   const handleMarkResolved = async (errorEvent: SystemErrorEvent) => {
     if (!window.confirm(
@@ -182,7 +191,7 @@ function AdminSystemErrorsPage() {
               </tr>
             )}
 
-            {!isLoading && errors.map((errorEvent) => {
+            {!isLoading && paginatedErrors.map((errorEvent) => {
               const isProcessing = actionErrorId === errorEvent.id
 
               return (
@@ -237,6 +246,7 @@ function AdminSystemErrorsPage() {
           </tbody>
         </table>
       </div>
+      {!isLoading && errors.length > 0 && <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-600">Showing {showingStart}–{showingEnd} of {errors.length}</p><nav aria-label="System errors pagination" className="flex items-center gap-1"><button type="button" aria-label="Previous page" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">‹</button>{Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => <button key={page} type="button" aria-label={`Page ${page}`} aria-current={currentPage === page ? 'page' : undefined} onClick={() => setCurrentPage(page)} className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium ${currentPage === page ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{page}</button>)}<button type="button" aria-label="Next page" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">›</button></nav></div>}
     </section>
   )
 }
