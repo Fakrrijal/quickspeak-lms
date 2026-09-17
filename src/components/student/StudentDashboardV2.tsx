@@ -110,12 +110,14 @@ export function StudentDashboardV2() {
     .filter((row) => row.completed_at && row.chapter_id)
     .sort((a, b) => String(b.completed_at).localeCompare(String(a.completed_at)))[0] ?? null
   const nextChapter = currentLevelRows.find((row) => !row.completed_at) ?? null
-  const currentLearningValue = learningState?.level_name ?? '—'
-  const currentLearningDetail = learningState
-    ? `${formatPackage(learningState.package_type)} · ${learningState.teaching_group_name ?? 'Class not assigned'}`
-    : 'No learning package yet'
+  const currentLearningValue = learningStateError ? 'Unavailable' : learningState?.level_name ?? '—'
+  const currentLearningDetail = learningStateError
+    ? 'Unable to load learning status'
+    : learningState
+      ? `${formatPackage(learningState.package_type)} · ${assigned ? (learningState.teaching_group_name ?? 'Class not assigned') : 'Class not assigned'}`
+      : 'No learning package yet'
   const attendanceValue = attendanceLoading ? '…' : attendanceError ? '—%' : rate === null ? '—%' : `${rate.toFixed(0)}%`
-  const attendanceDetail = attendanceLoading ? 'Loading records' : attendanceError ? 'Unable to load records' : `${total} attendance record${total === 1 ? '' : 's'}`
+  const attendanceDetail = attendanceLoading ? 'Loading records' : attendanceError ? 'Unable to load records' : `${total} attendance record${total === 1 ? '' : 's'} · ${absent} absent`
   const progressValue = `${currentCompletedRows.length}/${currentLevelRows.length}`
   const progressDetail = progressLoading ? 'Loading progress' : `${currentProgressPercent}% completed`
 
@@ -131,42 +133,10 @@ export function StudentDashboardV2() {
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Student dashboard summary">
-        <SummaryCard
-          label="Current Learning"
-          value={currentLearningValue}
-          detail={currentLearningDetail}
-          to="/student/learning"
-          icon="book"
-          color="text-blue-700"
-          iconBg="bg-blue-50"
-        />
-        <SummaryCard
-          label="Attendance"
-          value={attendanceValue}
-          detail={attendanceDetail}
-          to="/student/attendance"
-          icon="calendar"
-          color="text-emerald-700"
-          iconBg="bg-emerald-50"
-        />
-        <SummaryCard
-          label="Learning Progress"
-          value={progressValue}
-          detail={progressDetail}
-          to="/student/learning"
-          icon="book"
-          color="text-violet-700"
-          iconBg="bg-violet-50"
-        />
-        <SummaryCard
-          label="Payment"
-          value="Open"
-          detail="View payment details"
-          to="/student-payment"
-          icon="wallet"
-          color="text-amber-800"
-          iconBg="bg-amber-50"
-        />
+        <SummaryCard label="Current Learning" value={currentLearningValue} detail={currentLearningDetail} to="/student/learning" icon="book" color="text-blue-700" iconBg="bg-blue-50" />
+        <SummaryCard label="Attendance" value={attendanceValue} detail={attendanceDetail} to="/student/attendance" icon="calendar" color="text-emerald-700" iconBg="bg-emerald-50" />
+        <SummaryCard label="Learning Progress" value={progressValue} detail={progressDetail} to="/student/learning" icon="book" color="text-violet-700" iconBg="bg-violet-50" />
+        <SummaryCard label="Payment" value="Open" detail="View payment details" to="/student-payment" icon="wallet" color="text-amber-800" iconBg="bg-amber-50" />
       </section>
 
       <section className="student-progress-surface rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="student-learning-progress-title">
