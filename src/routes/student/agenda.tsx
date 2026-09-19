@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyLearningState } from '../../services/student-learning-state.service'
@@ -35,35 +35,29 @@ function StudentAgendaPage() {
     if (status === 'waiting') navigate({ to: '/waiting', replace: true })
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
 
-  useEffect(() => {
-    if (!canLoad) return
-
-    let cancelled = false
+  const loadAgenda = useCallback(async () => {
     setLoading(true)
     setError(null)
 
-    Promise.all([
-      getMyStudentAgenda(),
-      getMyLearningState(),
-    ])
-      .then(([nextSeries, learningState]) => {
-        if (cancelled) return
-        setSeries(nextSeries)
-        setTeacherName(learningState?.teacher_name ?? '')
-        setGroupName(learningState?.teaching_group_name ?? '')
-      })
-      .catch((loadError) => {
-        if (cancelled) return
-        setError(loadError instanceof Error ? loadError.message : 'Unable to load agenda.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
+    try {
+      const [nextSeries, learningState] = await Promise.all([
+        getMyStudentAgenda(),
+        getMyLearningState().catch(() => null),
+      ])
+      setSeries(nextSeries)
+      setTeacherName(learningState?.teacher_name ?? '')
+      setGroupName(learningState?.teaching_group_name ?? '')
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load agenda.')
+    } finally {
+      setLoading(false)
     }
-  }, [canLoad])
+  }, [])
+
+  useEffect(() => {
+    if (!canLoad) return
+    void loadAgenda()
+  }, [canLoad, loadAgenda])
 
   const activeSeries = useMemo(
     () => series
