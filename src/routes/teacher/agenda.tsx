@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendanceGroups, type TeacherAttendanceGroup } from '../../services/teacher-attendance.service'
@@ -144,7 +144,7 @@ function TeacherAgendaPage() {
     if (status === 'waiting') navigate({ to: '/waiting', replace: true })
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setError(null)
     try {
       const [nextGroups, nextSeries] = await Promise.all([
@@ -153,19 +153,19 @@ function TeacherAgendaPage() {
       ])
       setGroups(nextGroups)
       setSeries(nextSeries)
-      if (!selectedGroupId && nextGroups[0]) setSelectedGroupId(nextGroups[0].teaching_group_id)
+      setSelectedGroupId((current) => current || nextGroups[0]?.teaching_group_id || '')
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load agenda data.')
     } finally {
       setLoading(false)
       setGroupsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (!canLoad) return
     void loadData()
-  }, [canLoad])
+  }, [canLoad, loadData])
 
   const activeSeries = useMemo(
     () => series
