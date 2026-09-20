@@ -106,12 +106,6 @@ export function StudentLearningPageV2() {
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, role, status])
 
   useEffect(() => {
-    if (packageStatusLoading || !packageStatus?.renewal_available || levelCompleted) return
-    setPackageAction('renew')
-    setShowPackageSelection(true)
-  }, [levelCompleted, packageStatus?.renewal_available, packageStatusLoading])
-
-  useEffect(() => {
     if (!canLoadEbooks) return
     let cancelled = false
     setProgressLoading(true)
@@ -128,6 +122,12 @@ export function StudentLearningPageV2() {
   const legacyCompleted = Boolean(state && (state.enrollment_status === 'completed' || state.completed_at || state.completed_sessions >= state.session_limit))
   const completed = levelCompleted || (packageStatus ? packageCompleted && levelCompleted : legacyCompleted)
   const assigned = Boolean(state?.teaching_group_id && state?.teacher_id)
+
+  useEffect(() => {
+    if (packageStatusLoading || !packageStatus?.renewal_available || levelCompleted) return
+    setPackageAction('renew')
+    setShowPackageSelection(true)
+  }, [levelCompleted, packageStatus?.renewal_available, packageStatusLoading])
   const currentLevelRows = useMemo(() => state ? progressRows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [progressRows, state])
   const historicalLevels = useMemo(() => {
     const levels = new Map<number, { levelNumber: number; levelName: string; rows: StudentLearningProgressRow[] }>()
