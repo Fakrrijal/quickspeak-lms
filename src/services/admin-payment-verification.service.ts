@@ -14,6 +14,7 @@ export type PendingPaymentVerification = {
   proof_file_size: number | null
   payment_status: string
   enrollment_status: string
+  enrollment_id: string
 }
 
 export type PaymentReviewDecision = 'approve' | 'reject'
@@ -37,7 +38,7 @@ export async function getPendingPaymentVerifications(): Promise<PendingPaymentVe
   const { data, error } = await supabase
     .from('payments')
     .select(
-      'id, amount, status, invoices!inner (invoice_number, enrollments!inner (package_type, status, students!inner (profiles!inner (full_name, email)))), payment_proofs!inner (uploaded_at, storage_path, original_filename, mime_type, file_size)',
+      'id, amount, status, invoices!inner (invoice_number, enrollments!inner (id, package_type, status, students!inner (profiles!inner (full_name, email)))), payment_proofs!inner (uploaded_at, storage_path, original_filename, mime_type, file_size)',
     )
     .eq('status', 'proof_submitted')
 
@@ -73,6 +74,7 @@ export async function getPendingPaymentVerifications(): Promise<PendingPaymentVe
         proof_file_size: proof.file_size,
         payment_status: payment.status,
         enrollment_status: enrollment.status,
+        enrollment_id: enrollment.id,
       }))
   }) as PendingPaymentVerification[]
 }
@@ -111,4 +113,16 @@ export async function reviewPayment(
   }
 
   return result as ReviewPaymentResult
+}
+
+
+export async function adoptExistingPaidEnrollmentAssignment(enrollmentId: string) {
+  const { data, error } = await supabase.rpc('admin_adopt_existing_paid_enrollment_assignment', {
+    p_enrollment_id: enrollmentId,
+  })
+
+  if (error) throw error
+
+  const result = Array.isArray(data) ? data[0] : data
+  return result ?? null
 }
