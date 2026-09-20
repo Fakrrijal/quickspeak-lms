@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
 import { StudentLevelAssessmentHistory } from './StudentLevelAssessmentHistory'
+import { getMyStudentRenewalContext, type StudentRenewalContext } from '../../services/student-renewal.service'
 import {
   getStudentLevelPackageStatus,
   requestCurrentLevelPackageRenewal,
@@ -54,6 +55,7 @@ export function StudentLearningPageV2() {
   const [progressLoading, setProgressLoading] = useState(true)
   const [progressError, setProgressError] = useState(false)
   const [packageStatus, setPackageStatus] = useState<StudentLevelPackageStatus | null>(null)
+  const [renewalContext, setRenewalContext] = useState<StudentRenewalContext | null>(null)
   const [packageStatusLoading, setPackageStatusLoading] = useState(true)
   const [showPackageSelection, setShowPackageSelection] = useState(false)
   const [packageAction, setPackageAction] = useState<'renew' | 'next' | null>(null)
@@ -82,8 +84,8 @@ export function StudentLearningPageV2() {
     setPackageStatusLoading(true)
     setError(null)
 
-    Promise.allSettled([getMyLearningState(), getStudentLevelPackageStatus()])
-      .then(([learningResult, packageResult]) => {
+    Promise.allSettled([getMyLearningState(), getStudentLevelPackageStatus(), getMyStudentRenewalContext()])
+      .then(([learningResult, packageResult, renewalResult]) => {
         if (cancelled) return
 
         if (learningResult.status === 'fulfilled') {
@@ -94,6 +96,10 @@ export function StudentLearningPageV2() {
 
         if (packageResult.status === 'fulfilled') {
           setPackageStatus(packageResult.value)
+        }
+
+        if (renewalResult.status === 'fulfilled') {
+          setRenewalContext(renewalResult.value)
         }
       })
       .finally(() => {
@@ -123,11 +129,6 @@ export function StudentLearningPageV2() {
   const completed = levelCompleted || (packageStatus ? packageCompleted && levelCompleted : legacyCompleted)
   const assigned = Boolean(state?.teaching_group_id && state?.teacher_id)
 
-  useEffect(() => {
-    if (packageStatusLoading || !packageStatus?.renewal_available || levelCompleted) return
-    setPackageAction('renew')
-    setShowPackageSelection(true)
-  }, [levelCompleted, packageStatus?.renewal_available, packageStatusLoading])
   const currentLevelRows = useMemo(() => state ? progressRows.filter((row) => row.level_number === state.level_number && row.chapter_id) : [], [progressRows, state])
   const historicalLevels = useMemo(() => {
     const levels = new Map<number, { levelNumber: number; levelName: string; rows: StudentLearningProgressRow[] }>()
@@ -195,6 +196,92 @@ export function StudentLearningPageV2() {
   }
 
   if (!isAuthenticated || !profile || profileError || status !== 'active' || role !== 'student') return null
+
+  const showRenewalFlow = Boolean(
+    renewalContext
+      && renewalContext.next_action !== 'learning'
+      && renewalContext.next_action !== 'package_selection'
+      && renewalContext.next_action !== 'level_completed'
+      && !success,
+  )
+
+  if (showRenewalFlow && renewalContext) {
+    const isRenewalReady = renewalContext.next_action === 'renewal'
+    const isPaymentStep = renewalContext.next_action === 'renewal_payment'
+    const isWaitingApproval = renewalContext.next_action === 'waiting_approval'
+    const isActivationPending = renewalContext.next_action === 'activation_pending'
+    const packageType = renewalContext.previous_package_type ?? renewalContext.renewal_package_type
+    const packageLabel = packageType === 'private' ? 'Private' : packageType === 'semi_private' ? 'Semi-Private' : '—'
+
+    return (
+      <section className="space-y-6">
+        <header className="border-b border-slate-200 pb-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Learning</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.04em] text-[#102449]">{isRenewalReady ? 'Continue Learning' : 'Renewal Status'}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            {isRenewalReady
+              ? 'Continue with the same level, package, teacher, and teaching group.'
+              : isPaymentStep
+                ? 'Complete the renewal payment before learning can continue.'
+                : isWaitingApproval
+                  ? 'Your payment proof has been submitted and is waiting for Admin verification.'
+                  : 'Your renewal payment has been approved. The renewal is waiting to become active.'}
+          </p>
+        </header>
+
+        <section className="border border-blue-200 bg-blue-50/60 p-6 shadow-sm">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Level</p><p className="mt-1.5 text-sm font-bold text-slate-900">Level {renewalContext.current_level_number}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Package</p><p className="mt-1.5 text-sm font-bold text-slate-900">{packageLabel}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Teacher</p><p className="mt-1.5 text-sm font-bold text-slate-900">{renewalContext.teacher_name ? renewalContext.teacher_name + ' - ' + (renewalContext.teacher_code ?? '').replace(/^TCH-/i, '') : '—'}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Teaching Group</p><p className="mt-1.5 text-sm font-bold text-slate-900">{renewalContext.teaching_group_name ?? '—'}</p></div>
+          </div>
+
+          {isRenewalReady && (
+            <>
+              <p className="mt-5 text-sm leading-6 text-slate-600">No package or class re-selection is required. The renewal will use the same package and existing class assignment.</p>
+              <button
+                type="button"
+                disabled={submitting || !packageType}
+                onClick={() => {
+                  if (!packageType) return
+                  setPackageAction('renew')
+                  void handleChoosePackage(packageType)
+                }}
+                className="mt-5 inline-flex items-center rounded-lg bg-[#102449] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? 'Menyiapkan perpanjangan...' : 'Lanjut'}
+                <span className="ml-2">→</span>
+              </button>
+            </>
+          )}
+
+          {isPaymentStep && (
+            <>
+              <p className="mt-5 text-sm leading-6 text-slate-600">Renewal invoice {renewalContext.renewal_invoice_number ?? '—'} is ready. Continue to Payment to review the cost and upload your transfer proof.</p>
+              <div className="mt-3 text-2xl font-extrabold text-[#102449]">{formatRupiah(renewalContext.renewal_price)}</div>
+              <Link to="/student-payment" className="mt-5 inline-flex items-center rounded-lg bg-[#102449] px-5 py-3 text-sm font-bold text-white">Lanjut Pembayaran <span className="ml-2">→</span></Link>
+            </>
+          )}
+
+          {isWaitingApproval && (
+            <>
+              <p className="mt-5 text-sm font-bold text-amber-800">Payment proof submitted.</p>
+              <Link to="/student-payment" className="mt-5 inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800">Buka Payment <span className="ml-2">→</span></Link>
+            </>
+          )}
+
+          {isActivationPending && (
+            <>
+              <p className="mt-5 text-sm font-bold text-emerald-800">Payment approved.</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">Do not start a new renewal. Your existing Teacher and Teaching Group will be reused when the renewal is activated.</p>
+              <Link to="/student-payment" className="mt-5 inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800">View Payment Status <span className="ml-2">→</span></Link>
+            </>
+          )}
+        </section>
+      </section>
+    )
+  }
 
   if (success && selectedPackage) {
     const packageName = selectedPackage === 'private' ? 'Private' : 'Semi-Private'
