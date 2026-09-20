@@ -177,8 +177,6 @@ export function StudentLearningPageV2() {
       await initializeEnrollmentPayment(enrollmentId)
       setSuccess(true)
       setShowPackageSelection(false)
-      setState(null)
-      setPackageStatus(null)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to start the selected package.')
     } finally {
