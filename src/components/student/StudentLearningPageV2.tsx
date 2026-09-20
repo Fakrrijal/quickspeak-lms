@@ -106,6 +106,12 @@ export function StudentLearningPageV2() {
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, role, status])
 
   useEffect(() => {
+    if (packageStatusLoading || !packageStatus?.renewal_available || levelCompleted) return
+    setPackageAction('renew')
+    setShowPackageSelection(true)
+  }, [levelCompleted, packageStatus?.renewal_available, packageStatusLoading])
+
+  useEffect(() => {
     if (!canLoadEbooks) return
     let cancelled = false
     setProgressLoading(true)
@@ -198,13 +204,13 @@ export function StudentLearningPageV2() {
       <section className="space-y-6">
         <header className="border-b border-slate-200 pb-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Enrollment Ready</p>
-          <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{packageName} package selected</h1>
-          <p className="mt-1.5 text-sm leading-6 text-slate-600">Invoice {paymentInitialization?.invoice_number} is ready for payment.</p>
+          <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">Perpanjangan siap dibayar</h1>
+          <p className="mt-1.5 text-sm leading-6 text-slate-600">Level {packageStatus?.current_level_number ?? '—'} · {packageName}. Invoice {paymentInitialization?.invoice_number} sudah dibuat.</p>
         </header>
         <section className="border border-emerald-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-slate-900">Payment amount</p>
           <p className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{formatRupiah(paymentInitialization?.payment_amount)}</p>
-          <Link to="/student-payment" className="mt-5 inline-flex items-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">View Payment</Link>
+          <Link to="/student-payment" className="mt-5 inline-flex items-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">Lanjut Pembayaran <span className="ml-2">→</span></Link>
         </section>
       </section>
     )
@@ -227,21 +233,40 @@ export function StudentLearningPageV2() {
               : 'Select your package for the next learning stage.'}
           </p>
         </header>
-        <div className="grid gap-4 md:grid-cols-2">
-          {([['private', 'Private', 'One-to-one learning'], ['semi_private', 'Semi-Private', 'Small-group learning']] as const).map(([value, name, description]) => (
-            <button key={value} type="button" disabled={submitting} onClick={() => void handleChoosePackage(value)} className="group border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Package</p>
-              <h2 className="mt-2 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{name}</h2>
-              <p className="mt-1.5 text-sm leading-6 text-slate-600">{description}</p>
-              {isRenewal && (
-                <p className="mt-3 text-sm font-bold text-slate-900">
-                  {packageStatus?.current_package_type === value ? `Continue at ${formatRupiah(packageStatus.current_package_price)}` : 'Choose package type'}
-                </p>
-              )}
-              <span className="mt-5 inline-flex text-sm font-bold text-blue-700">{isRenewal ? 'Perpanjang paket' : 'Choose package'} <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
+        {isRenewal ? (
+          <section className="border border-blue-200 bg-blue-50/60 p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Renewal</p>
+            <h2 className="mt-2 text-xl font-extrabold text-[#102449]">Lanjutkan pembelajaran</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Kami akan memperpanjang paket yang sama untuk Level Anda saat ini. Tidak perlu memilih paket, teacher, atau teaching group lagi.</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Level</p><p className="mt-1.5 text-sm font-bold text-slate-900">Level {packageStatus?.current_level_number ?? state?.level_number ?? '—'}</p></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Package</p><p className="mt-1.5 text-sm font-bold text-slate-900">{formatPackage(packageStatus?.current_package_type ?? state?.package_type ?? 'private')}</p></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Teacher</p><p className="mt-1.5 text-sm font-bold text-slate-900">{state?.teacher_code ?? '—'}</p></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">Teaching Group</p><p className="mt-1.5 text-sm font-bold text-slate-900">{state?.teaching_group_name ?? '—'}</p></div>
+            </div>
+            <p className="mt-4 text-sm font-bold text-[#102449]">Next step: lihat biaya perpanjangan dan lanjutkan pembayaran.</p>
+            <button
+              type="button"
+              disabled={submitting || !packageStatus?.current_package_type}
+              onClick={() => packageStatus?.current_package_type && void handleChoosePackage(packageStatus.current_package_type)}
+              className="mt-5 inline-flex items-center rounded-lg bg-[#102449] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#17325f] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? 'Menyiapkan perpanjangan...' : 'Lanjut'}
+              <span className="ml-2">→</span>
             </button>
-          ))}
-        </div>
+          </section>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {([['private', 'Private', 'One-to-one learning'], ['semi_private', 'Semi-Private', 'Small-group learning']] as const).map(([value, name, description]) => (
+              <button key={value} type="button" disabled={submitting} onClick={() => void handleChoosePackage(value)} className="group border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Package</p>
+                <h2 className="mt-2 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">{name}</h2>
+                <p className="mt-1.5 text-sm leading-6 text-slate-600">{description}</p>
+                <span className="mt-5 inline-flex text-sm font-bold text-blue-700">Choose package <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
+              </button>
+            ))}
+          </div>
+        )}
         {error && <p className="text-sm font-medium text-rose-700">{error}</p>}
       </section>
     )
@@ -299,7 +324,7 @@ export function StudentLearningPageV2() {
                 <p className="mt-1 text-sm leading-6 text-slate-600">Level masih berjalan. Perpanjang paket dengan jenis paket yang sama.</p>
                 <p className="mt-1 text-xs font-bold text-blue-700">Sesi kumulatif Level {packageStatus?.current_level_number}: {packageStatus?.cumulative_level_session_count}</p>
               </div>
-              <button type="button" onClick={() => { setPackageAction('renew'); setShowPackageSelection(true) }} className="inline-flex items-center justify-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">Perpanjang Paket <span className="ml-2">→</span></button>
+              <button type="button" onClick={() => { setPackageAction('renew'); setShowPackageSelection(true) }} className="inline-flex items-center justify-center rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]">Continue Learning <span className="ml-2">→</span></button>
             </div>
           )}
 
