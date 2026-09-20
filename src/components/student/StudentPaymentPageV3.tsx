@@ -246,7 +246,7 @@ export function StudentPaymentPageV3() {
 
       {isLoading && <section className="border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">Loading current payment...</section>}
       {error && <section className="border border-rose-200 bg-rose-50 p-5 text-sm text-slate-700"><p className="font-bold">Unable to load payment details</p><p className="mt-1">{error}</p><button type="button" onClick={() => void loadPaymentPage()} className="mt-3 font-bold underline">Retry</button></section>}
-      {!isLoading && !error && !paymentDetails && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Payment</p><h2 className="mt-2 text-xl font-extrabold text-[#102449]">No enrollment found</h2><p className="mt-2 text-sm leading-6 text-slate-600">Choose a learning package before viewing payment details.</p><Link to="/student/learning" className="mt-5 inline-flex rounded-xl bg-[#102449] px-5 py-2.5 text-sm font-bold text-white">Open My Learning</Link></section>}
+      {!isLoading && !error && !paymentDetails && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Payment</p><h2 className="mt-2 text-xl font-extrabold text-[#102449]">No enrollment found</h2><p className="mt-2 text-sm leading-6 text-slate-600">Choose a learning package before viewing payment details.</p><Link to="/student/learning" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#102449] px-5 py-2.5 text-sm font-bold text-white">Continue Learning <Icon name="arrow" /></Link></section>}
       {!isLoading && !error && paymentDetails && !invoice && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-extrabold text-[#102449]">Invoice not available</h2><p className="mt-2 text-sm text-slate-600">Your enrollment exists, but its payment invoice is not available yet.</p></section>}
       {!isLoading && !error && paymentDetails && invoice && !payment && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-extrabold text-[#102449]">Payment record not available</h2><p className="mt-2 text-sm text-slate-600">Your invoice exists, but its payment record is not available yet.</p></section>}
 
@@ -269,7 +269,15 @@ export function StudentPaymentPageV3() {
 
             <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               {isPaid && currentReceipt ? (
-                <div><div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Icon name="check" /></div><h3 className="mt-4 text-lg font-extrabold text-[#102449]">Payment complete</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Your payment has been approved and recorded in your payment history.</p><button type="button" onClick={() => downloadReceipt(currentReceipt)} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]"><Icon name="download" />Download Receipt</button></div>
+                <div>
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Icon name="check" /></div>
+                  <h3 className="mt-4 text-lg font-extrabold text-[#102449]">Payment complete</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-600">Your payment has been approved. Your renewed learning access is ready once the enrollment is active.</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => downloadReceipt(currentReceipt)} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"><Icon name="download" />Download Receipt</button>
+                    <Link to="/student/learning" className="inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Continue Learning <Icon name="arrow" /></Link>
+                  </div>
+                </div>
               ) : isProofSubmitted ? (
                 <div><div className="flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><span className="text-base font-bold">…</span></div><h3 className="mt-4 text-lg font-extrabold text-[#102449]">Proof submitted</h3><p className="mt-1.5 text-sm leading-6 text-slate-600">Your {formatMethod(payment.payment_method)} payment proof is waiting for verification.</p></div>
               ) : (
