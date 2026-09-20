@@ -219,6 +219,7 @@ export function StudentPaymentPageV3() {
   const invoice = paymentDetails?.invoice
   const payment = paymentDetails?.payment
   const isPaid = invoice?.status === 'paid' || payment?.status === 'approved'
+  const isEnrollmentActive = paymentDetails?.enrollment.status === 'active'
   const isRejected = payment?.status === 'rejected'
   const isProofSubmitted = payment?.status === 'proof_submitted'
   const canUploadProof = payment?.status === 'unpaid' || isRejected
@@ -271,11 +272,15 @@ export function StudentPaymentPageV3() {
               {isPaid && currentReceipt ? (
                 <div>
                   <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Icon name="check" /></div>
-                  <h3 className="mt-4 text-lg font-extrabold text-[#102449]">Payment complete</h3>
-                  <p className="mt-1.5 text-sm leading-6 text-slate-600">Your payment has been approved. Your renewed learning access is ready once the enrollment is active.</p>
+                  <h3 className="mt-4 text-lg font-extrabold text-[#102449]">{isEnrollmentActive ? 'Payment complete' : 'Payment approved'}</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-600">
+                    {isEnrollmentActive
+                      ? 'Your payment has been approved and your renewed learning access is active.'
+                      : 'Your payment has been approved, but the renewal enrollment is not active yet. Do not start another renewal.'}
+                  </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     <button type="button" onClick={() => downloadReceipt(currentReceipt)} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"><Icon name="download" />Download Receipt</button>
-                    <Link to="/student/learning" className="inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Continue Learning <Icon name="arrow" /></Link>
+                    {isEnrollmentActive && <Link to="/student/learning" className="inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Continue Learning <Icon name="arrow" /></Link>}
                   </div>
                 </div>
               ) : isProofSubmitted ? (
