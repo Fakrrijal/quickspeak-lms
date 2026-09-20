@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { useStudentAttendance } from '../../hooks/useStudentAttendance'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
+import { getMyStudentRenewalContext, type StudentRenewalContext } from '../../services/student-renewal.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
 
 function Icon({ name }: { name: 'book' | 'calendar' | 'user' | 'wallet' | 'arrow' | 'check' }) {
@@ -53,6 +54,7 @@ export function StudentDashboardV2() {
   const [learningState, setLearningState] = useState<StudentLearningState | null>(null)
   const [learningStateLoading, setLearningStateLoading] = useState(true)
   const [learningStateError, setLearningStateError] = useState(false)
+  const [renewalContext, setRenewalContext] = useState<StudentRenewalContext | null>(null)
   const [progressRows, setProgressRows] = useState<StudentLearningProgressRow[]>([])
   const [progressLoading, setProgressLoading] = useState(true)
   const [progressError, setProgressError] = useState(false)
@@ -68,6 +70,9 @@ export function StudentDashboardV2() {
     getMyLearningState()
       .then((nextState) => { if (!cancelled) setLearningState(nextState) })
       .catch(() => { if (!cancelled) setLearningStateError(true) })
+    getMyStudentRenewalContext()
+      .then((context) => { if (!cancelled) setRenewalContext(context) })
+      .catch(() => { if (!cancelled) setRenewalContext(null) })
       .finally(() => { if (!cancelled) setLearningStateLoading(false) })
     return () => { cancelled = true }
   }, [canLoad])
@@ -97,8 +102,18 @@ export function StudentDashboardV2() {
   if (!isAuthenticated || !profile || profileError || status !== 'active') return null
   if (role !== 'student') return <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-base font-medium text-rose-800">Access denied.</div>
 
-  const completed = Boolean(learningState && (learningState.enrollment_status === 'completed' || learningState.completed_at || learningState.completed_sessions >= learningState.session_limit))
-  const assigned = Boolean(learningState?.teaching_group_id && learningState?.teacher_id)
+  const nextAction = renewalContext?.next_action ?? 'package_selection'
+  const hasActiveEnrollment = Boolean(renewalContext?.active_enrollment_id && renewalContext.active_enrollment_status === 'active')
+  const completed = Boolean(
+    hasActiveEnrollment
+      ? renewalContext && renewalContext.active_session_count >= renewalContext.active_session_limit
+      : renewalContext?.previous_enrollment_id,
+  )
+  const assigned = Boolean(
+    renewalContext?.teaching_group_id
+      && renewalContext?.teacher_id
+      && (hasActiveEnrollment || nextAction === 'renewal' || nextAction === 'renewal_payment' || nextAction === 'waiting_approval' || nextAction === 'activation_pending'),
+  )
   const present = attendance.filter((item) => item.teacher_status === 'present').length
   const absent = attendance.filter((item) => item.teacher_status === 'absent').length
   const total = attendance.length
@@ -110,12 +125,26 @@ export function StudentDashboardV2() {
     .filter((row) => row.completed_at && row.chapter_id)
     .sort((a, b) => String(b.completed_at).localeCompare(String(a.completed_at)))[0] ?? null
   const nextChapter = currentLevelRows.find((row) => !row.completed_at) ?? null
-  const currentLearningValue = learningStateError ? 'Unavailable' : learningState?.level_name ?? '—'
+  const currentLearningValue = learningStateError
+    ? 'Unavailable'
+    : nextAction === 'learning'
+      ? learningState?.level_name ?? 'Learning'
+      : nextAction === 'renewal' || nextAction === 'renewal_payment' || nextAction === 'waiting_approval' || nextAction === 'activation_pending'
+        ? 'Renewal'
+        : 'No active package'
   const currentLearningDetail = learningStateError
     ? 'Unable to load learning status'
-    : learningState
-      ? `${formatPackage(learningState.package_type)} · ${assigned ? (learningState.teaching_group_name ?? 'Class not assigned') : 'Class not assigned'}`
-      : 'No learning package yet'
+    : nextAction === 'learning'
+      ? `${formatPackage(renewalContext?.active_package_type ?? learningState?.package_type ?? 'private')} · ${assigned ? (renewalContext?.teaching_group_name ?? learningState?.teaching_group_name ?? 'Class not assigned') : 'Class not assigned'}`
+      : nextAction === 'renewal'
+        ? 'Continue to renew this level'
+        : nextAction === 'renewal_payment'
+          ? 'Payment required'
+          : nextAction === 'waiting_approval'
+            ? 'Waiting for payment verification'
+            : nextAction === 'activation_pending'
+              ? 'Payment approved · activation pending'
+              : 'No active learning package'
   const attendanceValue = attendanceLoading ? '…' : attendanceError ? '—%' : rate === null ? '—%' : `${rate.toFixed(0)}%`
   const attendanceDetail = attendanceLoading ? 'Loading records' : attendanceError ? 'Unable to load records' : `${total} attendance record${total === 1 ? '' : 's'} · ${absent} absent`
   const progressValue = `${currentCompletedRows.length}/${currentLevelRows.length}`
@@ -162,8 +191,41 @@ export function StudentDashboardV2() {
               {latestAchievement && <div className="mt-5 flex items-start justify-between gap-4 rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3.5"><div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Latest achievement</p><p className="mt-1.5 text-sm font-bold text-emerald-800">✓ Chapter {latestAchievement.chapter_number} — {latestAchievement.chapter_title}</p></div></div>}
 
               <div className="student-next-step mt-5 flex flex-col gap-4 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
-                <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">Next step</p><p className="mt-1 text-base font-extrabold text-[#102449]">{completed ? 'Ready for the next learning stage' : nextChapter ? `Continue Chapter ${nextChapter.chapter_number} — ${nextChapter.chapter_title}` : 'Continue your learning'}</p><p className="mt-1 text-sm leading-6 text-slate-600">{completed ? 'Your current stage is complete.' : 'Open My Learning to continue from your current stage.'}</p></div>
-                <Link to="/student/learning" className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#17325f] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">{completed ? 'Continue to Next Stage' : 'Continue Learning'} <Icon name="arrow" /></Link>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">Next step</p>
+                  <p className="mt-1 text-base font-extrabold text-[#102449]">
+                    {nextAction === 'renewal'
+                      ? 'Renew your current learning package'
+                      : nextAction === 'renewal_payment'
+                        ? 'Complete your renewal payment'
+                        : nextAction === 'waiting_approval'
+                          ? 'Payment proof is waiting for verification'
+                          : nextAction === 'activation_pending'
+                            ? 'Payment approved — waiting for activation'
+                            : completed
+                              ? 'Ready for the next learning stage'
+                              : nextChapter
+                                ? `Continue Chapter ${nextChapter.chapter_number} — ${nextChapter.chapter_title}`
+                                : 'Continue your learning'}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    {nextAction === 'renewal'
+                      ? 'Open My Learning to review the same level, package, teacher, and teaching group.'
+                      : nextAction === 'renewal_payment'
+                        ? 'Open My Learning to continue to the payment step.'
+                        : nextAction === 'waiting_approval'
+                          ? 'Your payment proof has been submitted and is awaiting Admin verification.'
+                          : nextAction === 'activation_pending'
+                            ? 'Your payment is approved. Learning access will appear after the renewal is activated.'
+                            : completed
+                              ? 'Your current stage is complete.'
+                              : 'Open My Learning to continue from your current stage.'}
+                  </p>
+                </div>
+                <Link to="/student/learning" className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#17325f] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">
+                  {nextAction === 'renewal' || nextAction === 'renewal_payment' || nextAction === 'waiting_approval' || nextAction === 'activation_pending' ? 'Continue Learning' : completed ? 'Continue to Next Stage' : 'Continue Learning'}
+                  <Icon name="arrow" />
+                </Link>
               </div>
 
               <div className="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50">
