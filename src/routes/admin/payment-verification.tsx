@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
+  adoptExistingPaidEnrollmentAssignment,
   createPaymentProofReviewUrl,
   getPendingPaymentVerifications,
   reviewPayment,
@@ -162,11 +163,29 @@ function AdminPaymentVerificationPage() {
     setSuccessMessage(null)
 
     try {
-      await reviewPayment(
+      const reviewResult = await reviewPayment(
         payment.payment_id,
         decision,
         decision === 'reject' ? trimmedReason : undefined,
       )
+
+      if (decision === 'approve') {
+        try {
+          await adoptExistingPaidEnrollmentAssignment(reviewResult.enrollment_id)
+        } catch (assignmentError) {
+          const assignmentMessage = getErrorMessage(assignmentError, '')
+          const expectedUnassigned =
+            assignmentMessage.includes('no teaching-group membership')
+            || assignmentMessage.includes('multiple teaching-group memberships')
+            || assignmentMessage.includes('Existing membership teaching group level does not match')
+            || assignmentMessage.includes('Existing membership teaching group type does not match')
+
+          if (!expectedUnassigned) {
+            throw assignmentError
+          }
+        }
+      }
+
       setRejectingPaymentId(null)
       setRejectionReason('')
       setSuccessMessage(
