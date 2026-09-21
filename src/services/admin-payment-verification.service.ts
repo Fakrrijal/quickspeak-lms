@@ -115,14 +115,3 @@ export async function reviewPayment(
   return result as ReviewPaymentResult
 }
 
-
-export async function adoptExistingPaidEnrollmentAssignment(enrollmentId: string) {
-  const { data, error } = await supabase.rpc('admin_adopt_existing_paid_enrollment_assignment', {
-    p_enrollment_id: enrollmentId,
-  })
-
-  if (error) throw error
-
-  const result = Array.isArray(data) ? data[0] : data
-  return result ?? null
-}
