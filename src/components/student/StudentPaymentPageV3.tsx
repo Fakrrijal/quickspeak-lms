@@ -99,7 +99,7 @@ export function StudentPaymentPageV3() {
     setError(null)
     try {
       const [details, settings] = await Promise.all([getCurrentStudentPaymentDetails(), getActivePaymentSettings()])
-      const history = details ? await getStudentPaymentHistory(details.enrollment.id) : []
+      const history = details ? await getStudentPaymentHistory(details.enrollment.student_id) : []
       setPaymentDetails(details)
       setPaymentSettings(settings)
       setPaymentHistory(history)
