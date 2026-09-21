@@ -210,7 +210,7 @@ export function StudentLearningPageV2() {
     const isPaymentStep = renewalContext.next_action === 'renewal_payment'
     const isWaitingApproval = renewalContext.next_action === 'waiting_approval'
     const isActivationPending = renewalContext.next_action === 'activation_pending'
-    const packageType = renewalContext.previous_package_type ?? renewalContext.renewal_package_type
+    const packageType = renewalContext.previous_package_type ?? renewalContext.renewal_package_type ?? renewalContext.active_package_type
     const packageLabel = packageType === 'private' ? 'Private' : packageType === 'semi_private' ? 'Semi-Private' : '—'
 
     return (
