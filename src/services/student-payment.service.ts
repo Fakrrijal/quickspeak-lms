@@ -149,11 +149,22 @@ export async function getCurrentStudentPaymentDetails(): Promise<StudentPaymentD
   }
 }
 
-export async function getStudentPaymentHistory(enrollmentId: string): Promise<StudentPaymentHistoryItem[]> {
+export async function getStudentPaymentHistory(studentId: string): Promise<StudentPaymentHistoryItem[]> {
+  const { data: enrollments, error: enrollmentError } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false })
+
+  if (enrollmentError) throw enrollmentError
+  if (!enrollments || enrollments.length === 0) return []
+
+  const enrollmentIds = enrollments.map((enrollment) => enrollment.id)
+
   const { data: invoices, error: invoiceError } = await supabase
     .from('invoices')
-    .select('id, invoice_number, amount, status, created_at')
-    .eq('enrollment_id', enrollmentId)
+    .select('id, enrollment_id, invoice_number, amount, status, created_at')
+    .in('enrollment_id', enrollmentIds)
     .order('created_at', { ascending: false })
 
   if (invoiceError) throw invoiceError
