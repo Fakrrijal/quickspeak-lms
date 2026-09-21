@@ -64,7 +64,7 @@ BEGIN
               WHEN tg.group_type = 'private' THEN 1
               WHEN tg.group_type = 'semi_private' THEN 4
               ELSE 0
-          )
+          END
     LOOP
         UPDATE public.enrollments
         SET status = 'active',
