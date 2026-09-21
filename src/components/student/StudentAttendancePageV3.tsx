@@ -127,8 +127,6 @@ export function StudentAttendancePageV3() {
 
   useEffect(() => { setPage(1) }, [month, year])
 
-  const historyPresent = attendance.filter((item) => item.teacher_status === 'present').length
-  useMemo(() => ({ total: attendance.length, present: historyPresent }), [attendance, historyPresent])
   const currentTotal = currentAttendance?.total_sessions ?? null
   const currentPresent = currentAttendance?.present_sessions ?? 0
   const currentAbsent = currentAttendance?.absent_sessions ?? 0
