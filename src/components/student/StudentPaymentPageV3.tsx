@@ -280,7 +280,7 @@ export function StudentPaymentPageV3() {
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     <button type="button" onClick={() => downloadReceipt(currentReceipt)} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"><Icon name="download" />Download Receipt</button>
-                    {isEnrollmentActive && <Link to="/student/learning" className="inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Continue Learning <Icon name="arrow" /></Link>}
+                    {isEnrollmentActive && <Link to="/student/learning" className="inline-flex items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#16345f]">Open My Learning <Icon name="arrow" /></Link>}
                   </div>
                 </div>
               ) : isProofSubmitted ? (
