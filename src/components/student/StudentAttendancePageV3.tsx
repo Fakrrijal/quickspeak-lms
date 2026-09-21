@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useStudentAttendance } from '../../hooks/useStudentAttendance'
+import { useStudentCurrentAttendance } from '../../hooks/useStudentCurrentAttendance'
 import { useAuthContext } from '../../providers/AuthProvider'
 import type { StudentAttendanceRecord } from '../../services/student-attendance.service'
 import { downloadAdminAttendancePdf } from '../../utils/admin-attendance-pdf'
@@ -116,6 +117,7 @@ export function StudentAttendancePageV3() {
 
   const canLoad = !loading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'student' && status === 'active'
   const { attendance, loading: attendanceLoading, error, reload } = useStudentAttendance(canLoad, month, year)
+  const { attendance: currentAttendance, loading: currentAttendanceLoading, error: currentAttendanceError } = useStudentCurrentAttendance(canLoad)
 
   useEffect(() => {
     if (loading || profileLoading) return
@@ -125,11 +127,13 @@ export function StudentAttendancePageV3() {
 
   useEffect(() => { setPage(1) }, [month, year])
 
-  const present = attendance.filter((item) => item.teacher_status === 'present').length
-  const summary = useMemo(() => {
-    const total = attendance.length
-    return { total, present, absent: total - present, rate: total ? (present / total) * 100 : null }
-  }, [attendance, present])
+  const historyPresent = attendance.filter((item) => item.teacher_status === 'present').length
+  useMemo(() => ({ total: attendance.length, present: historyPresent }), [attendance, historyPresent])
+  const currentTotal = currentAttendance?.total_sessions ?? null
+  const currentPresent = currentAttendance?.present_sessions ?? 0
+  const currentAbsent = currentAttendance?.absent_sessions ?? 0
+  const currentSessionLimit = currentAttendance?.session_limit ?? null
+  const currentRate = currentTotal ? (currentPresent / currentTotal) * 100 : null
   const period = periodLabel(year, month)
   const detailRecords = detail ? attendance.filter((item) => item.enrollment_id === detail.enrollment_id) : []
   const totalPages = Math.max(1, Math.ceil(attendance.length / PAGE_SIZE))
@@ -160,7 +164,9 @@ export function StudentAttendancePageV3() {
   if (!isAuthenticated || !profile || profileError || status !== 'active') return null
   if (role !== 'student') return <p>Access denied.</p>
 
-  const rateTone = summary.rate === 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+  const rateTone = currentRate === 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+  const currentLoading = currentAttendanceLoading
+  const currentUnavailable = currentAttendanceError || !currentAttendance
 
   return (
     <div className="space-y-5 pb-2">
@@ -168,10 +174,68 @@ export function StudentAttendancePageV3() {
         <div><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Attendance</p><h1 className="mt-1.5 text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#102449]">Attendance</h1><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Review your attendance history, session records, and attendance rate.</p></div>
       </header>
 
-      <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-        {[{ label: 'Total Sessions', value: summary.total, icon: 'calendar' as const, tone: 'bg-blue-50 text-blue-700' },{ label: 'Present', value: summary.present, icon: 'check' as const, tone: 'bg-emerald-50 text-emerald-700' },{ label: 'Absent', value: summary.absent, icon: 'x' as const, tone: 'bg-rose-50 text-rose-700' },{ label: 'Attendance Rate', value: summary.rate === null ? '—' : `${summary.rate.toFixed(1)}%`, icon: 'clock' as const, tone: rateTone }].map((item) => (
-          <article key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">{item.label}</p><p className="mt-1.5 text-2xl font-extrabold tracking-[-0.04em] text-[#102449]">{item.value}</p></div><div className={`flex size-10 items-center justify-center rounded-lg ${item.tone}`}><Icon name={item.icon} /></div></div></article>
-        ))}
+      <section className="space-y-3.5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Current Learning Package</p>
+          <h2 className="mt-0.5 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">Current Attendance</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-500">This summary follows your active enrollment. When you start a new level or renewal enrollment, it begins again from 0 sessions. Older attendance remains available in History.</p>
+        </div>
+        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              label: 'Current Sessions',
+              value: currentLoading ? '…' : currentAttendanceError ? '—' : currentAttendance && currentSessionLimit !== null ? `${currentTotal}/${currentSessionLimit}` : '—',
+              icon: 'calendar' as const,
+              tone: 'bg-blue-50 text-blue-700',
+            },
+            {
+              label: 'Present',
+              value: currentLoading ? '…' : currentUnavailable ? '—' : String(currentPresent),
+              icon: 'check' as const,
+              tone: 'bg-emerald-50 text-emerald-700',
+            },
+            {
+              label: 'Absent',
+              value: currentLoading ? '…' : currentUnavailable ? '—' : String(currentAbsent),
+              icon: 'x' as const,
+              tone: 'bg-rose-50 text-rose-700',
+            },
+            {
+              label: 'Attendance Rate',
+              value: currentLoading ? '…' : currentUnavailable || currentRate === null ? '—' : `${currentRate.toFixed(1)}%`,
+              icon: 'clock' as const,
+              tone: rateTone,
+            },
+          ].map((item) => (
+            <article key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">{item.label}</p>
+                  <p className="mt-1.5 text-2xl font-extrabold tracking-[-0.04em] text-[#102449]">{item.value}</p>
+                </div>
+                <div className={`flex size-10 items-center justify-center rounded-lg ${item.tone}`}><Icon name={item.icon} /></div>
+              </div>
+            </article>
+          ))}
+        </div>
+        {!currentLoading && !currentAttendanceError && currentAttendance && currentTotal === 0 && (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
+            <p className="text-sm font-bold text-slate-800">No attendance yet</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">This is a new active learning package. Attendance starts from 0 and will increase with each recorded meeting.</p>
+          </div>
+        )}
+        {!currentLoading && !currentAttendanceError && !currentAttendance && (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
+            <p className="text-sm font-bold text-slate-800">No active learning package</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">Current attendance will appear here when an active enrollment is available.</p>
+          </div>
+        )}
+        {currentAttendanceError && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-4">
+            <p className="text-sm font-bold text-rose-800">Unable to load current attendance.</p>
+            <p className="mt-1 text-sm leading-6 text-rose-700">Your attendance history below is still separate from the current package summary.</p>
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
