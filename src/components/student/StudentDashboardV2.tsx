@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
-import { useStudentAttendance } from '../../hooks/useStudentAttendance'
+import { useStudentCurrentAttendance } from '../../hooks/useStudentCurrentAttendance'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getMyStudentRenewalContext, type StudentRenewalContext } from '../../services/student-renewal.service'
 import { getMyStudentLearningProgress, type StudentLearningProgressRow } from '../../services/student-learning-progress.service'
@@ -60,7 +60,7 @@ export function StudentDashboardV2() {
   const [progressError, setProgressError] = useState(false)
   const [chaptersExpanded, setChaptersExpanded] = useState(false)
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'student' && status === 'active'
-  const { attendance, loading: attendanceLoading, error: attendanceError } = useStudentAttendance(canLoad)
+  const { attendance: currentAttendance, loading: attendanceLoading, error: attendanceError } = useStudentCurrentAttendance(canLoad)
 
   useEffect(() => {
     if (!canLoad) return
@@ -114,9 +114,10 @@ export function StudentDashboardV2() {
       && renewalContext?.teacher_id
       && (hasActiveEnrollment || nextAction === 'renewal' || nextAction === 'renewal_payment' || nextAction === 'waiting_approval' || nextAction === 'activation_pending'),
   )
-  const present = attendance.filter((item) => item.teacher_status === 'present').length
-  const absent = attendance.filter((item) => item.teacher_status === 'absent').length
-  const total = attendance.length
+  const total = currentAttendance?.total_sessions ?? 0
+  const present = currentAttendance?.present_sessions ?? 0
+  const absent = currentAttendance?.absent_sessions ?? 0
+  const sessionLimit = currentAttendance?.session_limit ?? null
   const rate = total ? (present / total) * 100 : null
   const currentLevelRows = learningState ? progressRows.filter((row) => row.level_number === learningState.level_number && row.chapter_id) : []
   const currentCompletedRows = currentLevelRows.filter((row) => row.completed_at)
@@ -145,8 +146,22 @@ export function StudentDashboardV2() {
             : nextAction === 'activation_pending'
               ? 'Payment approved · activation pending'
               : 'No active learning package'
-  const attendanceValue = attendanceLoading ? '…' : attendanceError ? '—%' : rate === null ? '—%' : `${rate.toFixed(0)}%`
-  const attendanceDetail = attendanceLoading ? 'Loading records' : attendanceError ? 'Unable to load records' : `${total} attendance record${total === 1 ? '' : 's'} · ${absent} absent`
+  const attendanceValue = attendanceLoading
+    ? '…'
+    : attendanceError
+      ? '—'
+      : currentAttendance && sessionLimit !== null
+        ? `${total}/${sessionLimit}`
+        : '—'
+  const attendanceDetail = attendanceLoading
+    ? 'Loading attendance'
+    : attendanceError
+      ? 'Unable to load attendance'
+      : !currentAttendance
+        ? 'No active learning package'
+        : total === 0
+          ? 'No attendance yet'
+          : `${present} Present · ${absent} Absent · ${rate?.toFixed(0)}% rate`
   const progressValue = `${currentCompletedRows.length}/${currentLevelRows.length}`
   const progressDetail = progressLoading ? 'Loading progress' : `${currentProgressPercent}% completed`
 
