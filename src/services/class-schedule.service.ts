@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getMyTeacherAttendanceGroups, type TeacherAttendanceGroup } from './teacher-attendance.service'
 
 export type ClassSchedule = {
   id: string
@@ -23,6 +24,45 @@ export async function getScheduleForTeachingGroup(teachingGroupId: string): Prom
 
   if (error) throw error
   return (data ?? []) as ClassSchedule[]
+}
+
+export async function getSchedulesForTeachingGroups(teachingGroupIds: string[]): Promise<ClassSchedule[]> {
+  if (teachingGroupIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('class_schedules')
+    .select(SCHEDULE_SELECT)
+    .in('teaching_group_id', teachingGroupIds)
+    .eq('is_active', true)
+    .order('teaching_group_id', { ascending: true })
+    .order('day_of_week', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []) as ClassSchedule[]
+}
+
+export type TeacherScheduleOverview = {
+  group: TeacherAttendanceGroup
+  schedules: ClassSchedule[]
+}
+
+export async function getMyTeacherScheduleOverview(): Promise<TeacherScheduleOverview[]> {
+  const groups = await getMyTeacherAttendanceGroups()
+  if (groups.length === 0) return []
+
+  const schedules = await getSchedulesForTeachingGroups(groups.map((group) => group.teaching_group_id))
+  const schedulesByGroup = new Map<string, ClassSchedule[]>()
+
+  for (const schedule of schedules) {
+    const current = schedulesByGroup.get(schedule.teaching_group_id) ?? []
+    current.push(schedule)
+    schedulesByGroup.set(schedule.teaching_group_id, current)
+  }
+
+  return groups.map((group) => ({
+    group,
+    schedules: schedulesByGroup.get(group.teaching_group_id) ?? [],
+  }))
 }
 
 export type SaveTeachingGroupScheduleInput = {
