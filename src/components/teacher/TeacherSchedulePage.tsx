@@ -81,7 +81,7 @@ export function TeacherSchedulePage() {
           studentCount: item.group.students.length,
         }
 
-        current.days.push(getScheduleDayLabel(schedule.day_of_week))
+        current.days.push(getScheduleDayLabel(schedule.day_of_week).slice(0, 3))
         grouped.set(key, current)
       }
 
@@ -166,12 +166,6 @@ export function TeacherSchedulePage() {
                   </p>
                 )}
               </div>
-              <Link
-                to="/teacher/teaching-groups"
-                className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-[#102449] transition hover:border-slate-400 hover:bg-white"
-              >
-                View Group <span aria-hidden="true">→</span>
-              </Link>
             </div>
           </section>
 
