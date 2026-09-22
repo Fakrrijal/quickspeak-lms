@@ -12,6 +12,13 @@ export type TeacherFeedbackForGroup = TeacherFeedback & {
   level_name: string
 }
 
+export type TeacherFeedbackReceived = TeacherFeedback & {
+  level_id: string
+  level_name: string
+  teaching_group_id: string | null
+  teaching_group_name: string | null
+}
+
 export type AdminTeacherFeedback = TeacherFeedback & {
   feedback_id: string
   student_id: string
@@ -75,6 +82,13 @@ export async function getMyTeachingGroupTeacherFeedback(
 
   if (error) throw error
   return (data ?? []) as TeacherFeedbackForGroup[]
+}
+
+export async function getMyTeacherFeedbackReceived(): Promise<TeacherFeedbackReceived[]> {
+  const { data, error } = await supabase.rpc('get_my_teacher_feedback_received')
+
+  if (error) throw error
+  return (data ?? []) as TeacherFeedbackReceived[]
 }
 
 export async function getAdminTeacherFeedback(
