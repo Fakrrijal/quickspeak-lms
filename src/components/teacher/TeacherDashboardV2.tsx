@@ -3,6 +3,8 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendance, type TeacherAttendanceMeeting } from '../../services/teacher-attendance.service'
 import { getMyTeacherFeeReport, type MyTeacherFeeReport } from '../../services/teacher-fee.service'
+import { getMyTeacherScheduleOverview, type TeacherScheduleOverview } from '../../services/class-schedule.service'
+import { formatScheduleDate, formatScheduleTime, getNextScheduleOccurrences } from '../../lib/schedule'
 
 type DateRange = { from: string; to: string }
 
@@ -73,6 +75,9 @@ export function TeacherDashboardV2() {
   const [feeReports, setFeeReports] = useState<MyTeacherFeeReport[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [scheduleOverview, setScheduleOverview] = useState<TeacherScheduleOverview[]>([])
+  const [scheduleLoading, setScheduleLoading] = useState(false)
+  const [scheduleError, setScheduleError] = useState(false)
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
 
   useEffect(() => {
@@ -80,6 +85,26 @@ export function TeacherDashboardV2() {
     if (!isAuthenticated || !profile || profileError || status === null) navigate({ to: '/login', replace: true })
     else if (status === 'waiting') navigate({ to: '/waiting', replace: true })
   }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
+
+  useEffect(() => {
+    if (!canLoad) return
+    let cancelled = false
+    setScheduleLoading(true)
+    setScheduleError(false)
+
+    getMyTeacherScheduleOverview()
+      .then((data) => {
+        if (!cancelled) setScheduleOverview(data)
+      })
+      .catch(() => {
+        if (!cancelled) setScheduleError(true)
+      })
+      .finally(() => {
+        if (!cancelled) setScheduleLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [canLoad])
 
   useEffect(() => {
     if (!canLoad || dateRange.from > dateRange.to) return
@@ -118,6 +143,14 @@ export function TeacherDashboardV2() {
   const attendanceRate = attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0
   const unpaidFee = useMemo(() => feeReports.reduce((total, report) => total + Math.max(report.period_summary.outstanding_amount, 0), 0), [feeReports])
   const rangeLabel = `${formatDate(dateRange.from)} – ${formatDate(dateRange.to)}`
+  const nextScheduledClass = useMemo(() => {
+    return scheduleOverview
+      .flatMap((item) => {
+        const occurrence = getNextScheduleOccurrences(item.schedules, 1)[0]
+        return occurrence ? [{ ...item, occurrence }] : []
+      })
+      .sort((a, b) => a.occurrence.date.getTime() - b.occurrence.date.getTime())[0] ?? null
+  }, [scheduleOverview])
 
   if (authLoading || profileLoading) return <p>Loading...</p>
   if (!isAuthenticated || !profile || profileError || status === null || status === 'waiting') return null
@@ -139,6 +172,41 @@ export function TeacherDashboardV2() {
           <p className="mt-2 text-[15px] leading-6 text-slate-600">Here is your current teaching operations overview.</p>
         </div>
       </header>
+
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="teacher-next-class-title">
+        <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Next Class</p>
+            <h2 id="teacher-next-class-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449]">
+              {scheduleLoading
+                ? 'Loading schedule…'
+                : scheduleError
+                  ? 'Unable to load schedule'
+                  : nextScheduledClass
+                    ? formatScheduleDate(nextScheduledClass.occurrence.date)
+                    : 'No upcoming class scheduled'}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              {scheduleLoading
+                ? 'Checking your planned classes.'
+                : scheduleError
+                  ? 'Open Schedule to retry.'
+                  : nextScheduledClass
+                    ? `${formatScheduleTime(nextScheduledClass.occurrence.schedule.start_time)} – ${formatScheduleTime(nextScheduledClass.occurrence.schedule.end_time)} WIB · ${nextScheduledClass.group.teaching_group_name} · ${nextScheduledClass.group.level_name} · ${nextScheduledClass.group.students.length} student${nextScheduledClass.group.students.length === 1 ? '' : 's'}`
+                    : 'Set a weekly schedule from Teaching Groups to see your next class here.'}
+            </p>
+          </div>
+          <Link
+            to="/teacher/schedule"
+            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-[#102449] transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]"
+          >
+            View Schedule <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+        <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-3 text-xs font-semibold leading-5 text-slate-500 sm:px-6">
+          Planned schedule only. Actual class time and attendance are recorded separately.
+        </div>
+      </section>
 
       <section className="teacher-period-filter flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5" aria-label="Reporting period">
         <div>
