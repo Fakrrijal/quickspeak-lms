@@ -221,10 +221,10 @@ export function StudentDashboardV2() {
       </section>
 
       <section className="relative z-0 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white shadow-sm" aria-labelledby="student-next-class-title">
-        <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:p-7">
+        <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between lg:p-5">
           <div className="flex min-w-0 items-start gap-4">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-7 fill-none stroke-current stroke-[1.8]">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 fill-none stroke-current stroke-[1.8]">
                 <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
                 <path d="M8 2.5v4M16 2.5v4M3 9h18" />
                 <path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" />
@@ -241,7 +241,7 @@ export function StudentDashboardV2() {
                 )}
               </div>
 
-              <h2 id="student-next-class-title" className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-[28px]">
+              <h2 id="student-next-class-title" className="mt-1.5 text-[22px] font-extrabold tracking-[-0.025em] text-[#102449] sm:text-[25px]">
                 {scheduleLoading
                   ? 'Loading schedule…'
                   : scheduleError
@@ -251,7 +251,7 @@ export function StudentDashboardV2() {
                       : 'Schedule not set yet'}
               </h2>
 
-              <p className="mt-2 text-lg font-extrabold text-blue-700">
+              <p className="mt-1.5 text-base font-extrabold text-blue-700 sm:text-lg">
                 {scheduleLoading
                   ? 'Checking your current teaching group schedule.'
                   : scheduleError
@@ -262,7 +262,7 @@ export function StudentDashboardV2() {
               </p>
 
               {nextPlannedClass && !scheduleLoading && !scheduleError && (
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-slate-600">
+                <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-semibold text-slate-600">
                   <span className="font-bold text-[#102449]">{learningState?.teaching_group_name ?? 'Current teaching group'}</span>
                   <span aria-hidden="true">·</span>
                   <span>{learningState?.level_name ?? 'Current level'}</span>
@@ -279,13 +279,13 @@ export function StudentDashboardV2() {
 
           <Link
             to="/student/schedule"
-            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#102449] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#17325f] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449] lg:w-auto"
+            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#102449] px-5 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#17325f] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449] lg:w-auto"
           >
             View Full Schedule <Icon name="arrow" />
           </Link>
         </div>
 
-        <div className="border-t border-blue-100 bg-white/70 px-5 py-3.5 text-xs font-semibold leading-5 text-slate-500 sm:px-6 lg:px-7">
+        <div className="border-t border-blue-100 bg-white/70 px-5 py-2.5 text-xs font-semibold leading-5 text-slate-500 sm:px-6 lg:px-5">
           Planned schedule only. Actual class time and attendance are recorded separately by your teacher.
         </div>
       </section>
