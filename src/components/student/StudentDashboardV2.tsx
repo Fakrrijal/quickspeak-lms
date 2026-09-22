@@ -22,6 +22,17 @@ function formatPackage(value: StudentLearningState['package_type']) {
   return value === 'private' ? 'Private' : 'Semi-Private'
 }
 
+function getScheduleDayStatus(date: Date) {
+  const today = new Date()
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const targetStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const dayOffset = Math.round((targetStart.getTime() - todayStart.getTime()) / 86400000)
+
+  if (dayOffset === 0) return 'TODAY'
+  if (dayOffset === 1) return 'TOMORROW'
+  return date.toLocaleDateString('en-GB', { weekday: 'long' }).toUpperCase()
+}
+
 type SummaryCardProps = {
   label: string
   value: string | number
@@ -209,35 +220,73 @@ export function StudentDashboardV2() {
         <SummaryCard label="Payment" value="Open" detail="View payment details" to="/student-payment" icon="wallet" color="text-amber-800" iconBg="bg-amber-50" />
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="student-next-class-title">
-        <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Next Class</p>
-            <h2 id="student-next-class-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449]">
-              {scheduleLoading
-                ? 'Loading schedule…'
-                : scheduleError
-                  ? 'Unable to load schedule'
-                  : nextPlannedClass
-                    ? formatScheduleDate(nextPlannedClass.date)
-                    : 'Schedule not set yet'}
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              {scheduleLoading
-                ? 'Checking your current teaching group schedule.'
-                : scheduleError
-                  ? 'Open Schedule to retry.'
-                  : nextPlannedClass
-                    ? `${formatScheduleTime(nextPlannedClass.schedule.start_time)} – ${formatScheduleTime(nextPlannedClass.schedule.end_time)} WIB · ${learningState?.teaching_group_name ?? 'Current teaching group'}${learningState?.teacher_name ? ` · Teacher: ${learningState.teacher_name}` : ''}`
-                    : 'Your teacher has not entered an upcoming planned class time yet.'}
-            </p>
+      <section className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white shadow-sm" aria-labelledby="student-next-class-title">
+        <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:p-7">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-7 fill-none stroke-current stroke-[1.8]">
+                <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
+                <path d="M8 2.5v4M16 2.5v4M3 9h18" />
+                <path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" />
+              </svg>
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Next Class</p>
+                {nextPlannedClass && !scheduleLoading && !scheduleError && (
+                  <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-extrabold tracking-[0.08em] text-blue-800">
+                    {getScheduleDayStatus(nextPlannedClass.date)}
+                  </span>
+                )}
+              </div>
+
+              <h2 id="student-next-class-title" className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-[28px]">
+                {scheduleLoading
+                  ? 'Loading schedule…'
+                  : scheduleError
+                    ? 'Unable to load schedule'
+                    : nextPlannedClass
+                      ? formatScheduleDate(nextPlannedClass.date)
+                      : 'Schedule not set yet'}
+              </h2>
+
+              <p className="mt-2 text-lg font-extrabold text-blue-700">
+                {scheduleLoading
+                  ? 'Checking your current teaching group schedule.'
+                  : scheduleError
+                    ? 'Open Schedule to retry.'
+                    : nextPlannedClass
+                      ? `${formatScheduleTime(nextPlannedClass.schedule.start_time)} – ${formatScheduleTime(nextPlannedClass.schedule.end_time)} WIB`
+                      : 'Your teacher has not entered an upcoming planned class time yet.'}
+              </p>
+
+              {nextPlannedClass && !scheduleLoading && !scheduleError && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-slate-600">
+                  <span className="font-bold text-[#102449]">{learningState?.teaching_group_name ?? 'Current teaching group'}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{learningState?.level_name ?? 'Current level'}</span>
+                  {learningState?.teacher_name && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>Teacher: {learningState.teacher_name}</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <Link to="/student/schedule" className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-[#102449] transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449]">
-            View Schedule <Icon name="arrow" />
+
+          <Link
+            to="/student/schedule"
+            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#102449] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#17325f] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102449] lg:w-auto"
+          >
+            View Full Schedule <Icon name="arrow" />
           </Link>
         </div>
-        <div className="border-t border-slate-100 bg-slate-50/70 px-6 py-3 text-xs font-semibold leading-5 text-slate-500 sm:px-7">
-          Showing the next planned class only. Actual class time and attendance are recorded separately by your teacher.
+
+        <div className="border-t border-blue-100 bg-white/70 px-5 py-3.5 text-xs font-semibold leading-5 text-slate-500 sm:px-6 lg:px-7">
+          Planned schedule only. Actual class time and attendance are recorded separately by your teacher.
         </div>
       </section>
 
