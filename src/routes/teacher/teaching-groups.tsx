@@ -275,7 +275,7 @@ function TeacherTeachingGroupsPage() {
                         : String(teacherFeedbackAverage?.toFixed(1) ?? '—') + '/5'}
                   </p>
                   {!teacherFeedbackLoading && teacherFeedback.length > 0 && teacherFeedbackAverage !== null && (
-                    <span className="text-lg tracking-[0.08em] text-amber-400" aria-label={`Average rating ${teacherFeedbackAverage.toFixed(1)} out of 5`}>
+                    <span className="text-lg tracking-[0.08em] text-amber-400" aria-label={`Overall rating ${teacherFeedbackAverage.toFixed(1)} out of 5`}>
                       {'★'.repeat(Math.round(teacherFeedbackAverage))}{'☆'.repeat(5 - Math.round(teacherFeedbackAverage))}
                     </span>
                   )}
@@ -389,7 +389,7 @@ function TeacherTeachingGroupsPage() {
 
             <div className="overflow-y-auto p-5 sm:p-6">
               <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Summary</p>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Overall Rating</p>
                 <div className="mt-2 flex flex-wrap items-center gap-3">
                   <span className="text-xl font-extrabold text-[#102449]">{teacherFeedbackAverage?.toFixed(1) ?? '—'}/5</span>
                   {teacherFeedbackAverage !== null && (
