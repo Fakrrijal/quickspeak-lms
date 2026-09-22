@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyLearningState, type StudentLearningState } from '../../services/student-learning-state.service'
 import { getScheduleForTeachingGroup, type ClassSchedule } from '../../services/class-schedule.service'
-import { formatScheduleTime, getScheduleDayLabel } from '../../lib/schedule'
+import { formatScheduleDate, formatScheduleTime, getNextScheduleOccurrences } from '../../lib/schedule'
 
 export function StudentSchedulePage() {
   const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
   const navigate = useNavigate()
   const [learningState, setLearningState] = useState<StudentLearningState | null>(null)
-  const [schedule, setSchedule] = useState<ClassSchedule | null>(null)
+  const [schedules, setSchedules] = useState<ClassSchedule[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -37,13 +37,13 @@ export function StudentSchedulePage() {
         setLearningState(state)
 
         if (!state?.teaching_group_id) {
-          setSchedule(null)
+          setSchedules([])
           setLoading(false)
           return
         }
 
-        const groupSchedule = await getScheduleForTeachingGroup(state.teaching_group_id)
-        if (!cancelled) setSchedule(groupSchedule)
+        const groupSchedules = await getScheduleForTeachingGroup(state.teaching_group_id)
+        if (!cancelled) setSchedules(groupSchedules)
       })
       .catch(() => {
         if (!cancelled) setError(true)
@@ -54,6 +54,11 @@ export function StudentSchedulePage() {
 
     return () => { cancelled = true }
   }, [canLoad])
+
+  const plannedOccurrences = useMemo(
+    () => getNextScheduleOccurrences(schedules, 8),
+    [schedules],
+  )
 
   if (authLoading || profileLoading || loading) {
     return (
@@ -72,7 +77,7 @@ export function StudentSchedulePage() {
       <header className="border-b border-slate-200 pb-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Student Portal</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Class Schedule</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">View the planned class time for your current teaching group.</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Your next 8 planned classes for the current teaching group.</p>
       </header>
 
       {error ? (
@@ -99,25 +104,32 @@ export function StudentSchedulePage() {
             </div>
 
             <div className="p-5 sm:p-6">
-              {!schedule ? (
+              {schedules.length === 0 || plannedOccurrences.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-6 text-center">
                   <h3 className="text-lg font-bold text-[#102449]">Schedule not set yet</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Your teacher has not entered the planned class schedule yet.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Your teacher has not entered an upcoming planned class schedule yet.</p>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5 sm:p-6">
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Weekly Schedule</p>
-                      <p className="mt-2 text-3xl font-extrabold tracking-[-0.02em] text-[#102449]">{getScheduleDayLabel(schedule.day_of_week)}</p>
-                      <p className="mt-1 text-xl font-bold text-blue-700">{formatScheduleTime(schedule.start_time)} – {formatScheduleTime(schedule.end_time)} WIB</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Planned classes</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-500">{plannedOccurrences.length} upcoming planned class{plannedOccurrences.length === 1 ? '' : 'es'}</p>
                     </div>
-                    <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm">
-                      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-8 fill-none stroke-current stroke-2">
-                        <rect x="3" y="4.5" width="18" height="16" rx="2" />
-                        <path d="M8 2.5v4M16 2.5v4M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" />
-                      </svg>
-                    </div>
+                    <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">WIB</span>
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-slate-200">
+                    {plannedOccurrences.map((occurrence, index) => (
+                      <div key={`${occurrence.date.toISOString()}-${occurrence.schedule.day_of_week}`} className="grid gap-3 border-b border-slate-200 bg-white px-4 py-4 last:border-b-0 sm:grid-cols-[48px_minmax(0,1fr)_auto] sm:items-center sm:px-5">
+                        <span className="flex size-9 items-center justify-center rounded-full bg-blue-50 text-sm font-extrabold text-blue-700">{index + 1}</span>
+                        <div>
+                          <p className="text-sm font-extrabold text-[#102449]">{formatScheduleDate(occurrence.date)}</p>
+                          <p className="mt-1 text-sm font-semibold text-blue-700">{formatScheduleTime(occurrence.schedule.start_time)} – {formatScheduleTime(occurrence.schedule.end_time)} WIB</p>
+                        </div>
+                        <span className="w-fit rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">Planned</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
