@@ -306,32 +306,49 @@ export function TeacherSchedulePage() {
 
             {scheduleData.weeklyRows.length > 0 ? (
               <>
-                <div className="divide-y divide-slate-100">
-                  {paginatedWeeklyRows.map((row) => (
-                    <div
-                      key={row.key}
-                      className="flex flex-col gap-3 px-5 py-4 sm:grid sm:grid-cols-[minmax(110px,0.9fr)_150px_minmax(0,1.6fr)] sm:items-center sm:px-6"
-                    >
-                      <p className="text-sm font-extrabold text-[#102449]">
-                        {row.days.join(', ')}
-                      </p>
-
-                      <p className="text-sm font-bold text-blue-700">
-                        {formatScheduleTime(row.startTime)} –{' '}
-                        {formatScheduleTime(row.endTime)} WIB
-                      </p>
-
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-slate-800">
-                          {row.groupName}
-                        </p>
-                        <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                          {row.levelName} · {row.studentCount} student
-                          {row.studentCount === 1 ? '' : 's'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50/80 text-left">
+                        <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:px-6">
+                          Days
+                        </th>
+                        <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                          Time
+                        </th>
+                        <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                          Teaching Group
+                        </th>
+                        <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                          Level
+                        </th>
+                        <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                          Students
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {paginatedWeeklyRows.map((row) => (
+                        <tr key={row.key} className="bg-white transition hover:bg-slate-50/70">
+                          <td className="whitespace-nowrap px-5 py-4 text-sm font-extrabold text-[#102449] sm:px-6">
+                            {row.days.join(', ')}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 text-sm font-bold text-blue-700">
+                            {formatScheduleTime(row.startTime)} – {formatScheduleTime(row.endTime)} WIB
+                          </td>
+                          <td className="px-5 py-4 text-sm font-bold text-slate-800">
+                            {row.groupName}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-600">
+                            {row.levelName}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-semibold text-slate-700">
+                            {row.studentCount}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
                 {scheduleData.weeklyRows.length > SCHEDULE_PAGE_SIZE && (
