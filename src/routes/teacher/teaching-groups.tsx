@@ -265,7 +265,7 @@ function TeacherTeachingGroupsPage() {
           <section className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Your Teacher Rating</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">My Rating</p>
                 <div className="mt-1 flex flex-wrap items-center gap-3">
                   <p className="text-2xl font-extrabold text-[#102449]">
                     {teacherFeedbackLoading
