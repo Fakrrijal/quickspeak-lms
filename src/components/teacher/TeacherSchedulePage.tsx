@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
-import { formatScheduleDate, formatScheduleTime, getNextScheduleOccurrences, getScheduleDayLabel } from '../../lib/schedule'
-import { getMyTeacherScheduleOverview, type TeacherScheduleOverview } from '../../services/class-schedule.service'
+import {
+  formatScheduleDate,
+  formatScheduleTime,
+  getNextScheduleOccurrences,
+  getScheduleDayLabel,
+} from '../../lib/schedule'
+import {
+  getMyTeacherScheduleOverview,
+  type TeacherScheduleOverview,
+} from '../../services/class-schedule.service'
 
 const SCHEDULE_PAGE_SIZE = 10
 
 type WeeklyScheduleRow = {
   key: string
+  firstDay: number
   days: string[]
   startTime: string
   endTime: string
@@ -17,23 +26,51 @@ type WeeklyScheduleRow = {
 }
 
 export function TeacherSchedulePage() {
-  const { isAuthenticated, loading: authLoading, profile, profileError, profileLoading, role, status } = useAuthContext()
+  const {
+    isAuthenticated,
+    loading: authLoading,
+    profile,
+    profileError,
+    profileLoading,
+    role,
+    status,
+  } = useAuthContext()
   const navigate = useNavigate()
+
   const [overview, setOverview] = useState<TeacherScheduleOverview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [schedulePage, setSchedulePage] = useState(1)
 
-  const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
+  const canLoad =
+    !authLoading &&
+    !profileLoading &&
+    isAuthenticated &&
+    Boolean(profile) &&
+    !profileError &&
+    role === 'teacher' &&
+    status === 'active'
 
   useEffect(() => {
     if (authLoading || profileLoading) return
+
     if (!isAuthenticated || !profile || profileError || status === null) {
       navigate({ to: '/login', replace: true })
       return
     }
-    if (status === 'waiting') navigate({ to: '/waiting', replace: true })
-  }, [authLoading, isAuthenticated, navigate, profile, profileError, profileLoading, status])
+
+    if (status === 'waiting') {
+      navigate({ to: '/waiting', replace: true })
+    }
+  }, [
+    authLoading,
+    isAuthenticated,
+    navigate,
+    profile,
+    profileError,
+    profileLoading,
+    status,
+  ])
 
   useEffect(() => {
     if (!canLoad) return
@@ -47,76 +84,102 @@ export function TeacherSchedulePage() {
         if (!cancelled) setOverview(data)
       })
       .catch((loadError) => {
-        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Unable to load your schedule')
+        if (!cancelled) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'Unable to load your schedule',
+          )
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [canLoad])
 
   const scheduleData = useMemo(() => {
-    const scheduled = overview.filter((item) => item.schedules.length > 0)
-    const unscheduledCount = overview.length - scheduled.length
+    const scheduledGroups = overview.filter((item) => item.schedules.length > 0)
+    const unscheduledCount = overview.length - scheduledGroups.length
 
-    const nextScheduledClass = scheduled
-      .flatMap((item) => {
-        const occurrence = getNextScheduleOccurrences(item.schedules, 1)[0]
-        return occurrence ? [{ ...item, occurrence }] : []
-      })
-      .sort((a, b) => a.occurrence.date.getTime() - b.occurrence.date.getTime())[0] ?? null
+    const nextScheduledClass =
+      scheduledGroups
+        .flatMap((item) => {
+          const occurrence = getNextScheduleOccurrences(item.schedules, 1)[0]
+          return occurrence ? [{ item, occurrence }] : []
+        })
+        .sort((a, b) => a.occurrence.date.getTime() - b.occurrence.date.getTime())[0] ?? null
 
     const rowMap = new Map<string, WeeklyScheduleRow>()
-    for (const item of scheduled) {
-      const schedules = [...item.schedules].sort((a, b) => a.day_of_week - b.day_of_week)
-      const grouped = new Map<string, WeeklyScheduleRow>()
+
+    for (const item of scheduledGroups) {
+      const schedules = [...item.schedules].sort(
+        (a, b) => a.day_of_week - b.day_of_week,
+      )
+      const groupRows = new Map<string, WeeklyScheduleRow>()
 
       for (const schedule of schedules) {
-        const key = `${item.group.teaching_group_id}-${schedule.start_time}-${schedule.end_time}`
-        const current = grouped.get(key) ?? {
+        const key = [
+          item.group.teaching_group_id,
+          schedule.start_time,
+          schedule.end_time,
+        ].join('-')
+
+        const existing = groupRows.get(key)
+        if (existing) {
+          existing.days.push(getScheduleDayLabel(schedule.day_of_week).slice(0, 3))
+          continue
+        }
+
+        groupRows.set(key, {
           key,
-          days: [],
+          firstDay: schedule.day_of_week,
+          days: [getScheduleDayLabel(schedule.day_of_week).slice(0, 3)],
           startTime: schedule.start_time,
           endTime: schedule.end_time,
           groupName: item.group.teaching_group_name,
           levelName: item.group.level_name,
           studentCount: item.group.students.length,
-        }
-
-        current.days.push(getScheduleDayLabel(schedule.day_of_week).slice(0, 3))
-        grouped.set(key, current)
+        })
       }
 
-      for (const [key, row] of grouped) {
-        rowMap.set(key, row)
+      for (const row of groupRows.values()) {
+        rowMap.set(row.key, row)
       }
     }
 
     const weeklyRows = [...rowMap.values()].sort((a, b) => {
-      const firstDayA = overview
-        .find((item) => item.group.teaching_group_name === a.groupName)
-        ?.schedules
-        .find((schedule) => schedule.start_time === a.startTime && schedule.end_time === a.endTime)?.day_of_week ?? 8
-      const firstDayB = overview
-        .find((item) => item.group.teaching_group_name === b.groupName)
-        ?.schedules
-        .find((schedule) => schedule.start_time === b.startTime && schedule.end_time === b.endTime)?.day_of_week ?? 8
-
-      return firstDayA - firstDayB || a.startTime.localeCompare(b.startTime) || a.groupName.localeCompare(b.groupName)
+      return (
+        a.firstDay - b.firstDay ||
+        a.startTime.localeCompare(b.startTime) ||
+        a.groupName.localeCompare(b.groupName)
+      )
     })
 
-    return { nextScheduledClass, weeklyRows, unscheduledCount, scheduledCount: scheduled.length }
+    return {
+      nextScheduledClass,
+      weeklyRows,
+      unscheduledCount,
+    }
   }, [overview])
 
-  const totalSchedulePages = Math.max(1, Math.ceil(scheduleData.weeklyRows.length / SCHEDULE_PAGE_SIZE))
+  const totalSchedulePages = Math.max(
+    1,
+    Math.ceil(scheduleData.weeklyRows.length / SCHEDULE_PAGE_SIZE),
+  )
+
   const paginatedWeeklyRows = scheduleData.weeklyRows.slice(
     (schedulePage - 1) * SCHEDULE_PAGE_SIZE,
     schedulePage * SCHEDULE_PAGE_SIZE,
   )
 
   useEffect(() => {
-    setSchedulePage((current) => Math.min(current, totalSchedulePages))
+    setSchedulePage((currentPage) =>
+      Math.min(currentPage, totalSchedulePages),
+    )
   }, [totalSchedulePages])
 
   if (authLoading || profileLoading || loading) {
@@ -128,143 +191,238 @@ export function TeacherSchedulePage() {
     )
   }
 
-  if (!isAuthenticated || !profile || profileError || status !== 'active') return null
-  if (role !== 'teacher') return <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-800">Access denied.</div>
+  if (!isAuthenticated || !profile || profileError || status !== 'active') {
+    return null
+  }
+
+  if (role !== 'teacher') {
+    return (
+      <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-800">
+        Access denied.
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">Schedule</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">See your next class and weekly teaching schedule in one place.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">
+            Teacher Portal
+          </p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.03em] text-[#102449] sm:text-4xl">
+            Schedule
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            See your next class and weekly teaching schedule in one place.
+          </p>
         </div>
+
         <Link
           to="/teacher/teaching-groups"
           className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17325f]"
         >
-          Manage Teaching Groups <span aria-hidden="true">→</span>
+          Manage Teaching Groups
+          <span aria-hidden="true">→</span>
         </Link>
       </header>
 
       {error ? (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
-          <p className="text-sm font-bold text-rose-800">Unable to load your schedule.</p>
+          <p className="text-sm font-bold text-rose-800">
+            Unable to load your schedule.
+          </p>
           <p className="mt-1 text-sm text-rose-700">{error}</p>
         </section>
       ) : overview.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-[#102449]">No teaching groups assigned</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Your teaching groups and planned schedules will appear here once assigned.</p>
+          <h2 className="text-lg font-bold text-[#102449]">
+            No teaching groups assigned
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Your teaching groups and planned schedules will appear here once
+            assigned.
+          </p>
         </section>
       ) : (
         <>
-          <section className="rounded-2xl border border-blue-100 bg-blue-50/60 shadow-sm" aria-labelledby="teacher-next-class-title">
-            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Next Class</p>
-                <h2 id="teacher-next-class-title" className="mt-1.5 text-xl font-extrabold tracking-[-0.02em] text-[#102449]">
-                  {scheduleData.nextScheduledClass
-                    ? formatScheduleDate(scheduleData.nextScheduledClass.occurrence.date)
-                    : 'No upcoming class scheduled'}
-                </h2>
-                <p className="mt-1.5 text-sm font-semibold text-blue-700">
-                  {scheduleData.nextScheduledClass
-                    ? `${formatScheduleTime(scheduleData.nextScheduledClass.occurrence.schedule.start_time)} – ${formatScheduleTime(scheduleData.nextScheduledClass.occurrence.schedule.end_time)} WIB`
-                    : 'Set a weekly schedule from Teaching Groups to see your next class here.'}
+          <section
+            className="rounded-2xl border border-blue-100 bg-blue-50/60 shadow-sm"
+            aria-labelledby="teacher-next-class-title"
+          >
+            <div className="p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                Next Class
+              </p>
+              <h2
+                id="teacher-next-class-title"
+                className="mt-1.5 text-xl font-extrabold tracking-[-0.02em] text-[#102449]"
+              >
+                {scheduleData.nextScheduledClass
+                  ? formatScheduleDate(
+                      scheduleData.nextScheduledClass.occurrence.date,
+                    )
+                  : 'No upcoming class scheduled'}
+              </h2>
+              <p className="mt-1.5 text-sm font-semibold text-blue-700">
+                {scheduleData.nextScheduledClass
+                  ? `${formatScheduleTime(
+                      scheduleData.nextScheduledClass.occurrence.schedule.start_time,
+                    )} – ${formatScheduleTime(
+                      scheduleData.nextScheduledClass.occurrence.schedule.end_time,
+                    )} WIB`
+                  : 'Set a weekly schedule from Teaching Groups to see your next class here.'}
+              </p>
+
+              {scheduleData.nextScheduledClass && (
+                <p className="mt-2 text-sm text-slate-600">
+                  {scheduleData.nextScheduledClass.item.group.teaching_group_name} ·{' '}
+                  {scheduleData.nextScheduledClass.item.group.level_name} ·{' '}
+                  {scheduleData.nextScheduledClass.item.group.students.length}{' '}
+                  student
+                  {scheduleData.nextScheduledClass.item.group.students.length === 1
+                    ? ''
+                    : 's'}
                 </p>
-                {scheduleData.nextScheduledClass && (
-                  <p className="mt-2 text-sm text-slate-600">
-                    {scheduleData.nextScheduledClass.group.teaching_group_name} · {scheduleData.nextScheduledClass.group.level_name} · {scheduleData.nextScheduledClass.group.students.length} student{scheduleData.nextScheduledClass.group.students.length === 1 ? '' : 's'}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="teacher-weekly-schedule-title">
-            <div className="flex flex-col gap-1 border-b border-slate-200 px-5 py-4 sm:px-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Weekly Schedule</p>
-              <h2 id="teacher-weekly-schedule-title" className="text-xl font-extrabold text-[#102449]">Your teaching timetable</h2>
+          <section
+            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            aria-labelledby="teacher-weekly-schedule-title"
+          >
+            <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                Weekly Schedule
+              </p>
+              <h2
+                id="teacher-weekly-schedule-title"
+                className="text-xl font-extrabold text-[#102449]"
+              >
+                Your teaching timetable
+              </h2>
             </div>
 
             {scheduleData.weeklyRows.length > 0 ? (
               <>
                 <div className="divide-y divide-slate-100">
-                {paginatedWeeklyRows.map((row) => (
-                  <div key={row.key} className="flex flex-col gap-3 px-5 py-4 sm:grid sm:grid-cols-[minmax(110px,0.9fr)_150px_minmax(0,1.6fr)] sm:items-center sm:px-6">
-                    <div>
-                      <p className="text-sm font-extrabold text-[#102449]">{row.days.join(', ')}</p>
-                    </div>
-                    <p className="text-sm font-bold text-blue-700">{formatScheduleTime(row.startTime)} – {formatScheduleTime(row.endTime)} WIB</p>
-                    <div className="flex min-w-0 items-center justify-between gap-4">
+                  {paginatedWeeklyRows.map((row) => (
+                    <div
+                      key={row.key}
+                      className="flex flex-col gap-3 px-5 py-4 sm:grid sm:grid-cols-[minmax(110px,0.9fr)_150px_minmax(0,1.6fr)] sm:items-center sm:px-6"
+                    >
+                      <p className="text-sm font-extrabold text-[#102449]">
+                        {row.days.join(', ')}
+                      </p>
+
+                      <p className="text-sm font-bold text-blue-700">
+                        {formatScheduleTime(row.startTime)} –{' '}
+                        {formatScheduleTime(row.endTime)} WIB
+                      </p>
+
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-slate-800">{row.groupName}</p>
-                        <p className="mt-0.5 text-xs font-semibold text-slate-500">{row.levelName} · {row.studentCount} student{row.studentCount === 1 ? '' : 's'}</p>
+                        <p className="truncate text-sm font-bold text-slate-800">
+                          {row.groupName}
+                        </p>
+                        <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                          {row.levelName} · {row.studentCount} student
+                          {row.studentCount === 1 ? '' : 's'}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {scheduleData.weeklyRows.length > SCHEDULE_PAGE_SIZE && (
-                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <p className="text-xs font-semibold text-slate-500">
-                    Showing {(schedulePage - 1) * SCHEDULE_PAGE_SIZE + 1}–{Math.min(schedulePage * SCHEDULE_PAGE_SIZE, scheduleData.weeklyRows.length)} of {scheduleData.weeklyRows.length} schedules
-                  </p>
-
-                  <nav aria-label="Schedule pagination" className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setSchedulePage((current) => Math.max(1, current - 1))}
-                      disabled={schedulePage === 1}
-                      aria-label="Previous schedule page"
-                      className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <span className="sm:hidden">Previous</span>
-                      <span className="hidden sm:inline" aria-hidden="true">‹</span>
-                    </button>
-
-                    <div className="hidden items-center gap-1.5 sm:flex">
-                      {Array.from({ length: totalSchedulePages }, (_, index) => index + 1).map((pageNumber) => (
-                        <button
-                          key={pageNumber}
-                          type="button"
-                          onClick={() => setSchedulePage(pageNumber)}
-                          aria-current={schedulePage === pageNumber ? 'page' : undefined}
-                          aria-label={`Schedule page ${pageNumber}`}
-                          className={[
-                            'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-bold transition',
-                            schedulePage === pageNumber
-                              ? 'border-[#102449] bg-[#102449] text-white'
-                              : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50',
-                          ].join(' ')}
-                        >
-                          {pageNumber}
-                        </button>
-                      ))}
-                    </div>
-
-                    <span className="text-xs font-bold text-slate-600 sm:hidden">Page {schedulePage} of {totalSchedulePages}</span>
-
-                    <button
-                      type="button"
-                      onClick={() => setSchedulePage((current) => Math.min(totalSchedulePages, current + 1))}
-                      disabled={schedulePage === totalSchedulePages}
-                      aria-label="Next schedule page"
-                      className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <span className="sm:hidden">Next</span>
-                      <span className="hidden sm:inline" aria-hidden="true">›</span>
-                    </button>
-                  </nav>
+                  ))}
                 </div>
+
+                {scheduleData.weeklyRows.length > SCHEDULE_PAGE_SIZE && (
+                  <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <p className="text-xs font-semibold text-slate-500">
+                      Showing {(schedulePage - 1) * SCHEDULE_PAGE_SIZE + 1}–
+                      {Math.min(
+                        schedulePage * SCHEDULE_PAGE_SIZE,
+                        scheduleData.weeklyRows.length,
+                      )}{' '}
+                      of {scheduleData.weeklyRows.length} schedules
+                    </p>
+
+                    <nav
+                      aria-label="Schedule pagination"
+                      className="flex items-center gap-1.5"
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSchedulePage((currentPage) =>
+                            Math.max(1, currentPage - 1),
+                          )
+                        }
+                        disabled={schedulePage === 1}
+                        aria-label="Previous schedule page"
+                        className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <span className="sm:hidden">Previous</span>
+                        <span className="hidden sm:inline" aria-hidden="true">
+                          ‹
+                        </span>
+                      </button>
+
+                      <div className="hidden items-center gap-1.5 sm:flex">
+                        {Array.from(
+                          { length: totalSchedulePages },
+                          (_, index) => index + 1,
+                        ).map((pageNumber) => (
+                          <button
+                            key={pageNumber}
+                            type="button"
+                            onClick={() => setSchedulePage(pageNumber)}
+                            aria-current={
+                              schedulePage === pageNumber ? 'page' : undefined
+                            }
+                            aria-label={`Schedule page ${pageNumber}`}
+                            className={[
+                              'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-bold transition',
+                              schedulePage === pageNumber
+                                ? 'border-[#102449] bg-[#102449] text-white'
+                                : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50',
+                            ].join(' ')}
+                          >
+                            {pageNumber}
+                          </button>
+                        ))}
+                      </div>
+
+                      <span className="text-xs font-bold text-slate-600 sm:hidden">
+                        Page {schedulePage} of {totalSchedulePages}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSchedulePage((currentPage) =>
+                            Math.min(totalSchedulePages, currentPage + 1),
+                          )
+                        }
+                        disabled={schedulePage === totalSchedulePages}
+                        aria-label="Next schedule page"
+                        className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <span className="sm:hidden">Next</span>
+                        <span className="hidden sm:inline" aria-hidden="true">
+                          ›
+                        </span>
+                      </button>
+                    </nav>
+                  </div>
                 )}
               </>
             ) : (
               <div className="px-5 py-8 text-center sm:px-6">
-                <p className="text-sm font-bold text-[#102449]">No weekly schedule set yet.</p>
-                <p className="mt-1 text-sm text-slate-600">Open Teaching Groups to set the planned class time.</p>
+                <p className="text-sm font-bold text-[#102449]">
+                  No weekly schedule set yet.
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Open Teaching Groups to set the planned class time.
+                </p>
               </div>
             )}
 
@@ -272,16 +430,25 @@ export function TeacherSchedulePage() {
               <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm font-semibold text-slate-600">
-                    {scheduleData.unscheduledCount} teaching group{scheduleData.unscheduledCount === 1 ? '' : 's'} {scheduleData.unscheduledCount === 1 ? 'has' : 'have'} no schedule yet.
+                    {scheduleData.unscheduledCount} teaching group
+                    {scheduleData.unscheduledCount === 1 ? '' : 's'}{' '}
+                    {scheduleData.unscheduledCount === 1 ? 'has' : 'have'} no
+                    schedule yet.
                   </p>
-                  <Link to="/teacher/teaching-groups" className="inline-flex w-fit text-sm font-bold text-blue-700 hover:underline">Manage Teaching Groups →</Link>
+                  <Link
+                    to="/teacher/teaching-groups"
+                    className="inline-flex w-fit text-sm font-bold text-blue-700 hover:underline"
+                  >
+                    Manage Teaching Groups →
+                  </Link>
                 </div>
               </div>
             )}
           </section>
 
           <p className="text-xs font-semibold leading-5 text-slate-500">
-            Planned schedule only. Actual class time and attendance are recorded separately.
+            Planned schedule only. Actual class time and attendance are recorded
+            separately.
           </p>
         </>
       )}
