@@ -3,6 +3,10 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendanceGroups } from '../../services/teacher-attendance.service'
 import { TeacherScheduleEditor } from '../../components/teacher/TeacherScheduleEditor'
+import {
+  getMyTeachingGroupTeacherFeedback,
+  type TeacherFeedbackForGroup,
+} from '../../services/teacher-feedback.service'
 
 export const Route = createFileRoute('/teacher/teaching-groups')({ component: TeacherTeachingGroupsPage })
 
@@ -42,6 +46,10 @@ function TeacherTeachingGroupsPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [groupPage, setGroupPage] = useState(1)
   const [studentPage, setStudentPage] = useState(1)
+  const [teacherFeedback, setTeacherFeedback] = useState<TeacherFeedbackForGroup[]>([])
+  const [teacherFeedbackLoading, setTeacherFeedbackLoading] = useState(false)
+  const [teacherFeedbackError, setTeacherFeedbackError] = useState(false)
+  const [isTeacherFeedbackOpen, setIsTeacherFeedbackOpen] = useState(false)
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
 
@@ -124,6 +132,43 @@ function TeacherTeachingGroupsPage() {
   }, [selectedGroupId])
 
   useEffect(() => {
+    if (!canLoad || !selectedGroupId) {
+      setTeacherFeedback([])
+      setTeacherFeedbackLoading(false)
+      setTeacherFeedbackError(false)
+      setIsTeacherFeedbackOpen(false)
+      return
+    }
+
+    let cancelled = false
+    setTeacherFeedbackLoading(true)
+    setTeacherFeedbackError(false)
+    setIsTeacherFeedbackOpen(false)
+
+    getMyTeachingGroupTeacherFeedback(selectedGroupId)
+      .then((data) => {
+        if (cancelled) return
+        setTeacherFeedback(data)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setTeacherFeedback([])
+        setTeacherFeedbackError(true)
+      })
+      .finally(() => {
+        if (!cancelled) setTeacherFeedbackLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [canLoad, selectedGroupId])
+
+  const teacherFeedbackAverage = useMemo(() => {
+    const rated = teacherFeedback.filter((item) => item.rating !== null)
+    if (rated.length === 0) return null
+    return rated.reduce((total, item) => total + (item.rating ?? 0), 0) / rated.length
+  }, [teacherFeedback])
+
+  useEffect(() => {
     const totalPages = Math.max(1, Math.ceil((selectedGroup?.students.length ?? 0) / PAGE_SIZE))
     if (studentPage > totalPages) setStudentPage(totalPages)
   }, [selectedGroup?.students.length, studentPage])
@@ -182,6 +227,43 @@ function TeacherTeachingGroupsPage() {
               <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Package</p>
                 <p className="mt-1 text-base font-extrabold text-[#102449]">{formatPackageType(selectedGroup.packageType)}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 px-5 py-5 sm:px-6">
+              <div className="flex flex-col gap-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Student Feedback</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-3">
+                    <h3 className="text-lg font-extrabold text-[#102449]">
+                      {teacherFeedbackLoading
+                        ? 'Loading...'
+                        : teacherFeedback.length === 0
+                          ? 'No responses yet'
+                          : `${teacherFeedbackAverage?.toFixed(1) ?? '—'}/5`}
+                    </h3>
+                    {!teacherFeedbackLoading && teacherFeedback.length > 0 && teacherFeedbackAverage !== null && (
+                      <span className="text-lg tracking-[0.08em] text-amber-400" aria-label={`Average rating ${teacherFeedbackAverage.toFixed(1)} out of 5`}>
+                        {'★'.repeat(Math.round(teacherFeedbackAverage))}{'☆'.repeat(5 - Math.round(teacherFeedbackAverage))}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {teacherFeedbackError
+                      ? 'Feedback belum dapat dimuat.'
+                      : teacherFeedback.length === 0
+                        ? 'Belum ada student yang mengirim feedback.'
+                        : `${teacherFeedback.length} response${teacherFeedback.length === 1 ? '' : 's'}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTeacherFeedbackOpen(true)}
+                  disabled={teacherFeedbackLoading || teacherFeedback.length === 0 || teacherFeedbackError}
+                  className="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  View Feedback
+                </button>
               </div>
             </div>
 
@@ -292,6 +374,82 @@ function TeacherTeachingGroupsPage() {
           )}
         </>
       )}
+
+      {selectedGroup && isTeacherFeedbackOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="teacher-feedback-dialog-title"
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5 sm:p-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Student Feedback</p>
+                <h3 id="teacher-feedback-dialog-title" className="mt-1 text-xl font-extrabold text-[#102449]">{selectedGroup.name}</h3>
+                <p className="mt-1 text-sm text-slate-500">Feedback ditampilkan tanpa identitas student.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTeacherFeedbackOpen(false)}
+                aria-label="Close feedback dialog"
+                className="rounded-lg px-2 py-1 text-lg font-bold text-slate-500 hover:bg-slate-100"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-5 sm:p-6">
+              <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Summary</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <span className="text-xl font-extrabold text-[#102449]">{teacherFeedbackAverage?.toFixed(1) ?? '—'}/5</span>
+                  {teacherFeedbackAverage !== null && (
+                    <span className="tracking-[0.08em] text-amber-400">
+                      {'★'.repeat(Math.round(teacherFeedbackAverage))}{'☆'.repeat(5 - Math.round(teacherFeedbackAverage))}
+                    </span>
+                  )}
+                  <span className="text-sm font-semibold text-slate-500">{teacherFeedback.length} response{teacherFeedback.length === 1 ? '' : 's'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {teacherFeedback.map((item) => (
+                  <article key={item.level_result_id} className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-bold text-slate-500">{item.level_name}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">Anonymous response · {new Intl.DateTimeFormat('id-ID').format(new Date(item.submitted_at))}</p>
+                      </div>
+                      <span className="text-sm font-bold tracking-[0.06em] text-amber-500">
+                        {renderTeacherFeedbackStars(item.rating)}
+                      </span>
+                    </div>
+                    {item.comment && (
+                      <p className="mt-3 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700">{item.comment}</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 p-4 text-right sm:p-5">
+              <button
+                type="button"
+                onClick={() => setIsTeacherFeedbackOpen(false)}
+                className="rounded-xl bg-[#102449] px-4 py-2.5 text-sm font-bold text-white"
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
+}
+
+function renderTeacherFeedbackStars(rating: number | null) {
+  if (!rating) return 'No rating'
+  return `${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}`
 }
