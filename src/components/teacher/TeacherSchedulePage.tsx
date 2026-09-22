@@ -189,7 +189,8 @@ export function TeacherSchedulePage() {
             </div>
 
             {scheduleData.weeklyRows.length > 0 ? (
-              <div className="divide-y divide-slate-100">
+              <>
+                <div className="divide-y divide-slate-100">
                 {paginatedWeeklyRows.map((row) => (
                   <div key={row.key} className="flex flex-col gap-3 px-5 py-4 sm:grid sm:grid-cols-[minmax(110px,0.9fr)_150px_minmax(0,1.6fr)] sm:items-center sm:px-6">
                     <div>
@@ -258,7 +259,8 @@ export function TeacherSchedulePage() {
                     </button>
                   </nav>
                 </div>
-              )}
+                )}
+              </>
             ) : (
               <div className="px-5 py-8 text-center sm:px-6">
                 <p className="text-sm font-bold text-[#102449]">No weekly schedule set yet.</p>
