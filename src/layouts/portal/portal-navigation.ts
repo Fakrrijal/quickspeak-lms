@@ -53,6 +53,7 @@ export const portalNavigation: Record<PortalRole, PortalNavigationGroup[]> = {
       items: [
         { label: 'Dashboard', to: '/teacher/overview' },
         { label: 'Teaching Groups', to: '/teacher/teaching-groups' },
+        { label: 'Schedule', to: '/teacher/schedule' },
         { label: 'Learning Progress', to: '/teacher/learning-progress' },
         { label: 'Books', to: '/teacher/books' },
         { label: 'Attendance', to: '/teacher/attendance' },
@@ -114,6 +115,7 @@ export function isPortalPath(pathname: string) {
     || pathname === '/teacher'
     || pathname === '/teacher/overview'
     || pathname === '/teacher/teaching-groups'
+    || pathname === '/teacher/schedule'
     || pathname === '/teacher/learning-progress'
     || pathname === '/teacher/books'
     || pathname === '/teacher/attendance'
