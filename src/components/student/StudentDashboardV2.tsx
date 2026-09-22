@@ -220,7 +220,7 @@ export function StudentDashboardV2() {
         <SummaryCard label="Payment" value="Open" detail="View payment details" to="/student-payment" icon="wallet" color="text-amber-800" iconBg="bg-amber-50" />
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white shadow-sm" aria-labelledby="student-next-class-title">
+      <section className="relative z-0 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white shadow-sm" aria-labelledby="student-next-class-title">
         <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:p-7">
           <div className="flex min-w-0 items-start gap-4">
             <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
@@ -290,7 +290,7 @@ export function StudentDashboardV2() {
         </div>
       </section>
 
-      <section className="student-progress-surface rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="student-learning-progress-title">
+      <section className="student-progress-surface relative z-0 rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="student-learning-progress-title">
         <div className="student-progress-header flex flex-col gap-3 border-b border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-5">
           <div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Learning Progress</p><h2 id="student-learning-progress-title" className="mt-1 text-xl font-bold tracking-[-0.015em] text-[#102449]">Your chapter progress</h2></div>
           <Link to="/student/learning" className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:text-blue-800">View details <Icon name="arrow" /></Link>
@@ -310,7 +310,12 @@ export function StudentDashboardV2() {
               </div>
               <div className="student-progress-bar mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="student-progress-fill h-full rounded-full transition-all" style={{ width: `${currentProgressPercent}%` }} /></div>
 
-              {latestAchievement && <div className="mt-5 flex items-start justify-between gap-4 rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3.5"><div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Latest achievement</p><p className="mt-1.5 text-sm font-bold text-emerald-800">✓ Chapter {latestAchievement.chapter_number} — {latestAchievement.chapter_title}</p></div></div>}
+              {latestAchievement && (
+                <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Latest achievement</p>
+                  <p className="mt-1.5 text-sm font-bold text-emerald-800">✓ Chapter {latestAchievement.chapter_number} — {latestAchievement.chapter_title}</p>
+                </div>
+              )}
 
               <div className="student-next-step mt-5 flex flex-col gap-4 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div>
