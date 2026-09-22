@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# Public authentication/account pages do not need search visibility.
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /email-confirmed
+Disallow: /waiting
+
+# Authenticated LMS areas are application content, not public search content.
+Disallow: /student
+Disallow: /teacher
+Disallow: /admin
+Disallow: /notifications
+Disallow: /student-payment
+Disallow: /student-payment-upload-debug
+
+Sitemap: https://quickspeakindonesia.net/sitemap.xml
