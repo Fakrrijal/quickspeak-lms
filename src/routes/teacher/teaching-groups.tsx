@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendanceGroups } from '../../services/teacher-attendance.service'
+import { TeacherScheduleEditor } from '../../components/teacher/TeacherScheduleEditor'
 
 export const Route = createFileRoute('/teacher/teaching-groups')({ component: TeacherTeachingGroupsPage })
 
@@ -183,6 +184,8 @@ function TeacherTeachingGroupsPage() {
                 <p className="mt-1 text-base font-extrabold text-[#102449]">{formatPackageType(selectedGroup.packageType)}</p>
               </div>
             </div>
+
+            <TeacherScheduleEditor teachingGroupId={selectedGroup.id} />
 
             <div className="border-t border-slate-200 px-5 py-5 sm:px-6">
               <div className="flex items-end justify-between gap-3">
