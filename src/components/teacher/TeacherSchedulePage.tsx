@@ -4,6 +4,8 @@ import { useAuthContext } from '../../providers/AuthProvider'
 import { formatScheduleDate, formatScheduleTime, getNextScheduleOccurrences, getScheduleDayLabel } from '../../lib/schedule'
 import { getMyTeacherScheduleOverview, type TeacherScheduleOverview } from '../../services/class-schedule.service'
 
+const SCHEDULE_PAGE_SIZE = 10
+
 type WeeklyScheduleRow = {
   key: string
   days: string[]
@@ -20,6 +22,7 @@ export function TeacherSchedulePage() {
   const [overview, setOverview] = useState<TeacherScheduleOverview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [schedulePage, setSchedulePage] = useState(1)
 
   const canLoad = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
 
@@ -106,6 +109,16 @@ export function TeacherSchedulePage() {
     return { nextScheduledClass, weeklyRows, unscheduledCount, scheduledCount: scheduled.length }
   }, [overview])
 
+  const totalSchedulePages = Math.max(1, Math.ceil(scheduleData.weeklyRows.length / SCHEDULE_PAGE_SIZE))
+  const paginatedWeeklyRows = scheduleData.weeklyRows.slice(
+    (schedulePage - 1) * SCHEDULE_PAGE_SIZE,
+    schedulePage * SCHEDULE_PAGE_SIZE,
+  )
+
+  useEffect(() => {
+    setSchedulePage((current) => Math.min(current, totalSchedulePages))
+  }, [totalSchedulePages])
+
   if (authLoading || profileLoading || loading) {
     return (
       <div className="space-y-4">
@@ -177,7 +190,7 @@ export function TeacherSchedulePage() {
 
             {scheduleData.weeklyRows.length > 0 ? (
               <div className="divide-y divide-slate-100">
-                {scheduleData.weeklyRows.map((row) => (
+                {paginatedWeeklyRows.map((row) => (
                   <div key={row.key} className="flex flex-col gap-3 px-5 py-4 sm:grid sm:grid-cols-[minmax(110px,0.9fr)_150px_minmax(0,1.6fr)] sm:items-center sm:px-6">
                     <div>
                       <p className="text-sm font-extrabold text-[#102449]">{row.days.join(', ')}</p>
@@ -192,6 +205,60 @@ export function TeacherSchedulePage() {
                   </div>
                 ))}
               </div>
+
+              {scheduleData.weeklyRows.length > SCHEDULE_PAGE_SIZE && (
+                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <p className="text-xs font-semibold text-slate-500">
+                    Showing {(schedulePage - 1) * SCHEDULE_PAGE_SIZE + 1}–{Math.min(schedulePage * SCHEDULE_PAGE_SIZE, scheduleData.weeklyRows.length)} of {scheduleData.weeklyRows.length} schedules
+                  </p>
+
+                  <nav aria-label="Schedule pagination" className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setSchedulePage((current) => Math.max(1, current - 1))}
+                      disabled={schedulePage === 1}
+                      aria-label="Previous schedule page"
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <span className="sm:hidden">Previous</span>
+                      <span className="hidden sm:inline" aria-hidden="true">‹</span>
+                    </button>
+
+                    <div className="hidden items-center gap-1.5 sm:flex">
+                      {Array.from({ length: totalSchedulePages }, (_, index) => index + 1).map((pageNumber) => (
+                        <button
+                          key={pageNumber}
+                          type="button"
+                          onClick={() => setSchedulePage(pageNumber)}
+                          aria-current={schedulePage === pageNumber ? 'page' : undefined}
+                          aria-label={`Schedule page ${pageNumber}`}
+                          className={[
+                            'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-bold transition',
+                            schedulePage === pageNumber
+                              ? 'border-[#102449] bg-[#102449] text-white'
+                              : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50',
+                          ].join(' ')}
+                        >
+                          {pageNumber}
+                        </button>
+                      ))}
+                    </div>
+
+                    <span className="text-xs font-bold text-slate-600 sm:hidden">Page {schedulePage} of {totalSchedulePages}</span>
+
+                    <button
+                      type="button"
+                      onClick={() => setSchedulePage((current) => Math.min(totalSchedulePages, current + 1))}
+                      disabled={schedulePage === totalSchedulePages}
+                      aria-label="Next schedule page"
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <span className="sm:hidden">Next</span>
+                      <span className="hidden sm:inline" aria-hidden="true">›</span>
+                    </button>
+                  </nav>
+                </div>
+              )}
             ) : (
               <div className="px-5 py-8 text-center sm:px-6">
                 <p className="text-sm font-bold text-[#102449]">No weekly schedule set yet.</p>
