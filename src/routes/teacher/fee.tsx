@@ -107,6 +107,13 @@ function TeacherFeePage() {
   }, [authLoading, isAuthenticated, navigate, profileError, profileLoading, status])
 
   const dateRangeLabel = formatDateRange(startDate, endDate)
+  const handleFeeStartDateChange = (value: string) => setStartDate(value)
+  const handleFeeEndDateChange = (value: string) => {
+    setEndDate(value)
+    if (!startDate && value === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`) {
+      setStartDate(`${value.slice(0, 7)}-01`)
+    }
+  }
   const rangeEntries = validDateRange ? entries : []
   const rangeDetailEntries = validDateRange ? detailEntries : []
   const rangeMonthlySummaries = validDateRange ? monthlySummaries : []
@@ -175,8 +182,8 @@ function TeacherFeePage() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Report Date Range</p><p className="mt-1 text-lg font-bold text-[#102449]">{dateRangeLabel}</p></div>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="text-sm font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
-            <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
+            <label className="text-sm font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate} onChange={(event) => handleFeeStartDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
+            <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate} onChange={(event) => handleFeeEndDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
             <div className="flex items-end gap-2">{(['all', 'paid', 'unpaid'] as const).map((filter) => <button key={filter} type="button" onClick={() => setStatusFilter(filter)} className={statusFilter === filter ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>{filter === 'all' ? 'All' : filter === 'paid' ? 'Paid' : 'Unpaid'}</button>)}</div>
             <button type="button" onClick={() => setShowDetailModal(true)} disabled={loading || visibleDetailEntries.length === 0} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">View Detail</button>
             <button type="button" onClick={() => void handleDownloadPdf()} disabled={isExporting || loading || !validDateRange || visibleDetailEntries.length === 0} className="rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">{isExporting ? 'Preparing PDF...' : 'Download PDF'}</button>
