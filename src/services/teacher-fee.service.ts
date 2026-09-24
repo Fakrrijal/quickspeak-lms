@@ -209,6 +209,50 @@ export async function getMyTeacherFeeReportRange(startDate: string, endDate: str
   }
 }
 
+export async function getMyTeacherUnpaidFee() {
+  const [{ data: meetings, error: meetingsError }, { data: unpaidPeriods, error: unpaidPeriodsError }] = await Promise.all([
+    supabase
+      .from('meetings')
+      .select('session_date')
+      .order('session_date', { ascending: true }),
+    supabase
+      .from('teacher_fee_periods')
+      .select('period_start')
+      .eq('status', 'unpaid')
+      .order('period_start', { ascending: true }),
+  ])
+
+  if (meetingsError) throw meetingsError
+  if (unpaidPeriodsError) throw unpaidPeriodsError
+
+  const monthStarts = new Set<string>()
+  for (const meeting of meetings ?? []) {
+    if (typeof meeting.session_date === 'string' && meeting.session_date.length >= 7) {
+      monthStarts.add(`${meeting.session_date.slice(0, 7)}-01`)
+    }
+  }
+  for (const period of unpaidPeriods ?? []) {
+    if (typeof period.period_start === 'string' && period.period_start.length >= 7) {
+      monthStarts.add(`${period.period_start.slice(0, 7)}-01`)
+    }
+  }
+
+  if (monthStarts.size === 0) return 0
+
+  const reports = await Promise.all(
+    [...monthStarts].sort().map((periodStart) => {
+      const year = Number(periodStart.slice(0, 4))
+      const month = Number(periodStart.slice(5, 7))
+      return getMyTeacherFeeReport(month, year)
+    }),
+  )
+
+  return reports.reduce(
+    (total, report) => total + Math.max(report.period_summary.outstanding_amount, 0),
+    0,
+  )
+}
+
 export async function getMyTeacherFeeReport(month: number, year: number) {
   const { data, error } = await supabase.rpc('get_teacher_fee_report', {
     p_month: month,
