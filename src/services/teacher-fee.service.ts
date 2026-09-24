@@ -253,6 +253,61 @@ export async function getMyTeacherUnpaidFee() {
   )
 }
 
+
+export async function getMyTeacherFeeReportAllTime() {
+  const [{ data: meetings, error: meetingsError }, { data: feePeriods, error: feePeriodsError }] = await Promise.all([
+    supabase
+      .from('meetings')
+      .select('session_date')
+      .order('session_date', { ascending: true }),
+    supabase
+      .from('teacher_fee_periods')
+      .select('period_start')
+      .order('period_start', { ascending: true }),
+  ])
+
+  if (meetingsError) throw meetingsError
+  if (feePeriodsError) throw feePeriodsError
+
+  const monthStarts = new Set<string>()
+  for (const meeting of meetings ?? []) {
+    if (typeof meeting.session_date === 'string' && meeting.session_date.length >= 7) {
+      monthStarts.add(`${meeting.session_date.slice(0, 7)}-01`)
+    }
+  }
+  for (const period of feePeriods ?? []) {
+    if (typeof period.period_start === 'string' && period.period_start.length >= 7) {
+      monthStarts.add(`${period.period_start.slice(0, 7)}-01`)
+    }
+  }
+
+  if (monthStarts.size === 0) {
+    return {
+      entries: [],
+      detail_entries: [],
+      monthly_summaries: [] as MyTeacherFeeReport['period_summary'][],
+      detail_reconciles_period: true,
+    }
+  }
+
+  const reports = await Promise.all(
+    [...monthStarts].sort().map((periodStart) => {
+      const year = Number(periodStart.slice(0, 4))
+      const month = Number(periodStart.slice(5, 7))
+      return getMyTeacherFeeReport(month, year)
+    }),
+  )
+
+  return {
+    entries: reports.flatMap((report) => report.entries)
+      .sort((left, right) => right.session_date.localeCompare(left.session_date) || right.session_time.localeCompare(left.session_time)),
+    detail_entries: reports.flatMap((report) => report.detail_entries)
+      .sort((left, right) => right.session_date.localeCompare(left.session_date) || right.attendance_recorded_at.localeCompare(left.attendance_recorded_at)),
+    monthly_summaries: reports.map((report) => report.period_summary),
+    detail_reconciles_period: reports.every((report) => report.detail_reconciles_period),
+  }
+}
+
 export async function getMyTeacherFeeReport(month: number, year: number) {
   const { data, error } = await supabase.rpc('get_teacher_fee_report', {
     p_month: month,
