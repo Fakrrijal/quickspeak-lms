@@ -52,11 +52,21 @@ export type TeachingGroup = ActiveTeachingGroup & {
   memberships: TeachingGroupMembership[]
 }
 
+export type TeachingGroupRosterStatus =
+  | 'active'
+  | 'waiting_renewal'
+  | 'waiting_next_level'
+  | 'level_completed'
+  | 'waiting_assignment'
+
 export type TeachingGroupMembership = {
   student_id: string
+  roster_status: TeachingGroupRosterStatus
+  enrollment_status: string | null
   students: {
     id: string
     student_code: string
+    level_id?: string | null
     profiles: {
       full_name: string
     } | null
@@ -302,6 +312,7 @@ export async function getTeachingGroups() {
             id,
             student_code,
             is_active,
+            level_id,
             profiles (full_name, role, status)
           )
         )
@@ -312,10 +323,12 @@ export async function getTeachingGroups() {
       .select(`
         teaching_group_id,
         enrollments!inner (
+          id,
           student_id,
           level_id,
           package_type,
           status,
+          created_at,
           students!inner (
             id,
             is_active,
@@ -335,6 +348,33 @@ export async function getTeachingGroups() {
 
   if (assignmentsError) {
     throw assignmentsError
+  }
+
+  const studentIds = [...new Set(
+    (groups ?? []).flatMap((group) => (group.teaching_group_students ?? []).map((membership) => membership.student_id)),
+  )]
+
+  const [{ data: pendingEnrollments, error: enrollmentsError }] = studentIds.length === 0
+    ? [{ data: [], error: null }]
+    : await Promise.all([
+        supabase
+          .from('enrollments')
+          .select('id, student_id, level_id, package_type, status, created_at')
+          .in('student_id', studentIds)
+          .in('status', [
+            'pending',
+            'payment_pending',
+            'payment_submitted',
+            'payment_rejected',
+            'payment_approved',
+            'teacher_assignment',
+            'active',
+          ])
+          .order('created_at', { ascending: false }),
+      ])
+
+  if (enrollmentsError) {
+    throw enrollmentsError
   }
 
   const activeAssignmentKeys = new Set(
@@ -367,6 +407,21 @@ export async function getTeachingGroups() {
     }),
   )
 
+  const enrollmentsByStudent = new Map<string, Array<{
+    id: string
+    student_id: string
+    level_id: string
+    package_type: string
+    status: string
+    created_at: string
+  }>>()
+
+  for (const enrollment of pendingEnrollments ?? []) {
+    const current = enrollmentsByStudent.get(enrollment.student_id) ?? []
+    current.push(enrollment)
+    enrollmentsByStudent.set(enrollment.student_id, current)
+  }
+
   return (groups ?? [])
     .map((group) => {
       const level = Array.isArray(group.levels)
@@ -380,7 +435,7 @@ export async function getTeachingGroups() {
         : teacher?.profiles ?? null
 
       const memberships = (group.teaching_group_students ?? [])
-        .filter((membership) => {
+        .flatMap((membership) => {
           const student = Array.isArray(membership.students)
             ? membership.students[0] ?? null
             : membership.students
@@ -396,31 +451,39 @@ export async function getTeachingGroups() {
             || profile?.role !== 'student'
             || profile?.status !== 'active'
           ) {
-            return false
+            return []
           }
 
           const assignmentKey = `${group.id}:${membership.student_id}:${group.level_id}:${group.group_type}`
-          return activeAssignmentKeys.has(assignmentKey)
-        })
-        .map((membership) => {
-          const student = Array.isArray(membership.students)
-            ? membership.students[0] ?? null
-            : membership.students
-          const rawProfile = student?.profiles
-          const profile = Array.isArray(rawProfile)
-            ? rawProfile[0] ?? null
-            : rawProfile ?? null
+          const studentEnrollments = enrollmentsByStudent.get(membership.student_id) ?? []
+          const activeEnrollment = studentEnrollments.find((enrollment) => (
+            enrollment.status === 'active'
+            && activeAssignmentKeys.has(assignmentKey)
+            && enrollment.level_id === group.level_id
+            && enrollment.package_type === group.group_type
+          ))
+          const latestPendingEnrollment = studentEnrollments.find((enrollment) => enrollment.status !== 'active')
 
-          return {
-            student_id: membership.student_id,
-            students: student
-              ? {
-                  id: student.id,
-                  student_code: student.student_code,
-                  profiles: profile ? { full_name: profile.full_name } : null,
-                }
-              : null,
+          let rosterStatus: TeachingGroupRosterStatus = 'waiting_assignment'
+          if (activeEnrollment) {
+            rosterStatus = 'active'
+          } else if (latestPendingEnrollment) {
+            rosterStatus = latestPendingEnrollment.level_id === student.level_id
+              ? 'waiting_renewal'
+              : 'waiting_next_level'
           }
+
+          return [{
+            student_id: membership.student_id,
+            roster_status: rosterStatus,
+            enrollment_status: activeEnrollment?.status ?? latestPendingEnrollment?.status ?? null,
+            students: {
+              id: student.id,
+              student_code: student.student_code,
+              level_id: student.level_id,
+              profiles: profile ? { full_name: profile.full_name } : null,
+            },
+          }]
         })
 
       return {
