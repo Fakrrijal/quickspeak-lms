@@ -132,7 +132,6 @@ function TeacherFeePage() {
     unpaid: rangeMonthlySummaries.filter((summary) => summary.status !== 'paid').length,
     total: rangeMonthlySummaries.length,
   }), [rangeMonthlySummaries])
-  const rangeStatusLabel = !reportReady ? 'Select dates' : settlementMonths.total === 0 ? 'No records' : isAllTime ? 'All Time' : settlementMonths.total === 1 ? (settlementMonths.paid === 1 ? 'Paid' : 'Unpaid') : 'Range'
   const visibleEntries = useMemo(() => statusFilter === 'all' ? rangeEntries : rangeEntries.filter((entry) => entry.status === statusFilter), [rangeEntries, statusFilter])
   const visibleDetailEntries = useMemo(() => statusFilter === 'all' ? rangeDetailEntries : rangeDetailEntries.filter((entry) => entry.period_status === statusFilter), [rangeDetailEntries, statusFilter])
   const studentSummaries = useMemo(() => summarizeTeacherFeeDetails(visibleDetailEntries), [visibleDetailEntries])
