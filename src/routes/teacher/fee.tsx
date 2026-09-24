@@ -23,6 +23,8 @@ function formatTime(value: string) {
 }
 
 function formatDateRange(startDate: string, endDate: string) {
+  if (!startDate || !endDate) return 'Select both dates'
+  if (startDate > endDate) return 'Invalid date range'
   const format = (value: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
   return `${format(startDate)} – ${format(endDate)}`
 }
@@ -89,7 +91,8 @@ function TeacherFeePage() {
   const [statusFilter, setStatusFilter] = useState<TeacherFeeStatus>('all')
   const [feeView, setFeeView] = useState<FeeView>('summary')
   const canLoad = !authLoading && !profileLoading && isAuthenticated && !profileError && role === 'teacher' && status === 'active'
-  const { entries, detailEntries, monthlySummaries, detailReconcilesPeriod, loading, error, reload } = useTeacherFee(startDate, endDate, canLoad)
+  const validDateRange = Boolean(startDate && endDate && startDate <= endDate)
+  const { entries, detailEntries, monthlySummaries, detailReconcilesPeriod, loading, error, reload } = useTeacherFee(startDate, endDate, canLoad && validDateRange)
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -104,16 +107,19 @@ function TeacherFeePage() {
   }, [authLoading, isAuthenticated, navigate, profileError, profileLoading, status])
 
   const dateRangeLabel = formatDateRange(startDate, endDate)
-  const rangeEarned = useMemo(() => detailEntries.reduce((total, entry) => total + entry.student_fee, 0), [detailEntries])
-  const rangePresentAttendances = useMemo(() => detailEntries.filter((entry) => entry.attendance_status === 'present').length, [detailEntries])
+  const rangeEntries = validDateRange ? entries : []
+  const rangeDetailEntries = validDateRange ? detailEntries : []
+  const rangeMonthlySummaries = validDateRange ? monthlySummaries : []
+  const rangeEarned = useMemo(() => rangeDetailEntries.reduce((total, entry) => total + entry.student_fee, 0), [rangeDetailEntries])
+  const rangePresentAttendances = useMemo(() => rangeDetailEntries.filter((entry) => entry.attendance_status === 'present').length, [rangeDetailEntries])
   const settlementMonths = useMemo(() => ({
-    paid: monthlySummaries.filter((summary) => summary.status === 'paid').length,
-    unpaid: monthlySummaries.filter((summary) => summary.status !== 'paid').length,
-    total: monthlySummaries.length,
-  }), [monthlySummaries])
-  const rangeStatusLabel = settlementMonths.total === 0 ? 'No records' : settlementMonths.total === 1 ? (settlementMonths.paid === 1 ? 'Paid' : 'Unpaid') : 'Range'
-  const visibleEntries = useMemo(() => statusFilter === 'all' ? entries : entries.filter((entry) => entry.status === statusFilter), [entries, statusFilter])
-  const visibleDetailEntries = useMemo(() => statusFilter === 'all' ? detailEntries : detailEntries.filter((entry) => entry.period_status === statusFilter), [detailEntries, statusFilter])
+    paid: rangeMonthlySummaries.filter((summary) => summary.status === 'paid').length,
+    unpaid: rangeMonthlySummaries.filter((summary) => summary.status !== 'paid').length,
+    total: rangeMonthlySummaries.length,
+  }), [rangeMonthlySummaries])
+  const rangeStatusLabel = !validDateRange ? 'Select dates' : settlementMonths.total === 0 ? 'No records' : settlementMonths.total === 1 ? (settlementMonths.paid === 1 ? 'Paid' : 'Unpaid') : 'Range'
+  const visibleEntries = useMemo(() => statusFilter === 'all' ? rangeEntries : rangeEntries.filter((entry) => entry.status === statusFilter), [rangeEntries, statusFilter])
+  const visibleDetailEntries = useMemo(() => statusFilter === 'all' ? rangeDetailEntries : rangeDetailEntries.filter((entry) => entry.period_status === statusFilter), [rangeDetailEntries, statusFilter])
   const studentSummaries = useMemo(() => summarizeTeacherFeeDetails(visibleDetailEntries), [visibleDetailEntries])
   const paginatedStudentSummaries = useMemo(() => studentSummaries.slice((summaryPage - 1) * PAGE_SIZE, summaryPage * PAGE_SIZE), [studentSummaries, summaryPage])
   const paginatedEntries = useMemo(() => visibleEntries.slice((historyPage - 1) * PAGE_SIZE, historyPage * PAGE_SIZE), [visibleEntries, historyPage])
@@ -173,7 +179,7 @@ function TeacherFeePage() {
             <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
             <div className="flex items-end gap-2">{(['all', 'paid', 'unpaid'] as const).map((filter) => <button key={filter} type="button" onClick={() => setStatusFilter(filter)} className={statusFilter === filter ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>{filter === 'all' ? 'All' : filter === 'paid' ? 'Paid' : 'Unpaid'}</button>)}</div>
             <button type="button" onClick={() => setShowDetailModal(true)} disabled={loading || visibleDetailEntries.length === 0} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">View Detail</button>
-            <button type="button" onClick={() => void handleDownloadPdf()} disabled={isExporting || loading || visibleDetailEntries.length === 0} className="rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">{isExporting ? 'Preparing PDF...' : 'Download PDF'}</button>
+            <button type="button" onClick={() => void handleDownloadPdf()} disabled={isExporting || loading || !validDateRange || visibleDetailEntries.length === 0} className="rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">{isExporting ? 'Preparing PDF...' : 'Download PDF'}</button>
           </div>
         </div>
         <p className="mt-3 text-xs text-slate-500">Paid / Unpaid is the monthly settlement status attached to each fee record. The selected date range controls the records and PDF export.</p>
