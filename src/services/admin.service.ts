@@ -81,10 +81,12 @@ export type ActiveStudent = {
   } | null
 }
 
+export type AdminStudentDirectoryStatus = 'active' | 'renewal' | 'next_level' | 'non_active'
+
 export type AdminStudentDirectoryItem = {
   id: string
   student_code: string
-  is_active: boolean
+  directory_status: AdminStudentDirectoryStatus
   profile: {
     full_name: string
     email: string
@@ -555,8 +557,67 @@ export async function getAdminStudents() {
     throw applicationsError
   }
 
+  const studentIds = (data ?? []).map((student) => student.id)
+  const [{ data: enrollments, error: enrollmentsError }, { data: levelResults, error: levelResultsError }] = studentIds.length === 0
+    ? [{ data: [], error: null }, { data: [], error: null }]
+    : await Promise.all([
+        supabase
+          .from('enrollments')
+          .select('id, student_id, level_id, status, created_at, levels (level_number)')
+          .in('student_id', studentIds)
+          .in('status', [
+            'pending',
+            'payment_pending',
+            'payment_submitted',
+            'payment_rejected',
+            'payment_approved',
+            'teacher_assignment',
+            'active',
+            'completed',
+          ])
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('student_level_results')
+          .select('student_id, level_id, completed_at')
+          .in('student_id', studentIds)
+          .order('completed_at', { ascending: false }),
+      ])
+
+  if (enrollmentsError) {
+    throw enrollmentsError
+  }
+
+  if (levelResultsError) {
+    throw levelResultsError
+  }
+
   const classTypeByProfileId = new Map(
     (applications ?? []).map((application) => [application.profile_id, application.student_class_type as ClassType | null]),
+  )
+  const enrollmentsByStudent = new Map<string, Array<{
+    id: string
+    student_id: string
+    level_id: string
+    status: string
+    created_at: string
+    levels: { level_number: number } | { level_number: number }[] | null
+  }>>()
+
+  for (const enrollment of enrollments ?? []) {
+    const current = enrollmentsByStudent.get(enrollment.student_id) ?? []
+    current.push(enrollment as {
+      id: string
+      student_id: string
+      level_id: string
+      status: string
+      created_at: string
+      levels: { level_number: number } | { level_number: number }[] | null
+    })
+    enrollmentsByStudent.set(enrollment.student_id, current)
+  }
+
+  const completedLevelKeys = new Set(
+    (levelResults ?? []).map((result) => `${result.student_id}:${result.level_id}`),
   )
 
   return (data ?? []).map((student) => {
@@ -583,11 +644,55 @@ export async function getAdminStudents() {
         : []
     })
     const registrationClassType = profile ? classTypeByProfileId.get(profile.id) : null
+    const studentEnrollments = enrollmentsByStudent.get(student.id) ?? []
+    const activeEnrollment = studentEnrollments.find((enrollment) => enrollment.status === 'active')
+    const pendingEnrollment = studentEnrollments.find((enrollment) => (
+      enrollment.status === 'pending'
+        || enrollment.status === 'payment_pending'
+        || enrollment.status === 'payment_submitted'
+        || enrollment.status === 'payment_rejected'
+        || enrollment.status === 'payment_approved'
+        || enrollment.status === 'teacher_assignment'
+    ))
+    const currentLevelCompleted = level
+      ? completedLevelKeys.has(`${student.id}:${level.id}`)
+      : false
+    const completedCurrentLevelEnrollment = level
+      ? studentEnrollments.some((enrollment) => enrollment.level_id === level.id && enrollment.status === 'completed')
+      : false
+    const pendingEnrollmentLevel = pendingEnrollment
+      ? (Array.isArray(pendingEnrollment.levels)
+        ? pendingEnrollment.levels[0] ?? null
+        : pendingEnrollment.levels)
+      : null
+
+    let directoryStatus: AdminStudentDirectoryStatus = 'non_active'
+
+    if (!student.is_active) {
+      directoryStatus = 'non_active'
+    } else if (activeEnrollment) {
+      directoryStatus = 'active'
+    } else if (
+      level
+      && pendingEnrollment
+      && pendingEnrollment.level_id === level.id
+      && completedCurrentLevelEnrollment
+    ) {
+      directoryStatus = 'renewal'
+    } else if (
+      level
+      && pendingEnrollment
+      && pendingEnrollmentLevel?.level_number === level.level_number + 1
+      && currentLevelCompleted
+    ) {
+      directoryStatus = 'next_level'
+    }
 
     return {
       ...student,
       profile,
       level,
+      directory_status: directoryStatus,
       teaching_group_names: [...new Set(teachingGroupNames)],
       class_types: registrationClassType
         ? [registrationClassType]
