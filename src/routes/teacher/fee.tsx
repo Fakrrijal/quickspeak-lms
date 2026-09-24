@@ -92,7 +92,8 @@ function TeacherFeePage() {
   const [feeView, setFeeView] = useState<FeeView>('summary')
   const canLoad = !authLoading && !profileLoading && isAuthenticated && !profileError && role === 'teacher' && status === 'active'
   const validDateRange = Boolean(startDate && endDate && startDate <= endDate)
-  const { entries, detailEntries, monthlySummaries, detailReconcilesPeriod, loading, error, reload } = useTeacherFee(startDate, endDate, canLoad && validDateRange)
+  const reportReady = isAllTime || validDateRange
+  const { entries, detailEntries, monthlySummaries, detailReconcilesPeriod, loading, error, reload } = useTeacherFee(startDate, endDate, canLoad && reportReady, isAllTime)
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -124,7 +125,7 @@ function TeacherFeePage() {
     unpaid: rangeMonthlySummaries.filter((summary) => summary.status !== 'paid').length,
     total: rangeMonthlySummaries.length,
   }), [rangeMonthlySummaries])
-  const rangeStatusLabel = !validDateRange ? 'Select dates' : settlementMonths.total === 0 ? 'No records' : settlementMonths.total === 1 ? (settlementMonths.paid === 1 ? 'Paid' : 'Unpaid') : 'Range'
+  const rangeStatusLabel = !reportReady ? 'Select dates' : settlementMonths.total === 0 ? 'No records' : isAllTime ? 'All Time' : settlementMonths.total === 1 ? (settlementMonths.paid === 1 ? 'Paid' : 'Unpaid') : 'Range'
   const visibleEntries = useMemo(() => statusFilter === 'all' ? rangeEntries : rangeEntries.filter((entry) => entry.status === statusFilter), [rangeEntries, statusFilter])
   const visibleDetailEntries = useMemo(() => statusFilter === 'all' ? rangeDetailEntries : rangeDetailEntries.filter((entry) => entry.period_status === statusFilter), [rangeDetailEntries, statusFilter])
   const studentSummaries = useMemo(() => summarizeTeacherFeeDetails(visibleDetailEntries), [visibleDetailEntries])
@@ -182,18 +183,19 @@ function TeacherFeePage() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Report Date Range</p><p className="mt-1 text-lg font-bold text-[#102449]">{dateRangeLabel}</p></div>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="text-sm font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate} onChange={(event) => handleFeeStartDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
-            <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate} onChange={(event) => handleFeeEndDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
+            <label className="text-sm font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate || undefined} disabled={isAllTime} onChange={(event) => handleFeeStartDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400" /></label>
+            <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate || undefined} disabled={isAllTime} onChange={(event) => handleFeeEndDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400" /></label>
+            <button type="button" onClick={handleAllTime} className={isAllTime ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>All Time</button>
             <div className="flex items-end gap-2">{(['all', 'paid', 'unpaid'] as const).map((filter) => <button key={filter} type="button" onClick={() => setStatusFilter(filter)} className={statusFilter === filter ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>{filter === 'all' ? 'All' : filter === 'paid' ? 'Paid' : 'Unpaid'}</button>)}</div>
             <button type="button" onClick={() => setShowDetailModal(true)} disabled={loading || visibleDetailEntries.length === 0} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">View Detail</button>
-            <button type="button" onClick={() => void handleDownloadPdf()} disabled={isExporting || loading || !validDateRange || visibleDetailEntries.length === 0} className="rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">{isExporting ? 'Preparing PDF...' : 'Download PDF'}</button>
+            <button type="button" onClick={() => void handleDownloadPdf()} disabled={isExporting || loading || !reportReady || visibleDetailEntries.length === 0} className="rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">{isExporting ? 'Preparing PDF...' : 'Download PDF'}</button>
           </div>
         </div>
-        <p className="mt-3 text-xs text-slate-500">Paid / Unpaid is the monthly settlement status attached to each fee record. The selected date range controls the records and PDF export.</p>
+        <p className="mt-3 text-xs text-slate-500">Paid / Unpaid is the monthly settlement status attached to each fee record. The selected date range or All Time mode controls the records and PDF export.</p>
       </section>
       <section className="grid gap-4 md:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-600">Earned in Range</p><span className="mt-2 inline-flex rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">Selected dates</span><p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{formatAmount(rangeEarned)}</p></article>
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-600">Present Attendances</p><span className="mt-2 inline-flex rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Selected dates</span><p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{rangePresentAttendances}</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-600">{isAllTime ? 'Total Earned' : 'Earned in Range'}</p><span className="mt-2 inline-flex rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">{isAllTime ? 'All time' : 'Selected dates'}</span><p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{formatAmount(rangeEarned)}</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-600">{isAllTime ? 'Total Attendances' : 'Present Attendances'}</p><span className="mt-2 inline-flex rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">{isAllTime ? 'All time' : 'Selected dates'}</span><p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{rangePresentAttendances}</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-600">Settlement Months</p><span className="mt-2 inline-flex rounded-lg bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">Monthly</span><p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{settlementMonths.total}</p><p className="mt-1 text-xs text-slate-500">{settlementMonths.paid} paid · {settlementMonths.unpaid} unpaid</p></article>
       </section>
       {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error} <button type="button" className="ml-2 font-bold underline" onClick={() => void reload()}>Retry</button></div>}
