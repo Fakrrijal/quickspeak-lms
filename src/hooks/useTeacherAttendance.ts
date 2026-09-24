@@ -3,7 +3,6 @@ import { useCallback, useRef, useState } from 'react'
 import {
   getMyTeacherAttendanceRange,
   recordTeacherAttendance,
-  type TeacherAttendancePeriod,
 } from '../services/teacher-attendance.service'
 
 type AttendanceStatus = 'present' | 'absent'
