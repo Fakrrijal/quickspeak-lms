@@ -212,6 +212,10 @@ function addFooter(doc: jsPDF, generatedAt: string) {
 
 function safeFilename(teacherCode: string, period: string) {
   const safeCode = teacherCode.replace(/[^a-zA-Z0-9_-]/g, '') || 'teacher'
+  if (period.includes(' – ')) {
+    const range = period.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()
+    return `teacher-fee-${safeCode}-${range}.pdf`
+  }
   const [, year] = period.split(' ')
   const monthName = period.split(' ')[0]
   const month = new Date(`${monthName} 1, ${year}`).getMonth() + 1
