@@ -83,8 +83,8 @@ function formatSettlementStatus(value: string) {
 }
 
 function detailRowHeight(entry: TeacherFeeDetailEntry) {
-  const groupLines = docSplit(entry.teaching_group_name, 27).length
-  const studentLines = docSplit(entry.student_name, 24).length
+  const groupLines = docSplit(entry.teaching_group_name + ' / ' + entry.level_name, 38).length
+  const studentLines = docSplit(entry.student_name + ' / ' + entry.student_code, 42).length
   return Math.max(8, Math.max(groupLines, studentLines) * 4 + 3)
 }
 
