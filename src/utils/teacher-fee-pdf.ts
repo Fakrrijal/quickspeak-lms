@@ -52,35 +52,74 @@ function heading(doc: jsPDF, title: string, y: number) {
   return y + 12
 }
 
+function detailTableHeader(doc: jsPDF, y: number) {
+  doc.setFillColor(241, 245, 249)
+  doc.rect(left, y, right - left, 8, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.text('Date', 16, y + 5)
+  doc.text('Time', 40, y + 5)
+  doc.text('Group / Level', 56, y + 5)
+  doc.text('Student / Code', 99, y + 5)
+  doc.text('Attendance', 143, y + 5)
+  doc.text('Fee', 168, y + 5)
+  doc.text('Settlement', 193, y + 5, { align: 'right' })
+  doc.setFont('helvetica', 'normal')
+  return y + 8
+}
+
 function studentTableHeader(doc: jsPDF, y: number) {
   doc.setFillColor(241, 245, 249)
   doc.rect(left, y, right - left, 7, 'F')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7)
-  doc.text('Student', 17, y + 4.6)
-  doc.text('Code', 77, y + 4.6)
-  doc.text('Status', 112, y + 4.6)
-  doc.text('Fee', 193, y + 4.6, { align: 'right' })
-  doc.setFont('helvetica', 'normal')
-  return y + 7
-}
-
-function summaryTableHeader(doc: jsPDF, y: number) {
-  doc.setFillColor(241, 245, 249)
-  doc.rect(left, y, right - left, 7, 'F')
-  doc.setFont('helvetica', 'bold')
   doc.setFontSize(6.5)
-  ;[['Student', 17], ['Code', 52], ['Teaching Group', 75], ['Present', 119], ['Fee / attendance', 140], ['Total fee', 193]].forEach(([label, x]) => doc.text(String(label), Number(x), y + 4.6, Number(x) > 180 ? { align: 'right' } : undefined))
+  ;[['Student', 17], ['Code', 55], ['Teaching Group', 82], ['Present', 128], ['Rate', 150], ['Total', 193]].forEach(([label, x]) => doc.text(String(label), Number(x), y + 4.6, Number(x) > 180 ? { align: 'right' } : undefined))
   doc.setFont('helvetica', 'normal')
   return y + 7
 }
 
-function groupedMeetings(entries: TeacherFeeDetailEntry[]) {
-  const groups = new Map<string, TeacherFeeDetailEntry[]>()
-  entries.forEach((entry) => groups.set(entry.meeting_id, [...(groups.get(entry.meeting_id) ?? []), entry]))
-  return [...groups.values()]
-    .map((meeting) => meeting.sort((a, b) => a.attendance_recorded_at.localeCompare(b.attendance_recorded_at)))
-    .sort((a, b) => a[0].session_date.localeCompare(b[0].session_date) || a[0].attendance_recorded_at.localeCompare(b[0].attendance_recorded_at))
+function formatSettlementStatus(value: string) {
+  return value === 'paid' ? 'Paid' : 'Unpaid'
+}
+
+function detailRowHeight(entry: TeacherFeeDetailEntry) {
+  const groupLines = docSplit(entry.teaching_group_name, 27).length
+  const studentLines = docSplit(entry.student_name, 24).length
+  return Math.max(8, Math.max(groupLines, studentLines) * 4 + 3)
+}
+
+function docSplit(value: string, width: number) {
+  return new jsPDF().splitTextToSize(value, width) as string[]
+}
+
+function drawDetailRow(doc: jsPDF, entry: TeacherFeeDetailEntry, y: number, rowHeight: number) {
+  doc.setDrawColor(226, 232, 240)
+  doc.line(left, y + rowHeight, right, y + rowHeight)
+  doc.setFontSize(6.5)
+
+  const groupLines = doc.splitTextToSize(entry.teaching_group_name + ' / ' + entry.level_name, 38) as string[]
+  const studentLines = doc.splitTextToSize(entry.student_name + ' / ' + entry.student_code, 42) as string[]
+  const lineY = y + 4.2
+
+  doc.text(date(entry.session_date), 16, lineY)
+  doc.text(time(entry.attendance_recorded_at), 40, lineY)
+  doc.text(groupLines, 56, lineY)
+  doc.text(studentLines, 99, lineY)
+  doc.text(entry.attendance_status === 'present' ? 'Present' : 'Absent', 143, lineY)
+  doc.text(amount(entry.student_fee), 168, lineY)
+  doc.text(formatSettlementStatus(entry.period_status), 193, lineY, { align: 'right' })
+}
+
+function settlementBreakdown(entries: TeacherFeeDetailEntry[]) {
+  const periods = new Map<string, 'paid' | 'unpaid'>()
+  entries.forEach((entry) => {
+    if (!periods.has(entry.period_start)) periods.set(entry.period_start, entry.period_status)
+  })
+  return {
+    total: periods.size,
+    paid: [...periods.values()].filter((status) => status === 'paid').length,
+    unpaid: [...periods.values()].filter((status) => status === 'unpaid').length,
+  }
 }
 
 function page(doc: jsPDF) {
@@ -97,103 +136,78 @@ function drawReport(doc: jsPDF, report: TeacherFeePdfReport, generatedAt: string
     return true
   }
 
+  const settlements = settlementBreakdown(report.detailEntries)
+
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(16)
+  doc.setFontSize(15)
   doc.text('QUICKSPEAK LMS', left, y)
-  doc.setFontSize(12)
-  doc.text('TEACHER FEE REPORT', left, y + 7)
+  doc.setFontSize(11)
+  doc.text('TEACHER FEE REPORT', left, y + 6)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
-  doc.text(`Teacher: ${report.teacherName}`, left, y + 17)
-  doc.text(`Teacher Code: ${report.teacherCode}`, left, y + 22)
-  doc.text(`Period: ${report.period}`, 110, y + 17)
-  doc.text(`Status: ${report.status.toUpperCase()}`, 110, y + 22)
-  doc.text(`Generated: ${generatedAt}`, left, y + 27)
-  y += 35
+  doc.text('Teacher: ' + report.teacherName + ' (' + report.teacherCode + ')', left, y + 16)
+  doc.text('Period: ' + report.period, left, y + 21)
+  doc.text('Status Filter: ' + report.status, 120, y + 21)
+  doc.text('Generated: ' + generatedAt, left, y + 26)
+  y += 34
 
-  y = heading(doc, 'A. MEETING & ATTENDANCE DETAIL', y)
-  const meetings = groupedMeetings(report.detailEntries)
-  if (meetings.length === 0) {
-    doc.setFontSize(9)
-    doc.text('No fee detail available for this teacher and period.', left, y)
-    y += 8
+  y = heading(doc, 'A. FEE SUMMARY', y)
+  doc.setFillColor(248, 250, 252)
+  doc.rect(left, y, right - left, 25, 'F')
+  doc.setFontSize(8)
+  doc.text('Total Attendances: ' + report.totalStudentAttendances, left + 4, y + 7)
+  doc.text('Total Earned: ' + amount(report.earned), 75, y + 7)
+  doc.text('Settlement Periods: ' + settlements.total, 145, y + 7)
+  doc.text('Paid: ' + settlements.paid + '   Unpaid: ' + settlements.unpaid, left + 4, y + 14)
+  doc.text('Settlement status is shown for each fee record below.', left + 4, y + 21)
+  y += 31
+
+  y = heading(doc, 'B. FEE DETAIL', y)
+  y = detailTableHeader(doc, y)
+  if (report.detailEntries.length === 0) {
+    doc.setFontSize(8)
+    doc.text('No fee detail available for this teacher and period.', left, y + 5)
+    y += 10
+  } else {
+    report.detailEntries.forEach((entry) => {
+      const rowHeight = detailRowHeight(entry)
+      if (ensure(rowHeight + 2)) {
+        y = heading(doc, 'B. FEE DETAIL (CONTINUED)', y)
+        y = detailTableHeader(doc, y)
+      }
+      drawDetailRow(doc, entry, y, rowHeight)
+      y += rowHeight
+    })
   }
 
-  meetings.forEach((entries) => {
-    const meeting = entries[0]
-    const headerHeight = 20
-    const firstRowHeight = 7
-    if (ensure(headerHeight + firstRowHeight)) y = heading(doc, 'A. MEETING & ATTENDANCE DETAIL (CONTINUED)', y)
-    doc.setFillColor(248, 250, 252)
-    doc.rect(left, y, right - left, headerHeight, 'F')
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    doc.text(`${date(meeting.session_date)} - ${time(meeting.attendance_recorded_at)}`, left + 3, y + 5)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(7)
-    doc.text(`Teaching Group: ${meeting.teaching_group_name}`, left + 3, y + 10)
-    doc.text(`Package: ${packageType(meeting.package_type)}`, 90, y + 10)
-    doc.text(`Level: ${meeting.level_name}`, left + 3, y + 15)
-    y = studentTableHeader(doc, y + headerHeight)
-    entries.forEach((entry) => {
-      if (ensure(7)) y = studentTableHeader(doc, 14)
-      doc.setDrawColor(226, 232, 240)
-      doc.line(left, y + 7, right, y + 7)
-      doc.setFontSize(7)
-      doc.text(doc.splitTextToSize(entry.student_name, 56) as string[], 17, y + 4.5)
-      doc.text(entry.student_code, 77, y + 4.5)
-      doc.text(entry.attendance_status === 'present' ? 'Present' : 'Absent', 112, y + 4.5)
-      doc.text(amount(entry.student_fee), 193, y + 4.5, { align: 'right' })
-      y += 7
-    })
-    if (ensure(8)) y = 14
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    doc.text(`Meeting Fee: ${amount(meeting.meeting_fee)}`, 193, y + 5, { align: 'right' })
-    doc.setFont('helvetica', 'normal')
-    y += 10
-  })
-
-  if (ensure(26)) y = page(doc)
-  y = heading(doc, 'B. STUDENT FEE SUMMARY', y)
-  y = summaryTableHeader(doc, y)
+  if (ensure(22)) y = page(doc)
+  y += 4
+  y = heading(doc, 'C. STUDENT FEE SUMMARY', y)
+  y = studentTableHeader(doc, y)
   report.studentSummaries.forEach((summary) => {
-    if (ensure(8)) { y = heading(doc, 'B. STUDENT FEE SUMMARY (CONTINUED)', 14); y = summaryTableHeader(doc, y) }
+    if (ensure(8)) {
+      y = heading(doc, 'C. STUDENT FEE SUMMARY (CONTINUED)', 14)
+      y = studentTableHeader(doc, y)
+    }
     doc.setDrawColor(226, 232, 240)
     doc.line(left, y + 8, right, y + 8)
     doc.setFontSize(6.5)
-    doc.text(doc.splitTextToSize(summary.student_name, 32) as string[], 17, y + 4.7)
-    doc.text(summary.student_code, 52, y + 4.7)
-    doc.text(doc.splitTextToSize(summary.teaching_group_name, 40) as string[], 75, y + 4.7)
-    doc.text(`${summary.present_attendance_count} x`, 122, y + 4.7)
-    doc.text(amount(summary.fee_rate), 140, y + 4.7)
+    doc.text(doc.splitTextToSize(summary.student_name, 34) as string[], 17, y + 4.7)
+    doc.text(summary.student_code, 55, y + 4.7)
+    doc.text(doc.splitTextToSize(summary.teaching_group_name, 40) as string[], 82, y + 4.7)
+    doc.text(summary.present_attendance_count + ' x', 132, y + 4.7)
+    doc.text(amount(summary.fee_rate), 151, y + 4.7)
     doc.text(amount(summary.student_total), 193, y + 4.7, { align: 'right' })
     y += 8
   })
 
-  if (ensure(45)) y = page(doc)
-  y = heading(doc, 'C. TEACHER FEE SUMMARY', y)
-  doc.setFillColor(248, 250, 252)
-  doc.rect(left, y, right - left, 30, 'F')
-  doc.setFontSize(8)
-  doc.text(`Total Student Attendances: ${report.totalStudentAttendances}`, left + 4, y + 7)
-  doc.text(`Earned: ${amount(report.earned)}`, left + 4, y + 13)
-  doc.text(`Paid: ${report.paid === null ? '—' : amount(report.paid)}`, 80, y + 13)
-  doc.text(`Outstanding: ${report.outstanding === null ? '—' : amount(report.outstanding)}`, 135, y + 13)
-  doc.text(`Status: ${report.status.toUpperCase()}`, left + 4, y + 20)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
-  doc.text(`TOTAL TEACHER FEE  ${amount(report.earned)}`, left + 4, y + 27)
-  doc.setFont('helvetica', 'normal')
-  y += 35
+  if (ensure(20)) y = page(doc)
   doc.setFontSize(8)
   const message = report.settlementNote
     ?? (report.detailReconcilesPeriod
-      ? '[OK] Detail reconciles with Teacher Fee total.'
-      : report.status === 'paid'
-        ? '[!] Historical detail does not currently reconcile with the frozen settlement amount.'
-        : '[!] Detail does not currently reconcile with the Teacher Fee total.')
-  doc.text(doc.splitTextToSize(message, right - left) as string[], left, y)
+      ? '[OK] Fee detail reconciles with the reported total.'
+      : '[!] Fee detail requires review against the settlement amount.')
+  doc.text(doc.splitTextToSize(message, right - left) as string[], left, y + 4)
 }
 
 function addFooter(doc: jsPDF, generatedAt: string) {
@@ -212,6 +226,7 @@ function addFooter(doc: jsPDF, generatedAt: string) {
 
 function safeFilename(teacherCode: string, period: string) {
   const safeCode = teacherCode.replace(/[^a-zA-Z0-9_-]/g, '') || 'teacher'
+  if (period === 'All Time') return `teacher-fee-${safeCode}-all-time.pdf`
   if (period.includes(' – ')) {
     const range = period.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()
     return `teacher-fee-${safeCode}-${range}.pdf`
