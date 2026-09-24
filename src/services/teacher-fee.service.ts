@@ -182,7 +182,7 @@ function listMonthStarts(startDate: string, endDate: string) {
 }
 
 export async function getMyTeacherFeeReportRange(startDate: string, endDate: string) {
-  if (startDate > endDate) {
+  if (!startDate || !endDate || startDate > endDate) {
     return { entries: [], detail_entries: [], monthly_summaries: [] as MyTeacherFeeReport['period_summary'][], detail_reconciles_period: true }
   }
 
