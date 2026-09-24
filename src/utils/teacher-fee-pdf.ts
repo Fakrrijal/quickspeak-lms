@@ -7,12 +7,13 @@ export type TeacherFeePdfReport = {
   period: string
   status: string
   earned: number
-  paid: number
-  outstanding: number
+  paid: number | null
+  outstanding: number | null
   detailEntries: TeacherFeeDetailEntry[]
   studentSummaries: TeacherFeeStudentSummary[]
   totalStudentAttendances: number
   detailReconcilesPeriod: boolean
+  settlementNote?: string
 }
 
 export type TeacherFeePdfArchive = {
@@ -177,8 +178,8 @@ function drawReport(doc: jsPDF, report: TeacherFeePdfReport, generatedAt: string
   doc.setFontSize(8)
   doc.text(`Total Student Attendances: ${report.totalStudentAttendances}`, left + 4, y + 7)
   doc.text(`Earned: ${amount(report.earned)}`, left + 4, y + 13)
-  doc.text(`Paid: ${amount(report.paid)}`, 80, y + 13)
-  doc.text(`Outstanding: ${amount(report.outstanding)}`, 135, y + 13)
+  doc.text(`Paid: ${report.paid === null ? '—' : amount(report.paid)}`, 80, y + 13)
+  doc.text(`Outstanding: ${report.outstanding === null ? '—' : amount(report.outstanding)}`, 135, y + 13)
   doc.text(`Status: ${report.status.toUpperCase()}`, left + 4, y + 20)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
@@ -186,11 +187,12 @@ function drawReport(doc: jsPDF, report: TeacherFeePdfReport, generatedAt: string
   doc.setFont('helvetica', 'normal')
   y += 35
   doc.setFontSize(8)
-  const message = report.detailReconcilesPeriod
-    ? '[OK] Detail reconciles with Teacher Fee total.'
-    : report.status === 'paid'
-      ? '[!] Historical detail does not currently reconcile with the frozen settlement amount.'
-      : '[!] Detail does not currently reconcile with the Teacher Fee total.'
+  const message = report.settlementNote
+    ?? (report.detailReconcilesPeriod
+      ? '[OK] Detail reconciles with Teacher Fee total.'
+      : report.status === 'paid'
+        ? '[!] Historical detail does not currently reconcile with the frozen settlement amount.'
+        : '[!] Detail does not currently reconcile with the Teacher Fee total.')
   doc.text(doc.splitTextToSize(message, right - left) as string[], left, y)
 }
 
