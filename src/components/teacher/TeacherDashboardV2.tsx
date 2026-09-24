@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { getMyTeacherAttendance, type TeacherAttendanceMeeting } from '../../services/teacher-attendance.service'
-import { getMyTeacherFeeReport, type MyTeacherFeeReport } from '../../services/teacher-fee.service'
+import { getMyTeacherUnpaidFee } from '../../services/teacher-fee.service'
 import { getMyTeacherScheduleOverview, type TeacherScheduleOverview } from '../../services/class-schedule.service'
 import { formatScheduleDate, formatScheduleTime, getNextScheduleOccurrences } from '../../lib/schedule'
 
@@ -83,7 +83,7 @@ export function TeacherDashboardV2() {
     return { from: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`, to: today }
   })
   const [meetings, setMeetings] = useState<TeacherAttendanceMeeting[]>([])
-  const [feeReports, setFeeReports] = useState<MyTeacherFeeReport[]>([])
+  const [unpaidFee, setUnpaidFee] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [scheduleOverview, setScheduleOverview] = useState<TeacherScheduleOverview[]>([])
@@ -123,17 +123,10 @@ export function TeacherDashboardV2() {
     setLoading(true)
     setError(null)
     const months = getRangeMonths(dateRange)
-    Promise.all([
-      ...months.map((referenceDate) => getMyTeacherAttendance('month', referenceDate)),
-      ...months.map((referenceDate) => {
-        const [year, month] = referenceDate.slice(0, 7).split('-').map(Number)
-        return getMyTeacherFeeReport(month, year)
-      }),
-    ])
+    Promise.all(months.map((referenceDate) => getMyTeacherAttendance('month', referenceDate)))
       .then((results) => {
         if (cancelled) return
-        setMeetings(results.slice(0, months.length).flat() as TeacherAttendanceMeeting[])
-        setFeeReports(results.slice(months.length) as MyTeacherFeeReport[])
+        setMeetings(results.flat())
         setLoading(false)
       })
       .catch((loadError) => {
@@ -144,6 +137,19 @@ export function TeacherDashboardV2() {
     return () => { cancelled = true }
   }, [canLoad, dateRange.from, dateRange.to])
 
+  useEffect(() => {
+    if (!canLoad) return
+    let cancelled = false
+    getMyTeacherUnpaidFee()
+      .then((amount) => {
+        if (!cancelled) setUnpaidFee(amount)
+      })
+      .catch((loadError) => {
+        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Unable to load teacher fee data')
+      })
+    return () => { cancelled = true }
+  }, [canLoad])
+
   const rangeMeetings = useMemo(() => meetings.filter((meeting) => isInRange(meeting.session_date, dateRange)), [dateRange, meetings])
   const completedMeetings = useMemo(() => rangeMeetings.filter((meeting) => meeting.teacher_status !== null && meeting.teacher_recorded_at !== null), [rangeMeetings])
   const classes = new Set(completedMeetings.map((meeting) => meeting.teaching_group_id)).size
@@ -152,7 +158,6 @@ export function TeacherDashboardV2() {
   const presentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'present').length
   const absentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'absent').length
   const attendanceRate = attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0
-  const unpaidFee = useMemo(() => feeReports.reduce((total, report) => total + Math.max(report.period_summary.outstanding_amount, 0), 0), [feeReports])
   const rangeLabel = `${formatDate(dateRange.from)} – ${formatDate(dateRange.to)}`
   const nextScheduledClass = useMemo(() => {
     return scheduleOverview
