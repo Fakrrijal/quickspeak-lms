@@ -54,6 +54,38 @@ export type RecordTeacherGroupAttendanceInput = {
   }>
 }
 
+function addMonthsToFirstDay(referenceDate: string, offset: number) {
+  const [year, month] = referenceDate.slice(0, 7).split('-').map(Number)
+  const date = new Date(year, month - 1 + offset, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
+}
+
+function listMonthStarts(startDate: string, endDate: string) {
+  const start = `${startDate.slice(0, 7)}-01`
+  const end = `${endDate.slice(0, 7)}-01`
+  const months: string[] = []
+  let cursor = start
+  while (cursor <= end) {
+    months.push(cursor)
+    const next = addMonthsToFirstDay(cursor, 1)
+    if (next === cursor) break
+    cursor = next
+  }
+  return months
+}
+
+export async function getMyTeacherAttendanceRange(startDate: string, endDate: string): Promise<TeacherAttendanceMeeting[]> {
+  if (startDate > endDate) return []
+  const monthRows = await Promise.all(
+    listMonthStarts(startDate, endDate).map((referenceDate) => getMyTeacherAttendance('month', referenceDate)),
+  )
+  const byMeeting = new Map<string, TeacherAttendanceMeeting>()
+  for (const row of monthRows.flat()) byMeeting.set(row.meeting_id, row)
+  return [...byMeeting.values()]
+    .filter((meeting) => meeting.session_date >= startDate && meeting.session_date <= endDate)
+    .sort((left, right) => right.session_date.localeCompare(left.session_date) || right.meeting_id.localeCompare(left.meeting_id))
+}
+
 export async function getMyTeacherAttendance(
   period: TeacherAttendancePeriod,
   referenceDate: string,
