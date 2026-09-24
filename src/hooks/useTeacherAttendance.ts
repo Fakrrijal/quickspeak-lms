@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef, useState } from 'react'
 import {
-  getMyTeacherAttendance,
+  getMyTeacherAttendanceRange,
   recordTeacherAttendance,
   type TeacherAttendancePeriod,
 } from '../services/teacher-attendance.service'
@@ -72,20 +72,19 @@ function getMutationErrorMessage(error: unknown) {
 }
 
 export function useTeacherAttendance(
-  period: TeacherAttendancePeriod,
-  referenceDate: string | Date,
+  startDate: string,
+  endDate: string,
   enabled: boolean,
 ) {
   const queryClient = useQueryClient()
-  const normalizedReferenceDate = normalizeReferenceDate(referenceDate)
-  const queryKey = ['teacher-attendance', period, normalizedReferenceDate] as const
+  const queryKey = ['teacher-attendance-range', startDate, endDate] as const
   const recordingMeetingIds = useRef(new Set<string>())
   const [recordingMeetingId, setRecordingMeetingId] = useState<string | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
 
   const query = useQuery({
     queryKey,
-    queryFn: () => getMyTeacherAttendance(period, normalizedReferenceDate),
+    queryFn: () => getMyTeacherAttendanceRange(startDate, endDate),
     enabled,
     placeholderData: keepPreviousData,
   })
