@@ -7,7 +7,6 @@ import { adminEditPaidEnrollment, getEditablePaidEnrollmentsForStudent, type Enr
 
 export const Route = createFileRoute('/admin/')({ component: AdminStudentManagementPage })
 
-function formatStatus(status: string | null) { if (!status) return 'Unavailable'; return `${status.charAt(0).toUpperCase()}${status.slice(1)}` }
 function formatDirectoryStatus(status: AdminStudentDirectoryStatus) {
   return status === 'next_level'
     ? 'Next Level'
