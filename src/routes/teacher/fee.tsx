@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTeacherFee } from '../../hooks/useTeacherFee'
-import type { TeacherFeeStatus, TeacherFeeDetailEntry, TeacherFeeStudentSummary } from '../../services/teacher-fee.service'
+import type { TeacherFeeStatus, TeacherFeeDetailEntry } from '../../services/teacher-fee.service'
 import { getMyTeacherCode, summarizeTeacherFeeDetails } from '../../services/teacher-fee.service'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { downloadTeacherFeePdf } from '../../utils/teacher-fee-pdf'
@@ -27,10 +27,6 @@ function formatDateRange(startDate: string, endDate: string) {
   if (startDate > endDate) return 'Invalid date range'
   const format = (value: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
   return `${format(startDate)} – ${format(endDate)}`
-}
-
-function formatPackageType(packageType: TeacherFeeDetailEntry['package_type']) {
-  return packageType === 'semi_private' ? 'Semi-private' : 'Private'
 }
 
 function Pagination({ page, totalItems, onPageChange }: { page: number; totalItems: number; onPageChange: (page: number) => void }) {
