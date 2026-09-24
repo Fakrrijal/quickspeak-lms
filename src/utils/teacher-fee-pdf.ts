@@ -37,10 +37,6 @@ function time(value: string) {
   return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value))
 }
 
-function packageType(value: TeacherFeeDetailEntry['package_type']) {
-  return value === 'semi_private' ? 'Semi-private' : 'Private'
-}
-
 function heading(doc: jsPDF, title: string, y: number) {
   doc.setFillColor(15, 23, 42)
   doc.rect(left, y, right - left, 8, 'F')
@@ -113,7 +109,8 @@ function drawDetailRow(doc: jsPDF, entry: TeacherFeeDetailEntry, y: number, rowH
 function settlementBreakdown(entries: TeacherFeeDetailEntry[]) {
   const periods = new Map<string, 'paid' | 'unpaid'>()
   entries.forEach((entry) => {
-    if (!periods.has(entry.period_start)) periods.set(entry.period_start, entry.period_status)
+    const periodStart = entry.session_date.slice(0, 7) + '-01'
+    if (!periods.has(periodStart)) periods.set(periodStart, entry.period_status)
   })
   return {
     total: periods.size,
