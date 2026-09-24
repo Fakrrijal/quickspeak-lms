@@ -75,7 +75,7 @@ function listMonthStarts(startDate: string, endDate: string) {
 }
 
 export async function getMyTeacherAttendanceRange(startDate: string, endDate: string): Promise<TeacherAttendanceMeeting[]> {
-  if (startDate > endDate) return []
+  if (!startDate || !endDate || startDate > endDate) return []
   const monthRows = await Promise.all(
     listMonthStarts(startDate, endDate).map((referenceDate) => getMyTeacherAttendance('month', referenceDate)),
   )
