@@ -88,6 +88,7 @@ function TeacherFeePage() {
   const today = new Date()
   const [startDate, setStartDate] = useState(() => `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`)
   const [endDate, setEndDate] = useState(() => `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
+  const [isAllTime, setIsAllTime] = useState(false)
   const [statusFilter, setStatusFilter] = useState<TeacherFeeStatus>('all')
   const [feeView, setFeeView] = useState<FeeView>('summary')
   const canLoad = !authLoading && !profileLoading && isAuthenticated && !profileError && role === 'teacher' && status === 'active'
@@ -107,17 +108,26 @@ function TeacherFeePage() {
     else if (status === 'waiting') navigate({ to: '/waiting', replace: true })
   }, [authLoading, isAuthenticated, navigate, profileError, profileLoading, status])
 
-  const dateRangeLabel = formatDateRange(startDate, endDate)
-  const handleFeeStartDateChange = (value: string) => setStartDate(value)
+  const dateRangeLabel = isAllTime ? 'All Time' : formatDateRange(startDate, endDate)
+  const handleAllTime = () => {
+    setIsAllTime(true)
+    setStartDate('')
+    setEndDate('')
+  }
+  const handleFeeStartDateChange = (value: string) => {
+    setIsAllTime(false)
+    setStartDate(value)
+  }
   const handleFeeEndDateChange = (value: string) => {
+    setIsAllTime(false)
     setEndDate(value)
     if (!startDate && value === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`) {
       setStartDate(`${value.slice(0, 7)}-01`)
     }
   }
-  const rangeEntries = validDateRange ? entries : []
-  const rangeDetailEntries = validDateRange ? detailEntries : []
-  const rangeMonthlySummaries = validDateRange ? monthlySummaries : []
+  const rangeEntries = reportReady ? entries : []
+  const rangeDetailEntries = reportReady ? detailEntries : []
+  const rangeMonthlySummaries = reportReady ? monthlySummaries : []
   const rangeEarned = useMemo(() => rangeDetailEntries.reduce((total, entry) => total + entry.student_fee, 0), [rangeDetailEntries])
   const rangePresentAttendances = useMemo(() => rangeDetailEntries.filter((entry) => entry.attendance_status === 'present').length, [rangeDetailEntries])
   const settlementMonths = useMemo(() => ({
