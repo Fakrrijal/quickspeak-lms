@@ -284,73 +284,157 @@ export async function getActiveTeachingGroups() {
 }
 
 export async function getTeachingGroups() {
-  const { data, error } = await supabase
-    .from('teaching_groups')
-    .select(`
-      id,
-      name,
-      group_type,
-      level_id,
-      teacher_id,
-      is_active,
-      levels (name, level_number),
-      teachers (teacher_code, profiles (full_name)),
-      teaching_group_students (
-        student_id,
-        students (id, student_code, profiles (full_name))
-      )
-    `)
-    .order('name', { ascending: true })
+  const [{ data: groups, error: groupsError }, { data: activeAssignments, error: assignmentsError }] = await Promise.all([
+    supabase
+      .from('teaching_groups')
+      .select(`
+        id,
+        name,
+        group_type,
+        level_id,
+        teacher_id,
+        is_active,
+        levels (name, level_number),
+        teachers (teacher_code, profiles (full_name)),
+        teaching_group_students (
+          student_id,
+          students (
+            id,
+            student_code,
+            is_active,
+            profiles (full_name, role, status)
+          )
+        )
+      `)
+      .order('name', { ascending: true }),
+    supabase
+      .from('enrollment_teaching_group_assignments')
+      .select(`
+        teaching_group_id,
+        enrollments!inner (
+          student_id,
+          level_id,
+          package_type,
+          status,
+          students!inner (
+            id,
+            is_active,
+            profiles!inner (role, status)
+          )
+        )
+      `)
+      .eq('enrollments.status', 'active')
+      .eq('enrollments.students.is_active', true)
+      .eq('enrollments.students.profiles.role', 'student')
+      .eq('enrollments.students.profiles.status', 'active'),
+  ])
 
-  if (error) {
-    throw error
+  if (groupsError) {
+    throw groupsError
   }
 
-  return (data ?? []).map((group) => {
-    const level = Array.isArray(group.levels)
-      ? group.levels[0] ?? null
-      : group.levels
-    const teacher = Array.isArray(group.teachers)
-      ? group.teachers[0] ?? null
-      : group.teachers
-    const teacherProfile = teacher && Array.isArray(teacher.profiles)
-      ? teacher.profiles[0] ?? null
-      : teacher?.profiles ?? null
-    const membershipCount = group.teaching_group_students?.length ?? 0
-    const memberships = group.teaching_group_students
-      .filter((membership) => membership.student_id)
-      .map((membership) => {
-        const student = Array.isArray(membership.students)
-          ? membership.students[0] ?? null
-          : membership.students
-        const profile = student && Array.isArray(student.profiles)
-          ? student.profiles[0] ?? null
-          : student?.profiles ?? null
+  if (assignmentsError) {
+    throw assignmentsError
+  }
 
-        return {
-          student_id: membership.student_id,
-          students: student
-            ? {
-                ...student,
-                profiles: profile,
-              }
-            : null,
-        }
-      })
+  const activeAssignmentKeys = new Set(
+    (activeAssignments ?? []).flatMap((assignment) => {
+      const enrollment = Array.isArray(assignment.enrollments)
+        ? assignment.enrollments[0] ?? null
+        : assignment.enrollments
+      const student = enrollment?.students
+        ? Array.isArray(enrollment.students)
+          ? enrollment.students[0] ?? null
+          : enrollment.students
+        : null
 
-    return {
-      ...group,
-      levels: level,
-      teachers: teacher
-        ? {
-            ...teacher,
-            profiles: teacherProfile,
+      if (
+        !enrollment
+        || enrollment.status !== 'active'
+        || !student
+        || !student.is_active
+        || !assignment.teaching_group_id
+        || !enrollment.student_id
+        || !enrollment.level_id
+        || !enrollment.package_type
+      ) {
+        return []
+      }
+
+      return [
+        `${assignment.teaching_group_id}:${enrollment.student_id}:${enrollment.level_id}:${enrollment.package_type}`,
+      ]
+    }),
+  )
+
+  return (groups ?? [])
+    .map((group) => {
+      const level = Array.isArray(group.levels)
+        ? group.levels[0] ?? null
+        : group.levels
+      const teacher = Array.isArray(group.teachers)
+        ? group.teachers[0] ?? null
+        : group.teachers
+      const teacherProfile = teacher && Array.isArray(teacher.profiles)
+        ? teacher.profiles[0] ?? null
+        : teacher?.profiles ?? null
+
+      const memberships = (group.teaching_group_students ?? [])
+        .filter((membership) => {
+          const student = Array.isArray(membership.students)
+            ? membership.students[0] ?? null
+            : membership.students
+          const profile = student && Array.isArray(student.profiles)
+            ? student.profiles[0] ?? null
+            : student?.profiles ?? null
+
+          if (
+            !membership.student_id
+            || !student
+            || !student.is_active
+            || profile?.role !== 'student'
+            || profile?.status !== 'active'
+          ) {
+            return false
           }
-        : null,
-      student_count: membershipCount,
-      memberships,
-    }
-  }) as TeachingGroup[]
+
+          const assignmentKey = `${group.id}:${membership.student_id}:${group.level_id}:${group.group_type}`
+          return activeAssignmentKeys.has(assignmentKey)
+        })
+        .map((membership) => {
+          const student = Array.isArray(membership.students)
+            ? membership.students[0] ?? null
+            : membership.students
+          const profile = student && Array.isArray(student.profiles)
+            ? student.profiles[0] ?? null
+            : student?.profiles ?? null
+
+          return {
+            student_id: membership.student_id,
+            students: student
+              ? {
+                  id: student.id,
+                  student_code: student.student_code,
+                  profiles: profile ? { full_name: profile.full_name } : null,
+                }
+              : null,
+          }
+        })
+
+      return {
+        ...group,
+        levels: level,
+        teachers: teacher
+          ? {
+              ...teacher,
+              profiles: teacherProfile,
+            }
+          : null,
+        student_count: memberships.length,
+        memberships,
+      }
+    })
+    .filter((group) => !group.is_active || group.student_count > 0) as TeachingGroup[]
 }
 
 export async function getActiveStudents() {
