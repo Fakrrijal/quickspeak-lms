@@ -99,7 +99,6 @@ export function TeacherAttendancePage() {
 
   const selectedGroup = useMemo(() => groups.find((group) => group.teaching_group_id === selectedGroupId) ?? null, [groups, selectedGroupId])
   const selectedStudent = useMemo(() => selectedGroup?.students.find((student) => student.enrollment_id === selectedEnrollmentId) ?? null, [selectedEnrollmentId, selectedGroup])
-  const validReportRange = Boolean(reportStartDate && reportEndDate && reportStartDate <= reportEndDate)
   const reportRecords = useMemo(() => {
     if (!validReportRange) return []
     const query = reportSearch.trim().toLocaleLowerCase()
