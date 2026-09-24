@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTeacherFee } from '../../hooks/useTeacherFee'
-import type { TeacherFeeStatus, TeacherFeeDetailEntry } from '../../services/teacher-fee.service'
+import type { TeacherFeeStatus } from '../../services/teacher-fee.service'
 import { getMyTeacherCode, summarizeTeacherFeeDetails } from '../../services/teacher-fee.service'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { downloadTeacherFeePdf } from '../../utils/teacher-fee-pdf'
