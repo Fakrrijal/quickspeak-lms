@@ -161,6 +161,54 @@ function assertLiveDetailReconciliation(entries: TeacherFeeDetailEntry[]) {
   }
 }
 
+function addMonthsToFirstDay(referenceDate: string, offset: number) {
+  const [year, month] = referenceDate.slice(0, 7).split('-').map(Number)
+  const date = new Date(year, month - 1 + offset, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
+}
+
+function listMonthStarts(startDate: string, endDate: string) {
+  const start = `${startDate.slice(0, 7)}-01`
+  const end = `${endDate.slice(0, 7)}-01`
+  const months: string[] = []
+  let cursor = start
+  while (cursor <= end) {
+    months.push(cursor)
+    const next = addMonthsToFirstDay(cursor, 1)
+    if (next === cursor) break
+    cursor = next
+  }
+  return months
+}
+
+export async function getMyTeacherFeeReportRange(startDate: string, endDate: string) {
+  if (startDate > endDate) {
+    return { entries: [], detail_entries: [], monthly_summaries: [] as MyTeacherFeeReport['period_summary'][], detail_reconciles_period: true }
+  }
+
+  const reports = await Promise.all(
+    listMonthStarts(startDate, endDate).map((monthStart) => {
+      const year = Number(monthStart.slice(0, 4))
+      const month = Number(monthStart.slice(5, 7))
+      return getMyTeacherFeeReport(month, year)
+    }),
+  )
+
+  const entries = reports.flatMap((report) => report.entries)
+    .filter((entry) => entry.session_date >= startDate && entry.session_date <= endDate)
+    .sort((left, right) => right.session_date.localeCompare(left.session_date) || right.session_time.localeCompare(left.session_time))
+  const detailEntries = reports.flatMap((report) => report.detail_entries)
+    .filter((entry) => entry.session_date >= startDate && entry.session_date <= endDate)
+    .sort((left, right) => right.session_date.localeCompare(left.session_date) || right.attendance_recorded_at.localeCompare(left.attendance_recorded_at))
+
+  return {
+    entries,
+    detail_entries: detailEntries,
+    monthly_summaries: reports.map((report) => report.period_summary),
+    detail_reconciles_period: true,
+  }
+}
+
 export async function getMyTeacherFeeReport(month: number, year: number) {
   const { data, error } = await supabase.rpc('get_teacher_fee_report', {
     p_month: month,
