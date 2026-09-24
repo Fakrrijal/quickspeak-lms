@@ -16,6 +16,7 @@ import {
   type TeachingGroup,
 } from '../../services/admin.service'
 import {
+  assignNextLevelEnrollmentToTeachingGroup,
   assignPaidEnrollmentToTeachingGroup,
   getEligibleTeachingGroupEnrollments,
   type EligibleTeachingGroupEnrollment,
@@ -388,10 +389,23 @@ function AdminTeachingGroupsPage() {
     setSuccessMessage(null)
 
     try {
-      await assignPaidEnrollmentToTeachingGroup(enrollment.id, group.id)
+      const memberships = enrollment.students?.teaching_group_students ?? []
+      const existingMembership = memberships.length === 1 ? memberships[0] : null
+      const existingGroup = existingMembership?.teaching_groups ?? null
+      const isNextLevelMove = existingGroup !== null
+        && existingGroup.is_active
+        && existingGroup.level_id !== enrollment.level_id
+        && existingGroup.group_type === enrollment.package_type
+
+      if (isNextLevelMove) {
+        await assignNextLevelEnrollmentToTeachingGroup(enrollment.id, group.id)
+        setSuccessMessage('Student moved to the next-level teaching group successfully.')
+      } else {
+        await assignPaidEnrollmentToTeachingGroup(enrollment.id, group.id)
+        setSuccessMessage('Enrollment assigned to the teaching group successfully.')
+      }
       await loadTeachingGroups()
       setEligibleEnrollments(await getEligibleTeachingGroupEnrollments(group.level_id, group.group_type))
-      setSuccessMessage('Enrollment assigned to the teaching group successfully.')
     } catch (assignError) {
       setStudentManagementError(
         assignError instanceof Error
@@ -855,6 +869,23 @@ function AdminTeachingGroupsPage() {
                       <p className="mt-1 text-xs text-slate-500">
                         {managingGroup.levels?.name ?? 'Unknown level'}
                       </p>
+                      <span className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                        membership.roster_status === 'waiting_renewal'
+                          ? 'bg-amber-50 text-amber-700'
+                          : membership.roster_status === 'waiting_next_level'
+                            ? 'bg-violet-50 text-violet-700'
+                            : membership.roster_status === 'active'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {membership.roster_status === 'waiting_renewal'
+                          ? 'Waiting Renewal'
+                          : membership.roster_status === 'waiting_next_level'
+                            ? 'Waiting Next Level'
+                            : membership.roster_status === 'active'
+                              ? 'Active'
+                              : 'Waiting Assignment'}
+                      </span>
                     </div>
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       {movingStudentId === membership.student_id ? <>
