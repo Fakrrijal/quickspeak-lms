@@ -3,7 +3,7 @@ import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-
 import { useAuthContext } from '../providers/AuthProvider'
 import { useTeacherGroupAttendance } from '../hooks/useTeacherGroupAttendance'
 import { useTeacherAttendance } from '../hooks/useTeacherAttendance'
-import { type TeacherAttendanceMeeting, type TeacherAttendancePeriod } from '../services/teacher-attendance.service'
+import { type TeacherAttendanceMeeting } from '../services/teacher-attendance.service'
 import { downloadAdminAttendancePdf } from '../utils/admin-attendance-pdf'
 import { summarizeAdminAttendanceOverall, summarizeAdminAttendanceStudents, type AdminAttendanceRecord } from '../services/admin-attendance.service'
 
@@ -29,8 +29,9 @@ function formatSessionDate(sessionDate: string) {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${sessionDate}T00:00:00`))
 }
 
-function formatPeriod(referenceDate: string, _period: TeacherAttendancePeriod) {
-  return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(`${referenceDate.slice(0, 7)}-01T00:00:00`))
+function formatDateRange(startDate: string, endDate: string) {
+  const format = (value: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
+  return `${format(startDate)} – ${format(endDate)}`
 }
 
 function formatRecordedDateTime(value: string) {
@@ -55,13 +56,13 @@ function Pagination({ page, totalItems, onPageChange }: { page: number; totalIte
   )
 }
 
-function TeacherAttendanceDetailModal({ student, records, period, referenceDate, onClose }: { student: ReturnType<typeof summarizeAdminAttendanceStudents>[number]; records: AdminAttendanceRecord[]; period: TeacherAttendancePeriod; referenceDate: string; onClose: () => void }) {
+function TeacherAttendanceDetailModal({ student, records, dateRangeLabel, onClose }: { student: ReturnType<typeof summarizeAdminAttendanceStudents>[number]; records: AdminAttendanceRecord[]; dateRangeLabel: string; onClose: () => void }) {
   const overall = summarizeAdminAttendanceOverall(records)
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/40 p-4" role="presentation">
       <div role="dialog" aria-modal="true" aria-labelledby="teacher-attendance-detail-title" className="mx-auto my-6 w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-2xl">
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Attendance</p><h3 id="teacher-attendance-detail-title" className="mt-1 text-xl font-extrabold text-[#102449]">Student Detail</h3><p className="mt-1 text-sm text-slate-600">{student.student_name} · {formatPeriod(referenceDate, period)}</p></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Attendance</p><h3 id="teacher-attendance-detail-title" className="mt-1 text-xl font-extrabold text-[#102449]">Student Detail</h3><p className="mt-1 text-sm text-slate-600">{student.student_name} · {dateRangeLabel}</p></div>
           <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">Close</button>
         </header>
         <div className="space-y-6 p-6">
@@ -83,15 +84,15 @@ export function TeacherAttendancePage() {
   const [teacherStatus, setTeacherStatus] = useState<'present' | 'absent' | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [detailStudentKey, setDetailStudentKey] = useState<string | null>(null)
-  const period: TeacherAttendancePeriod = 'month'
-  const [referenceDate, setReferenceDate] = useState(() => `${getTodayIsoDate().slice(0, 7)}-01`)
+  const [reportStartDate, setReportStartDate] = useState(() => `${getTodayIsoDate().slice(0, 7)}-01`)
+  const [reportEndDate, setReportEndDate] = useState(() => getTodayIsoDate())
   const [reportSearch, setReportSearch] = useState('')
   const [reportGroup, setReportGroup] = useState('')
   const [reportPage, setReportPage] = useState(1)
 
   const canLoadGroups = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
   const { groups, loading, error, mutationError, saving, saveAttendance, reload } = useTeacherGroupAttendance(canLoadGroups)
-  const { meetings, loading: historyLoading, reload: reloadHistory } = useTeacherAttendance(period, referenceDate, canLoadGroups)
+  const { meetings, loading: historyLoading, reload: reloadHistory } = useTeacherAttendance(reportStartDate, reportEndDate, canLoadGroups)
 
   const selectedGroup = useMemo(() => groups.find((group) => group.teaching_group_id === selectedGroupId) ?? null, [groups, selectedGroupId])
   const selectedStudent = useMemo(() => selectedGroup?.students.find((student) => student.enrollment_id === selectedEnrollmentId) ?? null, [selectedEnrollmentId, selectedGroup])
@@ -111,12 +112,14 @@ export function TeacherAttendancePage() {
   const attendanceRate = totalAttendance ? (presentRecords / totalAttendance) * 100 : null
   const totalStudents = useMemo(() => new Set(reportRecords.map((record) => record.student_id)).size, [reportRecords])
 
-  useEffect(() => { setReportPage(1) }, [reportSearch, reportGroup, referenceDate])
+  useEffect(() => { setReportPage(1) }, [reportSearch, reportGroup, reportStartDate, reportEndDate])
   useEffect(() => { const totalPages = Math.max(1, Math.ceil(studentSummary.length / PAGE_SIZE)); if (reportPage > totalPages) setReportPage(totalPages) }, [reportPage, studentSummary.length])
+
+  const dateRangeLabel = formatDateRange(reportStartDate, reportEndDate)
 
   const downloadReport = () => {
     if (reportRecords.length === 0) return
-    downloadAdminAttendancePdf({ records: reportRecords, generatedBy: profile?.full_name || 'Teacher', generatedAt: formatRecordedDateTime(new Date().toISOString()), filters: { student: 'All Students', teacher: profile?.full_name || 'Teacher', teachingGroup: 'Authorized Teaching Groups', period: formatPeriod(referenceDate, period) }, filename: `teacher-attendance-${referenceDate.slice(0, 7)}.pdf` })
+    downloadAdminAttendancePdf({ records: reportRecords, generatedBy: profile?.full_name || 'Teacher', generatedAt: formatRecordedDateTime(new Date().toISOString()), filters: { student: reportSearch.trim() || 'All Students', teacher: profile?.full_name || 'Teacher', teachingGroup: reportGroup ? (groups.find((group) => group.teaching_group_id === reportGroup)?.teaching_group_name || reportGroup) : 'All Authorized Groups', period: dateRangeLabel }, filename: `teacher-attendance-${reportStartDate}-to-${reportEndDate}.pdf` })
   }
 
   useEffect(() => {
@@ -131,7 +134,6 @@ export function TeacherAttendancePage() {
 
   const selectGroup = (groupId: string) => { setSelectedGroupId(groupId); setSelectedEnrollmentId(''); setTeacherStatus(null); setSuccessMessage(null) }
   const selectStudent = (enrollmentId: string) => { setSelectedEnrollmentId(enrollmentId); setTeacherStatus(null); setSuccessMessage(null) }
-  const handleReferenceDateChange = (value: string) => setReferenceDate(`${value}-01`)
   const save = async () => {
     if (!selectedGroup || !selectedStudent || !teacherStatus) return
     const saved = await saveAttendance({ teachingGroupId: selectedGroup.teaching_group_id, attendance: [{ studentId: selectedStudent.student_id, enrollmentId: selectedStudent.enrollment_id, teacherStatus }] })
@@ -152,12 +154,12 @@ export function TeacherAttendancePage() {
         ['Absent', absentRecords, 'text-rose-700'],
         ['Attendance Rate', attendanceRate === null ? '—' : `${attendanceRate.toFixed(0)}%`, 'text-[#102449]'],
       ].map(([label, value, tone]) => <article key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{label}</p><p className={`mt-2 text-2xl font-extrabold ${historyLoading ? 'text-slate-400' : tone}`}>{historyLoading ? '…' : value}</p></article>)}</section>
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-6 py-5 sm:px-7"><div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p><h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2><p className="mt-1 text-sm text-slate-600">{totalStudents} students · {formatPeriod(referenceDate, period)}</p></div><button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button></div></div>
-        <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-4 sm:px-7"><div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Report Filters</p><p className="mt-1 text-xs text-slate-500">Filter the attendance summary without changing the underlying records.</p></div></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><label className="block text-sm font-semibold text-slate-700">Search<input value={reportSearch} onChange={(event) => setReportSearch(event.target.value)} placeholder="Student / code / group" className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><label className="block text-sm font-semibold text-slate-700">Teaching Group<select value={reportGroup} onChange={(event) => setReportGroup(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"><option value="">All Authorized Groups</option>{groups.map((group) => <option key={group.teaching_group_id} value={group.teaching_group_id}>{group.teaching_group_name}</option>)}</select></label><label className="block text-sm font-semibold text-slate-700">Month<input type="month" value={referenceDate.slice(0, 7)} onChange={(event) => handleReferenceDateChange(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><label className="block text-sm font-semibold text-slate-700">Year<input type="number" value={referenceDate.slice(0, 4)} onChange={(event) => setReferenceDate(`${event.target.value}-${referenceDate.slice(5, 7)}-01`)} min="2000" max="9999" className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label></div></div>
-        <div className="border-b border-slate-200 px-6 py-4 sm:px-7"><div className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p><p className="mt-1 text-sm text-slate-500">Authorized session summary for {formatPeriod(referenceDate, period)}.</p></div></div></div>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-6 py-5 sm:px-7"><div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Authorized Records</p><h2 className="mt-1 text-xl font-bold text-[#102449]">Student Attendance Summary</h2><p className="mt-1 text-sm text-slate-600">{totalStudents} students · {dateRangeLabel}</p></div><button type="button" onClick={downloadReport} disabled={historyLoading || reportRecords.length === 0} className="rounded-lg bg-[#102449] px-3.5 py-2.5 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">Download PDF</button></div></div>
+        <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-4 sm:px-7"><div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Report Filters</p><p className="mt-1 text-xs text-slate-500">Filter the attendance summary without changing the underlying records.</p></div></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><label className="block text-sm font-semibold text-slate-700">Search<input value={reportSearch} onChange={(event) => setReportSearch(event.target.value)} placeholder="Student / code / group" className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><label className="block text-sm font-semibold text-slate-700">Teaching Group<select value={reportGroup} onChange={(event) => setReportGroup(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"><option value="">All Authorized Groups</option>{groups.map((group) => <option key={group.teaching_group_id} value={group.teaching_group_id}>{group.teaching_group_name}</option>)}</select></label><label className="block text-sm font-semibold text-slate-700">From<input type="date" value={reportStartDate} max={reportEndDate} onChange={(event) => setReportStartDate(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label><label className="block text-sm font-semibold text-slate-700">To<input type="date" value={reportEndDate} min={reportStartDate} onChange={(event) => setReportEndDate(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label></div></div>
+        <div className="border-b border-slate-200 px-6 py-4 sm:px-7"><div className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Attendance List</p><p className="mt-1 text-sm text-slate-500">Authorized session summary for {dateRangeLabel}.</p></div></div></div>
         <div id="teacher-attendance-records-content" className="border-b border-slate-200"><div className="overflow-x-auto"><table className="min-w-full whitespace-nowrap text-left text-sm"><thead className="sticky top-0 z-10 bg-white text-slate-600 shadow-sm"><tr><th className="px-5 py-3">Student</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Teaching Group</th><th className="px-5 py-3 text-right">Total Attendance</th><th className="px-5 py-3 text-right">Present</th><th className="px-5 py-3 text-right">Absent</th><th className="px-5 py-3 text-right">Rate</th><th className="px-5 py-3">Action</th></tr></thead><tbody className="divide-y divide-slate-100">{historyLoading ? <tr><td colSpan={8} className="px-5 py-8 text-slate-600">Loading attendance report...</td></tr> : studentSummary.length === 0 ? <tr><td colSpan={8} className="px-5 py-8 text-slate-600">No attendance records for this period.</td></tr> : paginatedStudentSummary.map((student) => <tr key={`${student.student_id}:${student.teaching_group_id}`} className="hover:bg-slate-50"><td className="px-5 py-3 font-semibold text-slate-900"><button type="button" onClick={() => setDetailStudentKey(`${student.student_id}:${student.teaching_group_id}`)} className="hover:text-blue-700 hover:underline">{student.student_name}</button></td><td className="px-5 py-3 text-slate-600">{student.student_code}</td><td className="px-5 py-3 text-slate-700">{student.teaching_group_name}</td><td className="px-5 py-3 text-right font-semibold">{student.total_sessions}</td><td className="px-5 py-3 text-right text-emerald-700">{student.present}</td><td className="px-5 py-3 text-right text-rose-700">{student.absent}</td><td className="px-5 py-3 text-right font-semibold">{student.attendance_rate === null ? '-' : `${student.attendance_rate.toFixed(1)}%`}</td><td className="px-5 py-3"><button type="button" onClick={() => setDetailStudentKey(`${student.student_id}:${student.teaching_group_id}`)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">View Detail</button></td></tr>)}</tbody></table></div><Pagination page={reportPage} totalItems={studentSummary.length} onPageChange={setReportPage} /></div>
       </section>
-      {detailStudent && <TeacherAttendanceDetailModal student={detailStudent} records={detailRecords} period={period} referenceDate={referenceDate} onClose={() => setDetailStudentKey(null)} />}
+      {detailStudent && <TeacherAttendanceDetailModal student={detailStudent} records={detailRecords} dateRangeLabel={dateRangeLabel} onClose={() => setDetailStudentKey(null)} />}
     </div>
   )
 }
