@@ -1,10 +1,10 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getMyTeacherFeeReportRange } from '../services/teacher-fee.service'
+import { getMyTeacherFeeReportAllTime, getMyTeacherFeeReportRange } from '../services/teacher-fee.service'
 
-export function useTeacherFee(startDate: string, endDate: string, enabled: boolean) {
+export function useTeacherFee(startDate: string, endDate: string, enabled: boolean, allTime = false) {
   const reportQuery = useQuery({
-    queryKey: ['teacher-fee-report-range', startDate, endDate],
-    queryFn: () => getMyTeacherFeeReportRange(startDate, endDate),
+    queryKey: ['teacher-fee-report', allTime ? 'all-time' : 'range', startDate, endDate],
+    queryFn: () => allTime ? getMyTeacherFeeReportAllTime() : getMyTeacherFeeReportRange(startDate, endDate),
     enabled,
     placeholderData: keepPreviousData,
   })
