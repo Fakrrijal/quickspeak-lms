@@ -163,7 +163,7 @@ function TeacherFeePage() {
         teacherName: profile?.full_name ?? 'Teacher',
         teacherCode: teacherCode ?? 'teacher',
         period: dateRangeLabel,
-        status: rangeStatusLabel.toLowerCase(),
+        status: statusFilter === 'all' ? 'All Status' : statusFilter,
         earned: rangeEarned,
         paid: null,
         outstanding: null,
@@ -171,7 +171,7 @@ function TeacherFeePage() {
         studentSummaries: exportStudentSummaries,
         totalStudentAttendances: exportStudentSummaries.reduce((total, student) => total + student.present_attendance_count, 0),
         detailReconcilesPeriod: true,
-        settlementNote: 'Paid and outstanding amounts are monthly settlement values; the selected custom range is shown through the fee records and earned total.',
+        settlementNote: 'Settlement status is monthly. Each fee record below shows the settlement status for its month.',
       }, new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()))
     } catch (downloadError) { setExportError(downloadError instanceof Error ? downloadError.message : 'Unable to generate the PDF report.') } finally { setIsExporting(false) }
   }
