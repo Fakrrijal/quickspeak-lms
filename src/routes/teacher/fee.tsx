@@ -183,25 +183,46 @@ function TeacherFeePage() {
   if (!isAuthenticated || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
-  const statusTone = rangeStatusLabel === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : rangeStatusLabel === 'Unpaid' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-slate-50 text-slate-700 border-slate-200'
   const viewMeta = { summary: { eyebrow: 'Student Fee Summary', title: 'Fee Summary', description: 'Fee totals grouped by student and teaching group.' }, history: { eyebrow: 'Earnings Activity', title: 'Fee History', description: 'Fee earnings by teaching session.' }, detail: { eyebrow: 'Attendance Records', title: 'Fee Detail', description: `Attendance-based fee detail for ${dateRangeLabel}.` } }[feeView]
 
   return (
     <div className="qs-fee-report-frame mx-auto w-full space-y-6">
-      <header className="border-b border-slate-200 pb-5"><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p><div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="text-3xl font-extrabold tracking-[-0.03em] text-[#102449]">Teacher Fee</h1><p className="mt-1.5 text-sm leading-6 text-slate-600">Review your current fee statement and attendance-based earnings.</p></div><span className={`inline-flex w-fit items-center rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] ${statusTone}`}>{rangeStatusLabel}</span></div></header>
+      <header className="border-b border-slate-200 pb-5"><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Teacher Portal</p><div className="mt-2"><h1 className="text-3xl font-extrabold tracking-[-0.03em] text-[#102449]">Teacher Fee</h1><p className="mt-1.5 text-sm leading-6 text-slate-600">Review your current fee statement and attendance-based earnings.</p></div></header>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Report Date Range</p><p className="mt-1 text-lg font-bold text-[#102449]">{dateRangeLabel}</p></div>
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="text-sm font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate || undefined} disabled={isAllTime} onChange={(event) => handleFeeStartDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400" /></label>
-            <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate || undefined} disabled={isAllTime} onChange={(event) => handleFeeEndDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400" /></label>
-            <button type="button" onClick={handleAllTime} className={isAllTime ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>All Time</button>
-            <div className="flex items-end gap-2">{(['all', 'paid', 'unpaid'] as const).map((filter) => <button key={filter} type="button" onClick={() => setStatusFilter(filter)} className={statusFilter === filter ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>{filter === 'all' ? 'All' : filter === 'paid' ? 'Paid' : 'Unpaid'}</button>)}</div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Report Period</p>
+              {isAllTime ? (
+                <>
+                  <p className="mt-1 text-lg font-bold text-[#102449]">All Time</p>
+                  <p className="mt-1 text-xs text-slate-500">Showing all available fee records.</p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 text-lg font-bold text-[#102449]">{dateRangeLabel}</p>
+                  <p className="mt-1 text-xs text-slate-500">Use From and To to change the reporting period.</p>
+                </>
+              )}
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              {!isAllTime && (
+                <>
+                  <label className="text-sm font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate || undefined} onChange={(event) => handleFeeStartDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
+                  <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate || undefined} onChange={(event) => handleFeeEndDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
+                </>
+              )}
+              <button type="button" onClick={handleAllTime} className={isAllTime ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>All Time</button>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+            <span className="mr-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Payment Status</span>
+            {(['all', 'paid', 'unpaid'] as const).map((filter) => <button key={filter} type="button" onClick={() => setStatusFilter(filter)} className={statusFilter === filter ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>{filter === 'all' ? 'All Status' : filter === 'paid' ? 'Paid' : 'Unpaid'}</button>)}
             <button type="button" onClick={() => setShowDetailModal(true)} disabled={loading || visibleDetailEntries.length === 0} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">View Detail</button>
             <button type="button" onClick={() => void handleDownloadPdf()} disabled={isExporting || loading || !reportReady || visibleDetailEntries.length === 0} className="rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white hover:bg-[#17325f] disabled:opacity-50">{isExporting ? 'Preparing PDF...' : 'Download PDF'}</button>
           </div>
+          <p className="text-xs text-slate-500">Paid / Unpaid follows the monthly settlement status attached to each fee record. The selected dates or All Time mode controls which records are shown and exported.</p>
         </div>
-        <p className="mt-3 text-xs text-slate-500">Paid / Unpaid is the monthly settlement status attached to each fee record. The selected date range or All Time mode controls the records and PDF export.</p>
       </section>
       <section className="grid gap-4 md:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-600">{isAllTime ? 'Total Earned' : 'Earned in Range'}</p><span className="mt-2 inline-flex rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">{isAllTime ? 'All time' : 'Selected dates'}</span><p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[#102449]">{formatAmount(rangeEarned)}</p></article>
