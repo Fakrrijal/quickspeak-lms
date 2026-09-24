@@ -436,7 +436,7 @@ export async function getTeachingGroups() {
         memberships,
       }
     })
-    .filter((group) => !group.is_active || group.student_count > 0) as TeachingGroup[]
+    as TeachingGroup[]
 }
 
 export async function getActiveStudents() {
