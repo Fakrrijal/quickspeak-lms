@@ -313,6 +313,25 @@ export async function assignPaidEnrollmentToTeachingGroup(
   return (Array.isArray(data) ? data[0] : data) as PaidEnrollmentAssignment
 }
 
+export async function assignNextLevelEnrollmentToTeachingGroup(
+  enrollmentId: string,
+  teachingGroupId: string,
+) {
+  const { data, error } = await supabase.rpc(
+    'admin_assign_next_level_enrollment_to_teaching_group',
+    {
+      p_enrollment_id: enrollmentId,
+      p_teaching_group_id: teachingGroupId,
+    },
+  )
+
+  if (error) {
+    throw error
+  }
+
+  return (Array.isArray(data) ? data[0] : data) as PaidEnrollmentAssignment
+}
+
 export async function adoptExistingPaidEnrollmentAssignment(enrollmentId: string) {
   const { data, error } = await supabase.rpc(
     'admin_adopt_existing_paid_enrollment_assignment',
