@@ -109,11 +109,8 @@ function TeacherFeePage() {
   }, [authLoading, isAuthenticated, navigate, profileError, profileLoading, status])
 
   const dateRangeLabel = isAllTime ? 'All Time' : formatDateRange(startDate, endDate)
-  const handleAllTime = () => {
-    setIsAllTime(true)
-    setStartDate('')
-    setEndDate('')
-  }
+  const handleAllTime = () => setIsAllTime(true)
+  const handleDateRange = () => setIsAllTime(false)
   const handleFeeStartDateChange = (value: string) => {
     setIsAllTime(false)
     setStartDate(value)
@@ -212,7 +209,7 @@ function TeacherFeePage() {
                   <label className="text-sm font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate || undefined} onChange={(event) => handleFeeEndDateChange(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium" /></label>
                 </>
               )}
-              <button type="button" onClick={handleAllTime} className={isAllTime ? 'rounded-lg bg-[#102449] px-3 py-2 text-sm font-bold text-white' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>All Time</button>
+              <button type="button" onClick={isAllTime ? handleDateRange : handleAllTime} className={isAllTime ? 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50' : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50'}>{isAllTime ? 'Date Range' : 'All Time'}</button>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
