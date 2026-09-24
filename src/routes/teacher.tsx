@@ -30,6 +30,8 @@ function formatSessionDate(sessionDate: string) {
 }
 
 function formatDateRange(startDate: string, endDate: string) {
+  if (!startDate || !endDate) return 'Select both dates'
+  if (startDate > endDate) return 'Invalid date range'
   const format = (value: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
   return `${format(startDate)} – ${format(endDate)}`
 }
@@ -91,15 +93,18 @@ export function TeacherAttendancePage() {
   const [reportPage, setReportPage] = useState(1)
 
   const canLoadGroups = !authLoading && !profileLoading && isAuthenticated && Boolean(profile) && !profileError && role === 'teacher' && status === 'active'
+  const validReportRange = Boolean(reportStartDate && reportEndDate && reportStartDate <= reportEndDate)
   const { groups, loading, error, mutationError, saving, saveAttendance, reload } = useTeacherGroupAttendance(canLoadGroups)
-  const { meetings, loading: historyLoading, reload: reloadHistory } = useTeacherAttendance(reportStartDate, reportEndDate, canLoadGroups)
+  const { meetings, loading: historyLoading, reload: reloadHistory } = useTeacherAttendance(reportStartDate, reportEndDate, canLoadGroups && validReportRange)
 
   const selectedGroup = useMemo(() => groups.find((group) => group.teaching_group_id === selectedGroupId) ?? null, [groups, selectedGroupId])
   const selectedStudent = useMemo(() => selectedGroup?.students.find((student) => student.enrollment_id === selectedEnrollmentId) ?? null, [selectedEnrollmentId, selectedGroup])
+  const validReportRange = Boolean(reportStartDate && reportEndDate && reportStartDate <= reportEndDate)
   const reportRecords = useMemo(() => {
+    if (!validReportRange) return []
     const query = reportSearch.trim().toLocaleLowerCase()
     return meetings.filter((meeting): meeting is TeacherAttendanceMeeting & { teacher_status: 'present' | 'absent', teacher_recorded_at: string } => meeting.teacher_status !== null && meeting.teacher_recorded_at !== null).filter((meeting) => !reportGroup || meeting.teaching_group_id === reportGroup).filter((meeting) => !query || [meeting.student_display_name, meeting.student_code, meeting.teaching_group_name].some((value) => (value ?? '').toLocaleLowerCase().includes(query))).map((meeting) => ({ meeting_id: meeting.meeting_id, session_date: meeting.session_date, student_id: meeting.student_id, student_name: meeting.student_display_name, student_code: meeting.student_code, teacher_id: '', teacher_name: meeting.teacher_name, teacher_code: meeting.teacher_code, teaching_group_id: meeting.teaching_group_id, teaching_group_name: meeting.teaching_group_name, level_name: meeting.level_name, package_type: meeting.package_type as 'private' | 'semi_private', teacher_status: meeting.teacher_status, teacher_recorded_at: meeting.teacher_recorded_at } satisfies AdminAttendanceRecord))
-  }, [meetings, reportGroup, reportSearch])
+  }, [meetings, reportGroup, reportSearch, validReportRange])
 
   const studentSummary = useMemo(() => summarizeAdminAttendanceStudents(reportRecords), [reportRecords])
   const paginatedStudentSummary = useMemo(() => studentSummary.slice((reportPage - 1) * PAGE_SIZE, reportPage * PAGE_SIZE), [studentSummary, reportPage])
