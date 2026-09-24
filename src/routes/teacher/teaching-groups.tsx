@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
-import { getMyTeacherAttendanceGroups } from '../../services/teacher-attendance.service'
+import { getMyTeacherTeachingGroups, type TeacherTeachingGroup } from '../../services/teacher-teaching-group.service'
 import { TeacherScheduleEditor } from '../../components/teacher/TeacherScheduleEditor'
 import {
   getMyTeacherFeedbackReceived,
@@ -14,6 +14,36 @@ const PAGE_SIZE = 10
 
 function formatPackageType(value: string) {
   return value === 'semi_private' ? 'Semi-Private' : 'Private'
+}
+
+function formatRosterStatus(status: TeacherTeachingGroup['students'][number]['roster_status']) {
+  switch (status) {
+    case 'waiting_renewal':
+      return 'Waiting Renewal'
+    case 'waiting_next_level':
+      return 'Waiting Next Level'
+    case 'level_completed':
+      return 'Level Completed'
+    case 'waiting_assignment':
+      return 'Waiting Assignment'
+    default:
+      return 'Active'
+  }
+}
+
+function rosterStatusClass(status: TeacherTeachingGroup['students'][number]['roster_status']) {
+  switch (status) {
+    case 'waiting_renewal':
+      return 'bg-amber-50 text-amber-700'
+    case 'waiting_next_level':
+      return 'bg-violet-50 text-violet-700'
+    case 'level_completed':
+      return 'bg-slate-100 text-slate-700'
+    case 'waiting_assignment':
+      return 'bg-blue-50 text-blue-700'
+    default:
+      return 'bg-emerald-50 text-emerald-700'
+  }
 }
 
 function Pagination({ page, totalItems, onPageChange }: { page: number; totalItems: number; onPageChange: (page: number) => void }) {
@@ -40,7 +70,7 @@ function TeacherTeachingGroupsPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [groups, setGroups] = useState<Awaited<ReturnType<typeof getMyTeacherAttendanceGroups>>>([])
+  const [groups, setGroups] = useState<TeacherTeachingGroup[]>([])
   const [search, setSearch] = useState('')
   const [groupType, setGroupType] = useState<'all' | 'private' | 'semi_private'>('all')
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
@@ -64,7 +94,7 @@ function TeacherTeachingGroupsPage() {
     let cancelled = false
     setLoading(true)
     setError(null)
-    getMyTeacherAttendanceGroups()
+    getMyTeacherTeachingGroups()
       .then((data) => {
         if (cancelled) return
         setGroups(data)
@@ -84,7 +114,7 @@ function TeacherTeachingGroupsPage() {
       name: group.teaching_group_name,
       level: group.level_name,
       packageType: group.package_type,
-      students: group.students.map((student) => ({ id: student.student_id, name: student.student_display_name })),
+      students: group.students.map((student) => ({ id: student.student_id, name: student.student_display_name, status: student.roster_status })),
     }))
   }, [groups])
 
@@ -234,7 +264,12 @@ function TeacherTeachingGroupsPage() {
                     <div key={student.id} className="flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-slate-50">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-extrabold text-blue-700">{student.name.slice(0, 1).toUpperCase()}</span>
-                        <span className="truncate text-sm font-semibold text-slate-800">{student.name}</span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-800">{student.name}</p>
+                          <span className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${rosterStatusClass(student.status)}`}>
+                            {formatRosterStatus(student.status)}
+                          </span>
+                        </div>
                       </div>
                       <span className="shrink-0 text-sm font-semibold text-slate-500">{selectedGroup.level}</span>
                     </div>
