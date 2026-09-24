@@ -558,37 +558,26 @@ export async function getAdminStudents() {
   }
 
   const studentIds = (data ?? []).map((student) => student.id)
-  const [{ data: enrollments, error: enrollmentsError }, { data: levelResults, error: levelResultsError }] = studentIds.length === 0
-    ? [{ data: [], error: null }, { data: [], error: null }]
-    : await Promise.all([
-        supabase
-          .from('enrollments')
-          .select('id, student_id, level_id, status, created_at, levels (level_number)')
-          .in('student_id', studentIds)
-          .in('status', [
-            'pending',
-            'payment_pending',
-            'payment_submitted',
-            'payment_rejected',
-            'payment_approved',
-            'teacher_assignment',
-            'active',
-            'completed',
-          ])
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('student_level_results')
-          .select('student_id, level_id, completed_at')
-          .in('student_id', studentIds)
-          .order('completed_at', { ascending: false }),
+  const { data: enrollments, error: enrollmentsError } = studentIds.length === 0
+    ? { data: [], error: null }
+    : await supabase
+      .from('enrollments')
+      .select('id, student_id, level_id, status, created_at, levels (level_number)')
+      .in('student_id', studentIds)
+      .in('status', [
+        'pending',
+        'payment_pending',
+        'payment_submitted',
+        'payment_rejected',
+        'payment_approved',
+        'teacher_assignment',
+        'active',
+        'completed',
       ])
+      .order('created_at', { ascending: false })
 
   if (enrollmentsError) {
     throw enrollmentsError
-  }
-
-  if (levelResultsError) {
-    throw levelResultsError
   }
 
   const classTypeByProfileId = new Map(
@@ -615,10 +604,6 @@ export async function getAdminStudents() {
     })
     enrollmentsByStudent.set(enrollment.student_id, current)
   }
-
-  const completedLevelKeys = new Set(
-    (levelResults ?? []).map((result) => `${result.student_id}:${result.level_id}`),
-  )
 
   return (data ?? []).map((student) => {
     const profile = Array.isArray(student.profiles)
@@ -654,9 +639,6 @@ export async function getAdminStudents() {
         || enrollment.status === 'payment_approved'
         || enrollment.status === 'teacher_assignment'
     ))
-    const currentLevelCompleted = level
-      ? completedLevelKeys.has(`${student.id}:${level.id}`)
-      : false
     const completedCurrentLevelEnrollment = level
       ? studentEnrollments.some((enrollment) => enrollment.level_id === level.id && enrollment.status === 'completed')
       : false
@@ -683,7 +665,7 @@ export async function getAdminStudents() {
       level
       && pendingEnrollment
       && pendingEnrollmentLevel?.level_number === level.level_number + 1
-      && currentLevelCompleted
+      && completedCurrentLevelEnrollment
     ) {
       directoryStatus = 'next_level'
     }
