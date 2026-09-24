@@ -86,6 +86,7 @@ export type AdminStudentDirectoryStatus = 'active' | 'renewal' | 'next_level' | 
 export type AdminStudentDirectoryItem = {
   id: string
   student_code: string
+  is_active: boolean
   directory_status: AdminStudentDirectoryStatus
   profile: {
     full_name: string
