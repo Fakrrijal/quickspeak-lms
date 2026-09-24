@@ -14,7 +14,10 @@ function getLocalIsoDate() {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
+  if (!value) return 'Select dates'
+  const date = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return 'Select dates'
+  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
 }
 
 function getScheduleDayStatus(date: Date) {
@@ -82,6 +85,7 @@ export function TeacherDashboardV2() {
     start.setDate(1)
     return { from: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`, to: today }
   })
+  const validDateRange = Boolean(dateRange.from && dateRange.to && dateRange.from <= dateRange.to)
   const [meetings, setMeetings] = useState<TeacherAttendanceMeeting[]>([])
   const [unpaidFee, setUnpaidFee] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -118,7 +122,7 @@ export function TeacherDashboardV2() {
   }, [canLoad])
 
   useEffect(() => {
-    if (!canLoad || dateRange.from > dateRange.to) return
+    if (!canLoad || !validDateRange) return
     let cancelled = false
     setLoading(true)
     setError(null)
@@ -135,7 +139,7 @@ export function TeacherDashboardV2() {
         setLoading(false)
       })
     return () => { cancelled = true }
-  }, [canLoad, dateRange.from, dateRange.to])
+  }, [canLoad, dateRange.from, dateRange.to, validDateRange])
 
   useEffect(() => {
     if (!canLoad) return
@@ -158,7 +162,7 @@ export function TeacherDashboardV2() {
   const presentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'present').length
   const absentCount = completedMeetings.filter((meeting) => meeting.teacher_status === 'absent').length
   const attendanceRate = attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0
-  const rangeLabel = `${formatDate(dateRange.from)} – ${formatDate(dateRange.to)}`
+  const rangeLabel = validDateRange ? `${formatDate(dateRange.from)} – ${formatDate(dateRange.to)}` : 'Select both dates'
   const nextScheduledClass = useMemo(() => {
     return scheduleOverview
       .flatMap((item) => {
@@ -261,8 +265,26 @@ export function TeacherDashboardV2() {
           <p className="mt-0.5 text-sm text-slate-600">Select the date range for your teaching activity.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <DatePicker ariaLabel="From Date" value={dateRange.from} max={dateRange.to} onChange={(from) => setDateRange((current) => ({ ...current, from }))} />
-          <DatePicker ariaLabel="To Date" value={dateRange.to} min={dateRange.from} max={today} onChange={(to) => setDateRange((current) => ({ ...current, to }))} />
+          <DatePicker
+            ariaLabel="From Date"
+            value={dateRange.from}
+            max={dateRange.to || today}
+            onChange={(from) => setDateRange((current) => ({ ...current, from }))}
+          />
+          <DatePicker
+            ariaLabel="To Date"
+            value={dateRange.to}
+            min={dateRange.from || undefined}
+            max={today}
+            onChange={(to) => {
+              setDateRange((current) => {
+                if (!current.from && to === today) {
+                  return { from: `${to.slice(0, 7)}-01`, to }
+                }
+                return { ...current, to }
+              })
+            }}
+          />
         </div>
       </section>
 
