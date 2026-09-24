@@ -384,9 +384,10 @@ export async function getTeachingGroups() {
           const student = Array.isArray(membership.students)
             ? membership.students[0] ?? null
             : membership.students
-          const profile = student && Array.isArray(student.profiles)
-            ? student.profiles[0] ?? null
-            : student?.profiles ?? null
+          const rawProfile = student?.profiles
+          const profile = Array.isArray(rawProfile)
+            ? rawProfile[0] ?? null
+            : rawProfile ?? null
 
           if (
             !membership.student_id
@@ -405,9 +406,10 @@ export async function getTeachingGroups() {
           const student = Array.isArray(membership.students)
             ? membership.students[0] ?? null
             : membership.students
-          const profile = student && Array.isArray(student.profiles)
-            ? student.profiles[0] ?? null
-            : student?.profiles ?? null
+          const rawProfile = student?.profiles
+          const profile = Array.isArray(rawProfile)
+            ? rawProfile[0] ?? null
+            : rawProfile ?? null
 
           return {
             student_id: membership.student_id,
