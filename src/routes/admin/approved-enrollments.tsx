@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthContext } from '../../providers/AuthProvider'
 import {
   adoptExistingPaidEnrollmentAssignment,
+  assignNextLevelEnrollmentToTeachingGroup,
   assignPaidEnrollmentToTeachingGroup,
   getActiveEnrollmentAssignmentExceptions,
   getAssignmentCandidateGroups,
@@ -108,9 +109,19 @@ function ApprovedEnrollmentsPage() {
     const group = (candidateGroups[enrollment.id] ?? []).find(
       (candidate) => candidate.id === teachingGroupId,
     )
-    const groupName = group?.name ?? 'the selected teaching group'
+    const memberships = enrollment.students?.teaching_group_students ?? []
+    const existingMembership = memberships.length === 1 ? memberships[0] : null
+    const existingGroup = existingMembership?.teaching_groups ?? null
+    const isNextLevelMove = existingGroup !== null
+      && existingGroup.is_active
+      && existingGroup.level_id !== enrollment.level_id
 
-    if (!window.confirm(`Assign this paid enrollment to ${groupName}?`)) {
+    const groupName = group?.name ?? 'the selected teaching group'
+    const confirmation = isNextLevelMove
+      ? `Move the student from ${existingGroup?.name ?? 'the current teaching group'} to ${groupName} and activate the next level?`
+      : `Assign this paid enrollment to ${groupName}?`
+
+    if (!window.confirm(confirmation)) {
       return
     }
 
@@ -119,8 +130,13 @@ function ApprovedEnrollmentsPage() {
     setSuccessMessage(null)
 
     try {
-      await assignPaidEnrollmentToTeachingGroup(enrollment.id, teachingGroupId)
-      setSuccessMessage('Enrollment assigned to the teaching group successfully.')
+      if (isNextLevelMove) {
+        await assignNextLevelEnrollmentToTeachingGroup(enrollment.id, teachingGroupId)
+        setSuccessMessage('Student moved to the next-level teaching group successfully.')
+      } else {
+        await assignPaidEnrollmentToTeachingGroup(enrollment.id, teachingGroupId)
+        setSuccessMessage('Enrollment assigned to the teaching group successfully.')
+      }
       await loadApprovedEnrollments()
     } catch (assignmentError) {
       setError(
@@ -307,6 +323,10 @@ function ApprovedEnrollmentsPage() {
                 && existingGroup.is_active
                 && existingGroup.level_id === enrollment.level_id
                 && existingGroup.group_type === enrollment.package_type
+              const isNextLevelMove = existingGroup !== null
+                && existingGroup.is_active
+                && existingGroup.level_id !== enrollment.level_id
+                && existingGroup.group_type === enrollment.package_type
               const existingMembershipPredatesEnrollment = existingMembership !== null
                 && new Date(existingMembership.joined_at) < new Date(enrollment.created_at)
               const selectedGroup = groups.find(
@@ -366,6 +386,35 @@ function ApprovedEnrollmentsPage() {
                           )
                         })}
                       </select>
+                    ) : isNextLevelMove ? (
+                      <div className="space-y-2">
+                        <p className="font-medium text-slate-900">{existingGroup?.name}</p>
+                        <p className="text-xs font-semibold text-violet-700">Current group · Next level requires a new group assignment</p>
+                        <select
+                          aria-label={`Next-level teaching group for ${enrollment.students?.profiles?.full_name ?? 'student'}`}
+                          value={selectedGroups[enrollment.id] ?? ''}
+                          onChange={(event) => {
+                            setSelectedGroups((current) => ({
+                              ...current,
+                              [enrollment.id]: event.target.value,
+                            }))
+                          }}
+                          disabled={isProcessing || groups.length === 0}
+                          className="min-w-64 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        >
+                          <option value="">
+                            {groups.length === 0 ? 'No compatible active groups' : 'Select new teaching group'}
+                          </option>
+                          {groups.map((group) => {
+                            const capacity = group.group_type === 'private' ? 1 : 4
+                            return (
+                              <option key={group.id} value={group.id}>
+                                {group.name} ({group.teaching_group_students.length}/{capacity})
+                              </option>
+                            )
+                          })}
+                        </select>
+                      </div>
                     ) : existingGroup ? (
                       <div>
                         <p className="font-medium text-slate-900">{existingGroup.name}</p>
@@ -393,7 +442,16 @@ function ApprovedEnrollmentsPage() {
                       : 'Select a group'}
                   </td>
                   <td className="px-6 py-4">
-                    {isLegacyTeacherAssignment ? (
+                    {isNextLevelMove ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleAssign(enrollment)}
+                        disabled={!selectedGroup || isProcessing}
+                        className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isProcessing ? 'Moving...' : 'Move & Activate'}
+                      </button>
+                    ) : isLegacyTeacherAssignment ? (
                       hasCompatibleExistingMembership && existingGroup ? (
                         <button
                           type="button"
