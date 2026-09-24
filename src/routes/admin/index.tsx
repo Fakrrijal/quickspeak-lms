@@ -2,12 +2,21 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAdminStudents } from '../../hooks/useAdminStudents'
 import { useAuthContext } from '../../providers/AuthProvider'
-import { deactivateStudent, getLevels, type AdminStudentDirectoryItem, type ActiveLevel } from '../../services/admin.service'
+import { deactivateStudent, getLevels, type AdminStudentDirectoryItem, type AdminStudentDirectoryStatus, type ActiveLevel } from '../../services/admin.service'
 import { adminEditPaidEnrollment, getEditablePaidEnrollmentsForStudent, type EnrollmentCorrectionItem } from '../../services/admin-enrollment-correction.service'
 
 export const Route = createFileRoute('/admin/')({ component: AdminStudentManagementPage })
 
 function formatStatus(status: string | null) { if (!status) return 'Unavailable'; return `${status.charAt(0).toUpperCase()}${status.slice(1)}` }
+function formatDirectoryStatus(status: AdminStudentDirectoryStatus) {
+  return status === 'next_level'
+    ? 'Next Level'
+    : status === 'non_active'
+      ? 'Non-active'
+      : status === 'renewal'
+        ? 'Renewal'
+        : 'Active'
+}
 function formatClassType(classType: 'private' | 'semi_private') { return classType === 'private' ? 'Private' : 'Semi-private' }
 
 function AdminStudentManagementPage() {
@@ -17,7 +26,7 @@ function AdminStudentManagementPage() {
   const directory = useAdminStudents(canManageStudents)
   const [levels, setLevels] = useState<ActiveLevel[]>([])
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('active')
+  const [statusFilter, setStatusFilter] = useState<AdminStudentDirectoryStatus | 'all'>('active')
   const [levelFilter, setLevelFilter] = useState('all')
   const [classTypeFilter, setClassTypeFilter] = useState<'all' | 'private' | 'semi_private'>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -41,14 +50,14 @@ function AdminStudentManagementPage() {
   const loadLevels = useCallback(async () => { try { setLevels(await getLevels()) } catch { /* Editing will surface the actionable error if the list cannot be loaded. */ } }, [])
   useEffect(() => { if (canManageStudents) void loadLevels() }, [canManageStudents, loadLevels])
 
-  const availableStatuses = useMemo(() => [...new Set(directory.students.flatMap((student) => student.profile?.status ? [student.profile.status] : []))].sort(), [directory.students])
+  const statusOptions: Array<AdminStudentDirectoryStatus | 'all'> = ['all', 'active', 'renewal', 'next_level', 'non_active']
   const availableLevels = useMemo(() => directory.students.flatMap((student) => student.level ? [student.level] : []).filter((level, index, all) => all.findIndex((candidate) => candidate.id === level.id) === index).sort((left, right) => left.level_number - right.level_number), [directory.students])
 
   const filteredStudents = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
     return directory.students.filter((student) => {
       const matchesSearch = !normalizedSearch || student.profile?.full_name.toLowerCase().includes(normalizedSearch) || student.student_code.toLowerCase().includes(normalizedSearch) || student.profile?.email.toLowerCase().includes(normalizedSearch)
-      const matchesStatus = statusFilter === 'all' || student.profile?.status === statusFilter
+      const matchesStatus = statusFilter === 'all' || student.directory_status === statusFilter
       const matchesLevel = levelFilter === 'all' || student.level?.id === levelFilter
       const matchesClassType = classTypeFilter === 'all' || student.class_types.includes(classTypeFilter)
       return matchesSearch && matchesStatus && matchesLevel && matchesClassType
@@ -117,7 +126,7 @@ function AdminStudentManagementPage() {
         <h3 className="text-xl font-semibold text-slate-900">Student Directory</h3>
         <div className="mt-5 flex flex-col gap-3 md:flex-row">
           <label className="flex-1"><span className="sr-only">Search students</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student..." className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" /></label>
-          <label className="text-sm font-medium text-slate-700">Status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="all">All statuses</option>{availableStatuses.map((studentStatus) => <option key={studentStatus} value={studentStatus}>{formatStatus(studentStatus)}</option>)}</select></label>
+          <label className="text-sm font-medium text-slate-700">Status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AdminStudentDirectoryStatus | 'all')} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">{statusOptions.map((studentStatus) => <option key={studentStatus} value={studentStatus}>{studentStatus === 'all' ? 'All statuses' : formatDirectoryStatus(studentStatus)}</option>)}</select></label>
           <label className="text-sm font-medium text-slate-700">Level<select value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="all">All levels</option>{availableLevels.map((level) => <option key={level.id} value={level.id}>{level.name}</option>)}</select></label>
           <label className="text-sm font-medium text-slate-700">Class Type<select value={classTypeFilter} onChange={(event) => setClassTypeFilter(event.target.value as 'all' | 'private' | 'semi_private')} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><option value="all">All types</option><option value="private">Private</option><option value="semi_private">Semi-private</option></select></label>
         </div>
@@ -136,7 +145,7 @@ function AdminStudentManagementPage() {
                   <td className="break-words px-3 py-3"><div>{student.level?.name ?? 'Level unavailable'}</div><div className="mt-1 text-xs text-slate-500">{student.class_types.length > 0 ? student.class_types.map(formatClassType).join(', ') : '—'}</div></td>
                   <td className="px-3 py-3">{student.profile?.created_at ? new Intl.DateTimeFormat('en-US').format(new Date(student.profile.created_at)) : '—'}</td>
                   <td className="break-words px-3 py-3">{student.teaching_group_names.length > 0 ? student.teaching_group_names.join(', ') : 'Not Assigned'}</td>
-                  <td className="px-3 py-3"><span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">{formatStatus(student.profile?.status ?? null)}</span></td>
+                  <td className="px-3 py-3"><span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">{formatDirectoryStatus(student.directory_status)}</span></td>
                   <td className="px-3 py-3"><button type="button" onClick={() => void openStudentEditor(student)} className="font-medium text-slate-900 underline">Edit</button></td>
                 </tr>)}
               </tbody>
