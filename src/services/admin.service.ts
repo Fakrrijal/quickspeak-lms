@@ -435,8 +435,7 @@ export async function getTeachingGroups() {
         student_count: memberships.length,
         memberships,
       }
-    })
-    as TeachingGroup[]
+    }) as TeachingGroup[]
 }
 
 export async function getActiveStudents() {
