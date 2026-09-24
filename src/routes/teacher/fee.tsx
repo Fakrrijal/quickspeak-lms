@@ -22,8 +22,9 @@ function formatTime(value: string) {
   return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value))
 }
 
-function formatMonth(year: number, month: number) {
-  return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(year, month - 1))
+function formatDateRange(startDate: string, endDate: string) {
+  const format = (value: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
+  return `${format(startDate)} – ${format(endDate)}`
 }
 
 function formatPackageType(packageType: TeacherFeeDetailEntry['package_type']) {
@@ -48,7 +49,7 @@ function Pagination({ page, totalItems, onPageChange }: { page: number; totalIte
   )
 }
 
-function TeacherFeeDetailModal({ detailEntries, studentSummaries, month, year, detailReconcilesPeriod, onClose }: { detailEntries: TeacherFeeDetailEntry[], studentSummaries: TeacherFeeStudentSummary[], month: number, year: number, detailReconcilesPeriod: boolean, onClose: () => void }) {
+function TeacherFeeDetailModal({ detailEntries, studentSummaries, dateRangeLabel, detailReconcilesPeriod, onClose }: { detailEntries: TeacherFeeDetailEntry[], studentSummaries: TeacherFeeStudentSummary[], dateRangeLabel: string, detailReconcilesPeriod: boolean, onClose: () => void }) {
   const meetings = useMemo(() => {
     const byMeeting = new Map<string, TeacherFeeDetailEntry[]>()
     detailEntries.forEach((entry) => byMeeting.set(entry.meeting_id, [...(byMeeting.get(entry.meeting_id) ?? []), entry]))
@@ -64,7 +65,7 @@ function TeacherFeeDetailModal({ detailEntries, studentSummaries, month, year, d
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/40 p-4" role="presentation">
       <div role="dialog" aria-modal="true" aria-labelledby="teacher-fee-detail-title" className="mx-auto my-6 w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-2xl">
-        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Teacher Fee</p><h3 id="teacher-fee-detail-title" className="mt-1 text-xl font-extrabold text-[#102449]">Fee Detail</h3><p className="mt-1 text-sm text-slate-600">{formatMonth(year, month)}</p></div><button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">Close</button></header>
+        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Teacher Fee</p><h3 id="teacher-fee-detail-title" className="mt-1 text-xl font-extrabold text-[#102449]">Fee Detail</h3><p className="mt-1 text-sm text-slate-600">{dateRangeLabel}</p></div><button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">Close</button></header>
         <div className="space-y-6 p-6">
           {detailEntries.length === 0 ? <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">No fee detail available for this period.</p> : <>
             <section><h4 className="text-lg font-bold text-[#102449]">Meeting &amp; Attendance Detail</h4><div className="mt-3 space-y-4">{meetings.map((entries) => { const meeting = entries[0]; return <article key={meeting.meeting_id} className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="border-b border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700"><p className="font-semibold text-slate-900">{formatDate(meeting.session_date)} · {formatTime(meeting.attendance_recorded_at)}</p><div className="mt-2 grid gap-2 text-xs text-slate-600 sm:grid-cols-3"><span><strong className="text-slate-800">Teaching Group:</strong> {meeting.teaching_group_name}</span><span><strong className="text-slate-800">Package:</strong> {formatPackageType(meeting.package_type)}</span><span><strong className="text-slate-800">Level:</strong> {meeting.level_name}</span></div></div><div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-white text-slate-500"><tr><th className="px-4 py-3">Student</th><th className="px-4 py-3">Code</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Fee</th></tr></thead><tbody className="divide-y divide-slate-100">{entries.map((entry) => <tr key={entry.attendance_id}><td className="px-4 py-3 font-semibold text-slate-900">{entry.student_name}</td><td className="px-4 py-3 text-slate-600">{entry.student_code}</td><td className="px-4 py-3 capitalize text-slate-700">{entry.attendance_status}</td><td className="px-4 py-3 text-right font-semibold text-slate-900">{formatAmount(entry.student_fee)}</td></tr>)}</tbody></table></div><p className="border-t border-slate-100 px-4 py-3 text-right text-sm font-bold text-slate-900">Meeting Fee: {formatAmount(meeting.meeting_fee)}</p></article> })}</div></section>
@@ -83,12 +84,12 @@ function TeacherFeePage() {
   const { isAuthenticated, loading: authLoading, profileLoading, profileError, role, status, profile } = useAuthContext()
   const navigate = useNavigate()
   const today = new Date()
-  const [month, setMonth] = useState(today.getMonth() + 1)
-  const [year, setYear] = useState(today.getFullYear())
+  const [startDate, setStartDate] = useState(() => `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`)
+  const [endDate, setEndDate] = useState(() => `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
   const [statusFilter, setStatusFilter] = useState<TeacherFeeStatus>('all')
   const [feeView, setFeeView] = useState<FeeView>('summary')
   const canLoad = !authLoading && !profileLoading && isAuthenticated && !profileError && role === 'teacher' && status === 'active'
-  const { entries, detailEntries, detailReconcilesPeriod, periodSummary, loading, error, reload } = useTeacherFee(month, year, canLoad)
+  const { entries, detailEntries, monthlySummaries, detailReconcilesPeriod, loading, error, reload } = useTeacherFee(startDate, endDate, canLoad)
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
