@@ -103,9 +103,17 @@ function TeacherFeePage() {
     else if (status === 'waiting') navigate({ to: '/waiting', replace: true })
   }, [authLoading, isAuthenticated, navigate, profileError, profileLoading, status])
 
-  const summary = useMemo(() => { if (!periodSummary) return { earned: 0, paid: 0, outstanding: 0, status: 'unpaid' as const }; return { earned: periodSummary.earned_amount, paid: periodSummary.paid_amount, outstanding: periodSummary.outstanding_amount, status: periodSummary.status } }, [periodSummary])
-  const visibleEntries = useMemo(() => statusFilter === 'all' || summary.status === statusFilter ? entries : [], [entries, statusFilter, summary.status])
-  const visibleDetailEntries = useMemo(() => statusFilter === 'all' || summary.status === statusFilter ? detailEntries : [], [detailEntries, statusFilter, summary.status])
+  const dateRangeLabel = formatDateRange(startDate, endDate)
+  const rangeEarned = useMemo(() => detailEntries.reduce((total, entry) => total + entry.student_fee, 0), [detailEntries])
+  const rangePresentAttendances = useMemo(() => detailEntries.filter((entry) => entry.attendance_status === 'present').length, [detailEntries])
+  const settlementMonths = useMemo(() => ({
+    paid: monthlySummaries.filter((summary) => summary.status === 'paid').length,
+    unpaid: monthlySummaries.filter((summary) => summary.status !== 'paid').length,
+    total: monthlySummaries.length,
+  }), [monthlySummaries])
+  const rangeStatusLabel = settlementMonths.total === 0 ? 'No records' : settlementMonths.total === 1 ? (settlementMonths.paid === 1 ? 'Paid' : 'Unpaid') : 'Range'
+  const visibleEntries = useMemo(() => statusFilter === 'all' ? entries : entries.filter((entry) => entry.status === statusFilter), [entries, statusFilter])
+  const visibleDetailEntries = useMemo(() => statusFilter === 'all' ? detailEntries : detailEntries.filter((entry) => entry.period_status === statusFilter), [detailEntries, statusFilter])
   const studentSummaries = useMemo(() => summarizeTeacherFeeDetails(visibleDetailEntries), [visibleDetailEntries])
   const paginatedStudentSummaries = useMemo(() => studentSummaries.slice((summaryPage - 1) * PAGE_SIZE, summaryPage * PAGE_SIZE), [studentSummaries, summaryPage])
   const paginatedEntries = useMemo(() => visibleEntries.slice((historyPage - 1) * PAGE_SIZE, historyPage * PAGE_SIZE), [visibleEntries, historyPage])
@@ -113,7 +121,7 @@ function TeacherFeePage() {
 
   useEffect(() => {
     setSummaryPage(1); setHistoryPage(1); setDetailPage(1)
-  }, [statusFilter, month, year, feeView])
+  }, [statusFilter, startDate, endDate, feeView])
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(studentSummaries.length / PAGE_SIZE)); if (summaryPage > totalPages) setSummaryPage(totalPages)
   }, [studentSummaries.length, summaryPage])
@@ -130,7 +138,20 @@ function TeacherFeePage() {
     try {
       const teacherCode = await getMyTeacherCode()
       const exportStudentSummaries = summarizeTeacherFeeDetails(visibleDetailEntries)
-      downloadTeacherFeePdf({ teacherName: profile?.full_name ?? 'Teacher', teacherCode: teacherCode ?? 'teacher', period: formatMonth(year, month), status: summary.status, earned: summary.earned, paid: summary.paid, outstanding: summary.outstanding, detailEntries: visibleDetailEntries, studentSummaries: exportStudentSummaries, totalStudentAttendances: exportStudentSummaries.reduce((total, student) => total + student.present_attendance_count, 0), detailReconcilesPeriod }, new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()))
+      downloadTeacherFeePdf({
+        teacherName: profile?.full_name ?? 'Teacher',
+        teacherCode: teacherCode ?? 'teacher',
+        period: dateRangeLabel,
+        status: rangeStatusLabel.toLowerCase(),
+        earned: rangeEarned,
+        paid: null,
+        outstanding: null,
+        detailEntries: visibleDetailEntries,
+        studentSummaries: exportStudentSummaries,
+        totalStudentAttendances: exportStudentSummaries.reduce((total, student) => total + student.present_attendance_count, 0),
+        detailReconcilesPeriod: true,
+        settlementNote: 'Paid and outstanding amounts are monthly settlement values; the selected custom range is shown through the fee records and earned total.',
+      }, new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()))
     } catch (downloadError) { setExportError(downloadError instanceof Error ? downloadError.message : 'Unable to generate the PDF report.') } finally { setIsExporting(false) }
   }
 
@@ -138,8 +159,8 @@ function TeacherFeePage() {
   if (!isAuthenticated || profileError || status === null || status === 'waiting') return null
   if (role !== 'teacher' || status !== 'active') return <p>Access denied.</p>
 
-  const statusTone = summary.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'
-  const viewMeta = { summary: { eyebrow: 'Student Fee Summary', title: 'Fee Summary', description: 'Fee totals grouped by student and teaching group.' }, history: { eyebrow: 'Earnings Activity', title: 'Fee History', description: 'Fee earnings by teaching session.' }, detail: { eyebrow: 'Attendance Records', title: 'Fee Detail', description: `Attendance-based fee detail for ${formatMonth(year, month)}.` } }[feeView]
+  const statusTone = rangeStatusLabel === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : rangeStatusLabel === 'Unpaid' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-slate-50 text-slate-700 border-slate-200'
+  const viewMeta = { summary: { eyebrow: 'Student Fee Summary', title: 'Fee Summary', description: 'Fee totals grouped by student and teaching group.' }, history: { eyebrow: 'Earnings Activity', title: 'Fee History', description: 'Fee earnings by teaching session.' }, detail: { eyebrow: 'Attendance Records', title: 'Fee Detail', description: `Attendance-based fee detail for ${dateRangeLabel}.` } }[feeView]
 
   return (
     <div className="qs-fee-report-frame mx-auto w-full space-y-6">
