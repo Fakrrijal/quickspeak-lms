@@ -600,9 +600,7 @@ export async function getAdminStudents() {
       : meeting.attendance
 
     const currentCount = sessionCountByEnrollment.get(meeting.enrollment_id) ?? 0
-    if (attendance?.teacher_status === 'present' || attendance?.teacher_status === 'absent') {
-      sessionCountByEnrollment.set(meeting.enrollment_id, currentCount + 1)
-    }
+    sessionCountByEnrollment.set(meeting.enrollment_id, currentCount + 1)
   }
 
   const classTypeByProfileId = new Map(
@@ -685,10 +683,20 @@ export async function getAdminStudents() {
         : pendingEnrollment.levels)
       : null
 
+    const activeEnrollmentSessions = activeEnrollment
+      ? sessionCountByEnrollment.get(activeEnrollment.id) ?? 0
+      : 0
+    const activeEnrollmentCompleted = Boolean(
+      activeEnrollment
+      && activeEnrollmentSessions >= activeEnrollment.session_limit,
+    )
+
     let directoryStatus: AdminStudentDirectoryStatus = 'non_active'
 
     if (!student.is_active) {
       directoryStatus = 'non_active'
+    } else if (activeEnrollmentCompleted) {
+      directoryStatus = 'renewal'
     } else if (activeEnrollment) {
       directoryStatus = 'active'
     } else if (
