@@ -130,7 +130,17 @@ const faqItems = [
   },
 ]
 
-export function QuickSpeakLanding() {
+type QuickSpeakLandingProps = {
+  heroEyebrow?: string
+  heroTitle?: string
+  heroDescription?: string
+}
+
+export function QuickSpeakLanding({
+  heroEyebrow = 'ENGLISH COURSE',
+  heroTitle = 'Kursus Bahasa Inggris Online dan Terstruktur Bersama QuickSpeak',
+  heroDescription = 'Pembelajaran Bahasa Inggris yang terstruktur melalui 4 level, didampingi teacher, dan dirancang untuk membantu siswa berkembang secara bertahap.',
+}: QuickSpeakLandingProps = {}) {
   // Testimonial carousel state
   const [currentSlide, setCurrentSlide] = useState(0)
   const [cardsPerView, setCardsPerView] = useState(3)
@@ -264,15 +274,15 @@ export function QuickSpeakLanding() {
               {/* Left: Copy occupying approx 55-60% width on desktop */}
               <div className="min-w-0 lg:col-span-7 xl:col-span-6 lg:pr-8">
                 <div className="inline-flex items-center rounded-full border border-[#dfe9ff] bg-[#edf4ff]/90 backdrop-blur-sm px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">
-                  ENGLISH COURSE
+                  {heroEyebrow}
                 </div>
 
                 <h1 className="mt-5 text-4xl font-semibold leading-[1.15] tracking-[-0.03em] text-[#102449] sm:text-5xl lg:text-[3.25rem]">
-                  Kursus Bahasa Inggris Online dan Terstruktur Bersama QuickSpeak
+                  {heroTitle}
                 </h1>
 
                 <p className="mt-5 max-w-lg text-base leading-7 text-slate-700 sm:text-lg">
-                  Pembelajaran Bahasa Inggris yang terstruktur melalui 4 level, didampingi teacher, dan dirancang untuk membantu siswa berkembang secara bertahap.
+                  {heroDescription}
                 </p>
 
                 {/* Trust Points */}
