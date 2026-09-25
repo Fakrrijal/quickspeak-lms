@@ -72,6 +72,8 @@ function AdminTeachingGroupsPage() {
   const [levelFilter, setLevelFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState<'' | 'private' | 'semi_private'>('')
   const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   useEffect(() => {
     if (loading || profileLoading) {
@@ -494,6 +496,29 @@ function AdminTeachingGroupsPage() {
   })
   const hasActiveGroupFilters = Boolean(
     groupSearch.trim() || levelFilter || typeFilter || statusFilter,
+  )
+  const totalGroupPages = Math.max(1, Math.ceil(filteredTeachingGroups.length / pageSize))
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [groupSearch, levelFilter, typeFilter, statusFilter])
+
+  useEffect(() => {
+    if (currentPage > totalGroupPages) {
+      setCurrentPage(totalGroupPages)
+    }
+  }, [currentPage, totalGroupPages])
+
+  const paginatedTeachingGroups = filteredTeachingGroups.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  )
+  const showingGroupStart = filteredTeachingGroups.length === 0
+    ? 0
+    : (currentPage - 1) * pageSize + 1
+  const showingGroupEnd = Math.min(
+    currentPage * pageSize,
+    filteredTeachingGroups.length,
   )
 
   const clearGroupFilters = () => {
@@ -1000,7 +1025,7 @@ function AdminTeachingGroupsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {filteredTeachingGroups.map((group) => {
+                {paginatedTeachingGroups.map((group) => {
                   const capacity = group.group_type === 'private' ? 1 : 4
                   const typeLabel = group.group_type === 'private'
                     ? 'Private'
@@ -1083,6 +1108,50 @@ function AdminTeachingGroupsPage() {
           </div>
         )}
       </div>
+
+      {!isLoading && !error && filteredTeachingGroups.length > 0 && (
+        <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-600">
+            Showing {showingGroupStart}–{showingGroupEnd} of {filteredTeachingGroups.length} teaching groups
+          </p>
+          <nav aria-label="Teaching group pagination" className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Previous page"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ‹
+            </button>
+            {Array.from({ length: totalGroupPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                aria-label={`Page ${page}`}
+                aria-current={currentPage === page ? 'page' : undefined}
+                onClick={() => setCurrentPage(page)}
+                className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium ${
+                  currentPage === page
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-300 text-slate-700'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              aria-label="Next page"
+              onClick={() => setCurrentPage((page) => Math.min(totalGroupPages, page + 1))}
+              disabled={currentPage === totalGroupPages}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ›
+            </button>
+          </nav>
+        </div>
+      )}
     </section>
   )
 }
