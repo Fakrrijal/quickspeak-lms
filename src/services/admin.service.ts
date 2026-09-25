@@ -102,6 +102,10 @@ export type AdminStudentDirectoryItem = {
   } | null
   teaching_group_names: string[]
   class_types: ClassType[]
+  session_progress: {
+    completed: number
+    limit: number
+  } | null
 }
 
 export type ClassType = 'private' | 'semi_private'
@@ -713,6 +717,16 @@ export async function getAdminStudents() {
       directoryStatus = 'renewal'
     }
 
+    const progressEnrollment = activeEnrollment ?? latestCompletedCurrentLevelEnrollment
+    const sessionProgress = progressEnrollment
+      ? {
+          completed: progressEnrollment.id === activeEnrollment?.id
+            ? activeEnrollmentSessions
+            : completedCurrentLevelSessions,
+          limit: progressEnrollment.session_limit,
+        }
+      : null
+
     return {
       ...student,
       profile,
@@ -722,6 +736,7 @@ export async function getAdminStudents() {
       class_types: registrationClassType
         ? [registrationClassType]
         : [...new Set(legacyClassTypes)],
+      session_progress: sessionProgress,
     }
   }) as AdminStudentDirectoryItem[]
 }
