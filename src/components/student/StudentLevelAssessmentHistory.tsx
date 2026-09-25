@@ -103,9 +103,9 @@ export function StudentLevelAssessmentHistory() {
         item.teacher_id,
         {
           value: item.teacher_id,
-          label: item.teacher_code
-            ? `${item.teacher_code.replace(/^TCH-/i, '')} · ${item.teacher_id.slice(0, 8)}`
-            : item.teacher_id,
+          label: item.teacher_name
+            ? `${item.teacher_name}${item.teacher_code ? ` · ${item.teacher_code.replace(/^TCH-/i, '')}` : ''}`
+            : item.teacher_code ?? '—',
         },
       ]),
     ).values()],
@@ -261,7 +261,7 @@ export function StudentLevelAssessmentHistory() {
                               Completed {formatDate(item.completed_at)}
                             </p>
                             <p className="mt-2 text-sm font-semibold text-slate-700">
-                              Teacher: {item.teacher_code ? item.teacher_code.replace(/^TCH-/i, '') : '—'}
+                              Teacher: {item.teacher_name ? `${item.teacher_name}${item.teacher_code ? ` · ${item.teacher_code.replace(/^TCH-/i, '')}` : ''}` : item.teacher_code ? item.teacher_code.replace(/^TCH-/i, '') : '—'}
                             </p>
                           </div>
 
@@ -353,7 +353,7 @@ export function StudentLevelAssessmentHistory() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">Assessment Details</p>
                 <h3 id="assessment-detail-title" className="mt-1 text-xl font-extrabold text-[#102449]">Level {viewingResult.level_number} · {viewingResult.level_name ?? `Level ${viewingResult.level_number}`}</h3>
-                <p className="mt-1 text-sm text-slate-500">Completed {formatDate(viewingResult.completed_at)} · Teacher {viewingResult.teacher_code ? viewingResult.teacher_code.replace(/^TCH-/i, '') : '—'}</p>
+                <p className="mt-1 text-sm text-slate-500">Completed {formatDate(viewingResult.completed_at)} · Teacher {viewingResult.teacher_name ? `${viewingResult.teacher_name}${viewingResult.teacher_code ? ` · ${viewingResult.teacher_code.replace(/^TCH-/i, '')}` : ''}` : viewingResult.teacher_code ? viewingResult.teacher_code.replace(/^TCH-/i, '') : '—'}</p>
               </div>
               <button type="button" onClick={() => setViewingResult(null)} aria-label="Close assessment details" className="rounded-lg px-2 py-1 text-lg font-bold text-slate-500 hover:bg-slate-100">×</button>
             </div>
@@ -378,7 +378,7 @@ export function StudentLevelAssessmentHistory() {
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.11em] text-slate-500">Teacher</p>
-                <p className="mt-1 text-sm font-extrabold text-[#102449]">{viewingResult.teacher_code ? viewingResult.teacher_code.replace(/^TCH-/i, '') : '—'}</p>
+                <p className="mt-1 text-sm font-extrabold text-[#102449]">{viewingResult.teacher_name ? viewingResult.teacher_name : viewingResult.teacher_code ? viewingResult.teacher_code.replace(/^TCH-/i, '') : '—'}</p>
               </div>
             </div>
 
