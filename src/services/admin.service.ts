@@ -586,7 +586,7 @@ export async function getAdminStudents() {
     ? { data: [], error: null }
     : await supabase
       .from('meetings')
-      .select('enrollment_id, attendance (teacher_status)')
+      .select('enrollment_id')
       .in('enrollment_id', enrollmentIds)
 
   if (enrollmentMeetingsError) {
@@ -595,10 +595,6 @@ export async function getAdminStudents() {
 
   const sessionCountByEnrollment = new Map<string, number>()
   for (const meeting of enrollmentMeetings ?? []) {
-    const attendance = Array.isArray(meeting.attendance)
-      ? meeting.attendance[0] ?? null
-      : meeting.attendance
-
     const currentCount = sessionCountByEnrollment.get(meeting.enrollment_id) ?? 0
     sessionCountByEnrollment.set(meeting.enrollment_id, currentCount + 1)
   }
