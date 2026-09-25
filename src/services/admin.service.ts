@@ -563,7 +563,7 @@ export async function getAdminStudents() {
     ? { data: [], error: null }
     : await supabase
       .from('enrollments')
-      .select('id, student_id, level_id, status, created_at, levels (level_number)')
+      .select('id, student_id, level_id, package_type, session_limit, status, created_at, levels (level_number)')
       .in('student_id', studentIds)
       .in('status', [
         'pending',
@@ -581,6 +581,30 @@ export async function getAdminStudents() {
     throw enrollmentsError
   }
 
+  const enrollmentIds = (enrollments ?? []).map((enrollment) => enrollment.id)
+  const { data: enrollmentMeetings, error: enrollmentMeetingsError } = enrollmentIds.length === 0
+    ? { data: [], error: null }
+    : await supabase
+      .from('meetings')
+      .select('enrollment_id, attendance (teacher_status)')
+      .in('enrollment_id', enrollmentIds)
+
+  if (enrollmentMeetingsError) {
+    throw enrollmentMeetingsError
+  }
+
+  const sessionCountByEnrollment = new Map<string, number>()
+  for (const meeting of enrollmentMeetings ?? []) {
+    const attendance = Array.isArray(meeting.attendance)
+      ? meeting.attendance[0] ?? null
+      : meeting.attendance
+
+    const currentCount = sessionCountByEnrollment.get(meeting.enrollment_id) ?? 0
+    if (attendance?.teacher_status === 'present' || attendance?.teacher_status === 'absent') {
+      sessionCountByEnrollment.set(meeting.enrollment_id, currentCount + 1)
+    }
+  }
+
   const classTypeByProfileId = new Map(
     (applications ?? []).map((application) => [application.profile_id, application.student_class_type as ClassType | null]),
   )
@@ -590,6 +614,8 @@ export async function getAdminStudents() {
     level_id: string
     status: string
     created_at: string
+    package_type: 'private' | 'semi_private'
+    session_limit: number
     levels: { level_number: number } | { level_number: number }[] | null
   }>>()
 
@@ -601,6 +627,8 @@ export async function getAdminStudents() {
       level_id: string
       status: string
       created_at: string
+      package_type: 'private' | 'semi_private'
+      session_limit: number
       levels: { level_number: number } | { level_number: number }[] | null
     })
     enrollmentsByStudent.set(enrollment.student_id, current)
@@ -640,9 +668,17 @@ export async function getAdminStudents() {
         || enrollment.status === 'payment_approved'
         || enrollment.status === 'teacher_assignment'
     ))
-    const completedCurrentLevelEnrollment = level
-      ? studentEnrollments.some((enrollment) => enrollment.level_id === level.id && enrollment.status === 'completed')
-      : false
+    const completedCurrentLevelEnrollments = level
+      ? studentEnrollments.filter((enrollment) => enrollment.level_id === level.id && enrollment.status === 'completed')
+      : []
+    const latestCompletedCurrentLevelEnrollment = completedCurrentLevelEnrollments[0] ?? null
+    const completedCurrentLevelSessions = latestCompletedCurrentLevelEnrollment
+      ? sessionCountByEnrollment.get(latestCompletedCurrentLevelEnrollment.id) ?? 0
+      : 0
+    const completedCurrentLevel = Boolean(
+      latestCompletedCurrentLevelEnrollment
+      && completedCurrentLevelSessions >= latestCompletedCurrentLevelEnrollment.session_limit,
+    )
     const pendingEnrollmentLevel = pendingEnrollment
       ? (Array.isArray(pendingEnrollment.levels)
         ? pendingEnrollment.levels[0] ?? null
@@ -659,16 +695,18 @@ export async function getAdminStudents() {
       level
       && pendingEnrollment
       && pendingEnrollment.level_id === level.id
-      && completedCurrentLevelEnrollment
+      && completedCurrentLevel
     ) {
       directoryStatus = 'renewal'
     } else if (
       level
       && pendingEnrollment
       && pendingEnrollmentLevel?.level_number === level.level_number + 1
-      && completedCurrentLevelEnrollment
+      && completedCurrentLevel
     ) {
       directoryStatus = 'next_level'
+    } else if (completedCurrentLevel) {
+      directoryStatus = 'renewal'
     }
 
     return {
