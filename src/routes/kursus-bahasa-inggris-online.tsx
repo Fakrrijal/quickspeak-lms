@@ -52,10 +52,6 @@ function OnlineEnglishCoursePage() {
           to: '/kursus-bahasa-inggris-anak',
           label: 'Kursus Bahasa Inggris untuk Anak',
         },
-        {
-          to: '/kursus-bahasa-inggris-online',
-          label: 'Kursus Bahasa Inggris Online',
-        },
       ]}
     />
   )
