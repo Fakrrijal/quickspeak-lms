@@ -8,6 +8,7 @@ export type LevelResult = {
   level_number?: number
   teacher_id: string
   teacher_code?: string
+  teacher_name?: string
   speaking: number
   listening: number
   vocabulary: number
@@ -131,7 +132,32 @@ export async function getStudentLevelResults(levelId?: string): Promise<LevelRes
   })
 
   if (error) throw error
-  return (data ?? []) as LevelResult[]
+
+  const rows = (data ?? []) as LevelResult[]
+  const teacherIds = [...new Set(rows.map((row) => row.teacher_id).filter(Boolean))]
+
+  if (teacherIds.length === 0) return rows
+
+  const { data: teachers, error: teachersError } = await supabase
+    .from('teachers')
+    .select('id, profiles (full_name)')
+    .in('id', teacherIds)
+
+  if (teachersError) throw teachersError
+
+  const teacherNameById = new Map(
+    (teachers ?? []).map((teacher) => {
+      const profile = Array.isArray(teacher.profiles)
+        ? teacher.profiles[0] ?? null
+        : teacher.profiles
+      return [teacher.id, profile?.full_name ?? '—'] as const
+    }),
+  )
+
+  return rows.map((row) => ({
+    ...row,
+    teacher_name: teacherNameById.get(row.teacher_id) ?? '—',
+  }))
 }
 
 export async function getStudentLevelPackageStatus(): Promise<StudentLevelPackageStatus | null> {
