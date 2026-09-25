@@ -10,7 +10,6 @@ import {
 type TeacherLevelAssessmentPanelProps = {
   studentId: string
   levelId: string
-  levelNumber: number
   levelName: string
   isCurrentLevel: boolean
   onCompleted?: () => void | Promise<void>
@@ -65,7 +64,6 @@ function formatDate(value: string) {
 export function TeacherLevelAssessmentPanel({
   studentId,
   levelId,
-  levelNumber,
   levelName,
   isCurrentLevel,
   onCompleted,
