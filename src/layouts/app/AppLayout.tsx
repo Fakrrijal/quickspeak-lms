@@ -7,6 +7,12 @@ import { isPortalPath, type PortalRole } from '../portal/portal-navigation'
 import { StudentDashboardV2 } from '../../components/student/StudentDashboardV2'
 import { useProfile } from '../../hooks/useProfile'
 
+const publicSeoPaths = [
+  '/kursus-bahasa-inggris-bandung',
+  '/kursus-bahasa-inggris-online',
+  '/kursus-bahasa-inggris-anak',
+] as const
+
 export function AppLayout() {
   const { isAuthenticated, profile, role, user } = useAuthContext()
   const navigate = useNavigate()
@@ -41,15 +47,15 @@ export function AppLayout() {
       <>
         <HeadContent />
         <EnterprisePortalShell
-        role={portalRole}
-        userName={profile.full_name || 'QuickSpeak user'}
-        avatarUrl={portalRole === 'student' || portalRole === 'teacher' ? avatarUrl : null}
-        pathname={pathname}
-        isLoggingOut={isLoggingOut}
-        logoutError={logoutError}
-        onLogout={() => void handleLogout()}
-      >
-        {pathname === '/student' ? <StudentDashboardV2 /> : <Outlet />}
+          role={portalRole}
+          userName={profile.full_name || 'QuickSpeak user'}
+          avatarUrl={portalRole === 'student' || portalRole === 'teacher' ? avatarUrl : null}
+          pathname={pathname}
+          isLoggingOut={isLoggingOut}
+          logoutError={logoutError}
+          onLogout={() => void handleLogout()}
+        >
+          {pathname === '/student' ? <StudentDashboardV2 /> : <Outlet />}
         </EnterprisePortalShell>
       </>
     )
@@ -57,9 +63,12 @@ export function AppLayout() {
 
   const isPartnerPage = pathname === '/partner'
   const isHomePage = pathname === '/'
+  const isSeoLandingPage = publicSeoPaths.includes(
+    pathname as (typeof publicSeoPaths)[number],
+  )
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname)
 
-  if (isHomePage) {
+  if (isHomePage || isSeoLandingPage) {
     return (
       <>
         <HeadContent />
@@ -72,31 +81,38 @@ export function AppLayout() {
     <>
       <HeadContent />
       <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
-      {!isPartnerPage && (
-        <header className="border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
-          <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between px-5 py-2 sm:px-6">
-            <a href="/" className="inline-flex items-center gap-2.5" aria-label="QuickSpeak home">
-              <img src="/favicon.png" alt="QuickSpeak" className="h-9 w-9 shrink-0" />
-              <div className="leading-tight">
-                <div className="text-[17px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
-                <div className="text-[8px] font-bold uppercase tracking-[0.28em] text-[#1b5dd7]">English</div>
-              </div>
-            </a>
-            {isAuthenticated && !isAuthPage && (
-              <div className="flex items-center gap-4">
-                {logoutError && <span className="text-sm text-red-600">{logoutError}</span>}
-                <button onClick={handleLogout} disabled={isLoggingOut} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50">
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
-      )}
+        {!isPartnerPage && (
+          <header className="border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
+            <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between px-5 py-2 sm:px-6">
+              <a href="/" className="inline-flex items-center gap-2.5" aria-label="QuickSpeak home">
+                <img src="/favicon.png" alt="QuickSpeak" className="h-9 w-9 shrink-0" />
+                <div className="leading-tight">
+                  <div className="text-[17px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
+                  <div className="text-[8px] font-bold uppercase tracking-[0.28em] text-[#1b5dd7]">English</div>
+                </div>
+              </a>
+              {isAuthenticated && !isAuthPage && (
+                <div className="flex items-center gap-4">
+                  {logoutError && <span className="text-sm text-red-600">{logoutError}</span>}
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </header>
+        )}
 
-      <main className={isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'} id={isAuthPage ? undefined : 'top'}>
-        <Outlet />
-      </main>
+        <main
+          className={isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'}
+          id={isAuthPage ? undefined : 'top'}
+        >
+          <Outlet />
+        </main>
       </div>
     </>
   )
