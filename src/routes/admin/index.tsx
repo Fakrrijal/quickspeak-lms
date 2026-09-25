@@ -143,7 +143,20 @@ function AdminStudentManagementPage() {
                   <td className="break-words px-3 py-3"><div>{student.profile?.email ?? '—'}</div><div className="mt-1 text-xs text-slate-500">{student.profile?.phone ?? '—'}</div></td>
                   <td className="break-words px-3 py-3"><div>{student.level?.name ?? 'Level unavailable'}</div><div className="mt-1 text-xs text-slate-500">{student.class_types.length > 0 ? student.class_types.map(formatClassType).join(', ') : '—'}</div></td>
                   <td className="px-3 py-3">{student.profile?.created_at ? new Intl.DateTimeFormat('en-US').format(new Date(student.profile.created_at)) : '—'}</td>
-                  <td className="break-words px-3 py-3">{student.teaching_group_names.length > 0 ? student.teaching_group_names.join(', ') : 'Not Assigned'}</td>
+                  <td className="break-words px-3 py-3">
+                    {student.teaching_group_names.length > 0 ? (
+                      <>
+                        <div>{student.teaching_group_names.join(', ')}</div>
+                        {student.session_progress && (
+                          <div className="mt-1 text-xs font-medium text-slate-500">
+                            Sessions {student.session_progress.completed}/{student.session_progress.limit}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      'Not Assigned'
+                    )}
+                  </td>
                   <td className="px-3 py-3"><span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">{formatDirectoryStatus(student.directory_status)}</span></td>
                   <td className="px-3 py-3"><button type="button" onClick={() => void openStudentEditor(student)} className="font-medium text-slate-900 underline">Edit</button></td>
                 </tr>)}
