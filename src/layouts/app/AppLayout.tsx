@@ -38,7 +38,9 @@ export function AppLayout() {
 
   if (isAuthenticated && profile && portalRole && isPortalPath(pathname)) {
     return (
-      <EnterprisePortalShell
+      <>
+        <HeadContent />
+        <EnterprisePortalShell
         role={portalRole}
         userName={profile.full_name || 'QuickSpeak user'}
         avatarUrl={portalRole === 'student' || portalRole === 'teacher' ? avatarUrl : null}
@@ -48,7 +50,8 @@ export function AppLayout() {
         onLogout={() => void handleLogout()}
       >
         {pathname === '/student' ? <StudentDashboardV2 /> : <Outlet />}
-      </EnterprisePortalShell>
+        </EnterprisePortalShell>
+      </>
     )
   }
 
@@ -57,11 +60,18 @@ export function AppLayout() {
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(pathname)
 
   if (isHomePage) {
-    return <Outlet />
+    return (
+      <>
+        <HeadContent />
+        <Outlet />
+      </>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
+    <>
+      <HeadContent />
+      <div className="min-h-screen bg-[#f6f8fc] text-slate-900">
       {!isPartnerPage && (
         <header className="border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
           <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between px-5 py-2 sm:px-6">
@@ -87,6 +97,7 @@ export function AppLayout() {
       <main className={isAuthPage ? 'mx-auto max-w-7xl px-6 py-8 sm:py-10' : 'mx-auto max-w-7xl px-6 py-8'} id={isAuthPage ? undefined : 'top'}>
         <Outlet />
       </main>
-    </div>
+      </div>
+    </>
   )
 }
