@@ -2,9 +2,9 @@ import { useState, type FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
 
 const navItems = [
-  { label: 'Beranda', href: '#top' },
-  { label: 'Program', href: '#programs' },
-  { label: 'Kontak', href: '#contact' },
+  { label: 'Beranda', href: '/#top' },
+  { label: 'Program', href: '/#programs' },
+  { label: 'Kontak', href: '/#contact' },
 ]
 
 export function PublicHeader() {
@@ -100,7 +100,7 @@ export function PublicHeader() {
       {/* Primary navigation */}
       <nav className="mx-auto flex min-h-[74px] max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3" aria-label="QuickSpeak English home">
-          <img src="/favicon.svg" alt="" aria-hidden="true" className="h-[42px] w-[42px] shrink-0 object-contain" />
+          <img src="/favicon.png" alt="" aria-hidden="true" className="h-[42px] w-[42px] shrink-0 object-contain" />
           <span className="leading-none">
             <span className="block text-[18px] font-extrabold tracking-[-0.03em] text-[#102449]">QuickSpeak</span>
             <span className="mt-0.5 block text-[8px] font-bold uppercase tracking-[0.34em] text-[#1b5dd7]">English</span>

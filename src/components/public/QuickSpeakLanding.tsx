@@ -131,19 +131,6 @@ const faqItems = [
 ]
 
 export function QuickSpeakLanding() {
-  useEffect(() => {
-    document.title = 'QuickSpeak — English Course'
-
-    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null
-    if (!meta) {
-      meta = document.createElement('meta')
-      meta.name = 'description'
-      document.head.appendChild(meta)
-    }
-    meta.content =
-      'QuickSpeak adalah English Course dengan pembelajaran terstruktur, empat level, dan dukungan teacher.'
-  }, [])
-
   // Testimonial carousel state
   const [currentSlide, setCurrentSlide] = useState(0)
   const [cardsPerView, setCardsPerView] = useState(3)
@@ -281,7 +268,7 @@ export function QuickSpeakLanding() {
                 </div>
 
                 <h1 className="mt-5 text-4xl font-semibold leading-[1.15] tracking-[-0.03em] text-[#102449] sm:text-5xl lg:text-[3.25rem]">
-                  Belajar Bahasa Inggris dengan Cara Praktis dan Menyenangkan
+                  Kursus Bahasa Inggris Online dan Terstruktur Bersama QuickSpeak
                 </h1>
 
                 <p className="mt-5 max-w-lg text-base leading-7 text-slate-700 sm:text-lg">
@@ -620,6 +607,55 @@ export function QuickSpeakLanding() {
             </div>
           </div>
         </section>
+
+            <section className="bg-[#f8fafc] py-16 border-t border-slate-200/80">
+              <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+                <div className="mx-auto max-w-3xl text-center">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1b5dd7]">JELAJAHI PROGRAM</p>
+                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[#102449] sm:text-4xl">
+                    Temukan Program Bahasa Inggris QuickSpeak
+                  </h2>
+                  <p className="mt-4 text-base leading-8 text-slate-600">
+                    Kenali pilihan pembelajaran berdasarkan lokasi, format kelas, dan kebutuhan belajar Anda.
+                  </p>
+                </div>
+
+                <div className="mt-10 grid gap-5 md:grid-cols-3">
+                  <Link
+                    to="/kursus-bahasa-inggris-bandung"
+                    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <h3 className="text-lg font-bold text-[#102449]">Kursus Bahasa Inggris Bandung</h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      Informasi program QuickSpeak untuk siswa yang mencari kursus Bahasa Inggris di Bandung.
+                    </p>
+                    <span className="mt-4 inline-flex text-sm font-bold text-[#1b5dd7]">Lihat program →</span>
+                  </Link>
+
+                  <Link
+                    to="/kursus-bahasa-inggris-online"
+                    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <h3 className="text-lg font-bold text-[#102449]">Kursus Bahasa Inggris Online</h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      Pelajari sistem kelas online, pendampingan teacher, dan tahapan belajar QuickSpeak.
+                    </p>
+                    <span className="mt-4 inline-flex text-sm font-bold text-[#1b5dd7]">Lihat program →</span>
+                  </Link>
+
+                  <Link
+                    to="/kursus-bahasa-inggris-anak"
+                    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <h3 className="text-lg font-bold text-[#102449]">Kursus Bahasa Inggris untuk Anak</h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      Kenali pendekatan bertahap QuickSpeak untuk anak dan remaja.
+                    </p>
+                    <span className="mt-4 inline-flex text-sm font-bold text-[#1b5dd7]">Lihat program →</span>
+                  </Link>
+                </div>
+              </div>
+            </section>
 
         <section className="bg-[#f4f7ff] py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

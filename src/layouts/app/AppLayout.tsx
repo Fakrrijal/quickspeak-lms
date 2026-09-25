@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { HeadContent, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { authService } from '../../services/auth.service'
 import { useAuthContext } from '../../providers/AuthProvider'
 import { useState } from 'react'
@@ -66,7 +66,7 @@ export function AppLayout() {
         <header className="border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
           <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between px-5 py-2 sm:px-6">
             <a href="/" className="inline-flex items-center gap-2.5" aria-label="QuickSpeak home">
-              <img src="/favicon.svg" alt="QuickSpeak" className="h-9 w-9 shrink-0" />
+              <img src="/favicon.png" alt="QuickSpeak" className="h-9 w-9 shrink-0" />
               <div className="leading-tight">
                 <div className="text-[17px] font-extrabold tracking-[-0.02em] text-[#102449]">QuickSpeak</div>
                 <div className="text-[8px] font-bold uppercase tracking-[0.28em] text-[#1b5dd7]">English</div>
