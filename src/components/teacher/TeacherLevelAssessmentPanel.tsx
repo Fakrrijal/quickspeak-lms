@@ -159,7 +159,7 @@ export function TeacherLevelAssessmentPanel({
       <div className="flex flex-col gap-3 border-b border-slate-200 pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-blue-700">Level Completion</p>
-          <h4 id="level-assessment-title" className="mt-1 text-xl font-extrabold text-[#102449]">Level {levelNumber} · {levelName}</h4>
+          <h4 id="level-assessment-title" className="mt-1 text-xl font-extrabold text-[#102449]">{levelName}</h4>
           <p className="mt-1 text-sm text-slate-500">Nilai akhir diberikan satu kali saat level selesai.</p>
         </div>
         {packageStatus && (
@@ -191,7 +191,7 @@ export function TeacherLevelAssessmentPanel({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Assessment Completed</p>
-                <h5 className="mt-1 text-lg font-extrabold text-[#102449]">Level {levelNumber} · {levelName}</h5>
+                <h5 className="mt-1 text-lg font-extrabold text-[#102449]">{levelName}</h5>
                 <p className="mt-1 text-xs font-semibold text-slate-500">Completed {formatDate(result.completed_at)}</p>
                 <p className="mt-3 text-sm font-semibold text-slate-700">Assessment sudah tersimpan dan tidak dapat dinilai ulang.</p>
               </div>
@@ -284,7 +284,7 @@ export function TeacherLevelAssessmentPanel({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">Assessment Details</p>
-                <h5 id="teacher-assessment-details-title" className="mt-1 text-xl font-extrabold text-[#102449]">Level {levelNumber} · {levelName}</h5>
+                <h5 id="teacher-assessment-details-title" className="mt-1 text-xl font-extrabold text-[#102449]">{levelName}</h5>
                 <p className="mt-1 text-sm text-slate-500">Completed {formatDate(result.completed_at)}</p>
               </div>
               <button
