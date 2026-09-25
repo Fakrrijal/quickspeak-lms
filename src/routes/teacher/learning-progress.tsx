@@ -392,7 +392,7 @@ function TeacherLearningProgressPage() {
               </div>
             )}
 
-            {activeLevel?.levelId && <TeacherLevelAssessmentPanel studentId={selectedStudent.studentId} levelId={activeLevel.levelId} levelNumber={activeLevel.levelNumber} levelName={activeLevel.levelName} isCurrentLevel={activeLevel.levelNumber === selectedStudent.currentLevelNumber} onCompleted={refresh} />}
+            {activeLevel?.levelId && <TeacherLevelAssessmentPanel studentId={selectedStudent.studentId} levelId={activeLevel.levelId} levelName={activeLevel.levelName} isCurrentLevel={activeLevel.levelNumber === selectedStudent.currentLevelNumber} onCompleted={refresh} />}
           </div>
         </section>
       )}
