@@ -52,10 +52,6 @@ function ChildrenEnglishCoursePage() {
           to: '/kursus-bahasa-inggris-bandung',
           label: 'Kursus Bahasa Inggris Bandung',
         },
-        {
-          to: '/kursus-bahasa-inggris-anak',
-          label: 'Kursus Bahasa Inggris untuk Anak',
-        },
       ]}
     />
   )
