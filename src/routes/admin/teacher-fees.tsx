@@ -45,85 +45,235 @@ function formatPackageType(packageType: TeacherFeeDetailEntry['package_type']) {
 }
 
 function TeacherFeeDetailModal({ report, month, year, onClose }: { report: AdminTeacherFeeReport, month: number, year: number, onClose: () => void }) {
+  const [meetingPage, setMeetingPage] = useState(1)
+  const [expandedMeetingId, setExpandedMeetingId] = useState<string | null>(null)
+  const meetingPageSize = 10
+
   const meetings = useMemo(() => {
     const byMeeting = new Map<string, TeacherFeeDetailEntry[]>()
-    report.detail_entries.forEach((entry) => byMeeting.set(entry.meeting_id, [...(byMeeting.get(entry.meeting_id) ?? []), entry]))
+    report.detail_entries.forEach((entry) => {
+      byMeeting.set(entry.meeting_id, [...(byMeeting.get(entry.meeting_id) ?? []), entry])
+    })
 
     return [...byMeeting.values()]
       .map((entries) => entries.sort((left, right) => left.attendance_recorded_at.localeCompare(right.attendance_recorded_at)))
-      .sort((left, right) => left[0].session_date.localeCompare(right[0].session_date) || left[0].attendance_recorded_at.localeCompare(right[0].attendance_recorded_at))
+      .sort((left, right) => right[0].session_date.localeCompare(left[0].session_date) || right[0].attendance_recorded_at.localeCompare(left[0].attendance_recorded_at))
   }, [report.detail_entries])
+
   const studentSummaries = useMemo(() => summarizeTeacherFeeDetails(report.detail_entries), [report.detail_entries])
   const totalPresentAttendances = studentSummaries.reduce((total, summary) => total + summary.present_attendance_count, 0)
+  const meetingTotalPages = Math.max(1, Math.ceil(meetings.length / meetingPageSize))
+  const paginatedMeetings = meetings.slice((meetingPage - 1) * meetingPageSize, meetingPage * meetingPageSize)
+  const showingMeetingStart = meetings.length === 0 ? 0 : (meetingPage - 1) * meetingPageSize + 1
+  const showingMeetingEnd = Math.min(meetingPage * meetingPageSize, meetings.length)
   const reconciliationMessage = report.detail_reconciles_period
     ? 'Detail reconciles with Teacher Fee total.'
     : report.status === 'paid'
       ? 'Historical detail does not currently reconcile with the frozen settlement amount.'
       : 'Detail does not currently reconcile with the Teacher Fee total.'
 
+  useEffect(() => {
+    setMeetingPage(1)
+    setExpandedMeetingId(null)
+  }, [report.teacher_id, report.period_start])
+
+  useEffect(() => {
+    if (meetingPage > meetingTotalPages) setMeetingPage(meetingTotalPages)
+  }, [meetingPage, meetingTotalPages])
+
   return <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/40 p-4" role="presentation">
-    <div role="dialog" aria-modal="true" aria-labelledby="teacher-fee-detail-title" className="mx-auto my-6 w-full max-w-5xl rounded-2xl bg-slate-50 shadow-xl">
-      <header className="sticky top-0 z-10 flex items-start justify-between gap-4 rounded-t-2xl border-b border-slate-200 bg-white px-6 py-5">
+    <div role="dialog" aria-modal="true" aria-labelledby="teacher-fee-detail-title" className="mx-auto my-6 w-full max-w-6xl rounded-2xl bg-slate-50 shadow-xl">
+      <header className="sticky top-0 z-20 flex items-start justify-between gap-4 rounded-t-2xl border-b border-slate-200 bg-white px-6 py-5">
         <div>
           <h3 id="teacher-fee-detail-title" className="text-xl font-bold text-slate-900">Teacher Fee Detail</h3>
-          <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm text-slate-600 sm:grid-cols-2">
+          <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
             <div><dt className="inline font-medium text-slate-700">Teacher: </dt><dd className="inline">{report.teacher_name}</dd></div>
-            <div><dt className="inline font-medium text-slate-700">Teacher Code: </dt><dd className="inline">{report.teacher_code}</dd></div>
+            <div><dt className="inline font-medium text-slate-700">Code: </dt><dd className="inline">{report.teacher_code}</dd></div>
             <div><dt className="inline font-medium text-slate-700">Period: </dt><dd className="inline">{formatMonth(year, month)}</dd></div>
-            <div><dt className="inline font-medium text-slate-700">Status: </dt><dd className="inline uppercase">{report.status}</dd></div>
+            <div><dt className="inline font-medium text-slate-700">Status: </dt><dd className="inline font-semibold uppercase">{report.status}</dd></div>
           </dl>
         </div>
         <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Close</button>
       </header>
 
-      <div className="space-y-6 p-6">
-        {report.detail_entries.length === 0 ? <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">No fee detail available for this teacher and period.</p> : <>
-          <section>
-            <h4 className="text-lg font-bold text-slate-900">Meeting &amp; Attendance Detail</h4>
-            <div className="mt-3 space-y-4">{meetings.map((entries) => {
-              const meeting = entries[0]
-              return <article key={meeting.meeting_id} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <p className="font-semibold text-slate-900">{formatDate(meeting.session_date)} · {formatTime(meeting.attendance_recorded_at)}</p>
-                  <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-3">
-                    <span><strong>Teaching Group:</strong> {meeting.teaching_group_name}</span>
-                    <span><strong>Package:</strong> {formatPackageType(meeting.package_type)}</span>
-                    <span><strong>Level:</strong> {meeting.level_name}</span>
-                  </div>
-                </div>
-                <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="text-slate-500"><tr><th className="px-4 py-3">Student</th><th className="px-4 py-3">Code</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Fee</th></tr></thead><tbody className="divide-y divide-slate-100">{entries.map((entry) => <tr key={entry.attendance_id}><td className="px-4 py-3 font-medium text-slate-900">{entry.student_name}</td><td className="px-4 py-3 text-slate-600">{entry.student_code}</td><td className="px-4 py-3 capitalize">{entry.attendance_status}</td><td className="px-4 py-3 text-right">{formatAmount(entry.student_fee)}</td></tr>)}</tbody></table></div>
-                <p className="border-t border-slate-100 px-4 py-3 text-right text-sm font-bold text-slate-900">Meeting Fee: {formatAmount(meeting.meeting_fee)}</p>
-              </article>
-            })}</div>
-          </section>
+      <div className="space-y-5 p-6">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Earned</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{formatAmount(report.earned_amount)}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Paid</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{formatAmount(report.paid_amount)}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Outstanding</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{formatAmount(report.outstanding_amount)}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Meetings</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{meetings.length}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Student Attendances</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{totalPresentAttendances}</p>
+          </div>
+        </section>
 
-          <section>
-            <h4 className="text-lg font-bold text-slate-900">Student Fee Summary</h4>
-            <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="px-4 py-3">Student</th><th className="px-4 py-3">Student Code</th><th className="px-4 py-3">Teaching Group</th><th className="px-4 py-3 text-right">Present Attendances</th><th className="px-4 py-3 text-right">Fee / Attendance</th><th className="px-4 py-3 text-right">Total Fee</th></tr></thead><tbody className="divide-y divide-slate-100">{studentSummaries.map((summary) => <tr key={`${summary.student_id}:${summary.teaching_group_id}:${summary.fee_rate}`}><td className="px-4 py-3 font-medium text-slate-900">{summary.student_name}</td><td className="px-4 py-3 text-slate-600">{summary.student_code}</td><td className="px-4 py-3">{summary.teaching_group_name}</td><td className="px-4 py-3 text-right">{summary.present_attendance_count}×</td><td className="px-4 py-3 text-right">{formatAmount(summary.fee_rate)}</td><td className="px-4 py-3 text-right font-medium">{formatAmount(summary.student_total)}</td></tr>)}</tbody></table></div>
-          </section>
-        </>}
+        {report.detail_entries.length === 0 ? (
+          <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">No fee detail available for this teacher and period.</p>
+        ) : (
+          <>
+            <section>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h4 className="text-lg font-bold text-slate-900">Meeting &amp; Attendance Detail</h4>
+                  <p className="mt-1 text-sm text-slate-500">Select a meeting to view the students and attendance fees.</p>
+                </div>
+                <p className="text-sm text-slate-500">Showing {showingMeetingStart}–{showingMeetingEnd} of {meetings.length} meetings</p>
+              </div>
+
+              <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Date</th>
+                        <th className="px-4 py-3 font-semibold">Time</th>
+                        <th className="px-4 py-3 font-semibold">Teaching Group</th>
+                        <th className="px-4 py-3 font-semibold">Level</th>
+                        <th className="px-4 py-3 text-right font-semibold">Present</th>
+                        <th className="px-4 py-3 text-right font-semibold">Meeting Fee</th>
+                        <th className="px-4 py-3 text-right font-semibold">Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {paginatedMeetings.map((entries) => {
+                        const meeting = entries[0]
+                        const presentCount = entries.filter((entry) => entry.attendance_status === 'present').length
+                        const isExpanded = expandedMeetingId === meeting.meeting_id
+
+                        return <tr key={meeting.meeting_id} className="align-top">
+                          <td className="px-4 py-3">{formatDate(meeting.session_date)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{formatTime(meeting.attendance_recorded_at)}</td>
+                          <td className="px-4 py-3 font-medium text-slate-900">{meeting.teaching_group_name}</td>
+                          <td className="px-4 py-3">{meeting.level_name}</td>
+                          <td className="px-4 py-3 text-right">{presentCount}/{entries.length}</td>
+                          <td className="px-4 py-3 text-right font-medium">{formatAmount(meeting.meeting_fee)}</td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedMeetingId(isExpanded ? null : meeting.meeting_id)}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            >
+                              {isExpanded ? 'Hide Students' : 'View Students'}
+                            </button>
+                          </td>
+                        </tr>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {paginatedMeetings.map((entries) => {
+                  const meeting = entries[0]
+                  if (expandedMeetingId !== meeting.meeting_id) return null
+
+                  return <div key={`detail-${meeting.meeting_id}`} className="border-t border-slate-200 bg-slate-50 px-4 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-900">{formatDate(meeting.session_date)} · {formatTime(meeting.attendance_recorded_at)} · {meeting.teaching_group_name}</p>
+                        <p className="mt-1 text-xs text-slate-500">{formatPackageType(meeting.package_type)} · {meeting.level_name}</p>
+                      </div>
+                      <p className="text-sm font-bold text-slate-900">Meeting Fee: {formatAmount(meeting.meeting_fee)}</p>
+                    </div>
+                    <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                      <table className="min-w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-slate-600">
+                          <tr>
+                            <th className="px-4 py-3 font-semibold">Student</th>
+                            <th className="px-4 py-3 font-semibold">Code</th>
+                            <th className="px-4 py-3 font-semibold">Attendance</th>
+                            <th className="px-4 py-3 text-right font-semibold">Fee</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {entries.map((entry) => <tr key={entry.attendance_id}>
+                            <td className="px-4 py-3 font-medium text-slate-900">{entry.student_name}</td>
+                            <td className="px-4 py-3 text-slate-600">{entry.student_code}</td>
+                            <td className="px-4 py-3 capitalize">{entry.attendance_status}</td>
+                            <td className="px-4 py-3 text-right">{formatAmount(entry.student_fee)}</td>
+                          </tr>)}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                })}
+              </div>
+
+              {meetings.length > 0 && <nav aria-label="Meeting detail pagination" className="mt-4 flex items-center justify-between gap-3">
+                <p className="text-sm text-slate-600">Page {meetingPage} of {meetingTotalPages}</p>
+                <div className="flex items-center gap-1">
+                  <button type="button" aria-label="Previous meeting page" onClick={() => { setMeetingPage((page) => Math.max(1, page - 1)); setExpandedMeetingId(null) }} disabled={meetingPage === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">‹</button>
+                  {Array.from({ length: meetingTotalPages }, (_, index) => index + 1).map((page) => <button key={page} type="button" aria-label={`Meeting page ${page}`} aria-current={meetingPage === page ? 'page' : undefined} onClick={() => { setMeetingPage(page); setExpandedMeetingId(null) }} className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium ${meetingPage === page ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 text-slate-700'}`}>{page}</button>)}
+                  <button type="button" aria-label="Next meeting page" onClick={() => { setMeetingPage((page) => Math.min(meetingTotalPages, page + 1)); setExpandedMeetingId(null) }} disabled={meetingPage === meetingTotalPages} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">›</button>
+                </div>
+              </nav>}
+            </section>
+
+            <section>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <h4 className="text-lg font-bold text-slate-900">Student Fee Summary</h4>
+                  <p className="mt-1 text-sm text-slate-500">Aggregated from the fee detail above.</p>
+                </div>
+              </div>
+              <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Student</th>
+                      <th className="px-4 py-3 font-semibold">Student Code</th>
+                      <th className="px-4 py-3 font-semibold">Teaching Group</th>
+                      <th className="px-4 py-3 text-right font-semibold">Present</th>
+                      <th className="px-4 py-3 text-right font-semibold">Fee / Attendance</th>
+                      <th className="px-4 py-3 text-right font-semibold">Total Fee</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {studentSummaries.map((summary) => <tr key={`${summary.student_id}:${summary.teaching_group_id}:${summary.fee_rate}`}>
+                      <td className="px-4 py-3 font-medium text-slate-900">{summary.student_name}</td>
+                      <td className="px-4 py-3 text-slate-600">{summary.student_code}</td>
+                      <td className="px-4 py-3">{summary.teaching_group_name}</td>
+                      <td className="px-4 py-3 text-right">{summary.present_attendance_count}×</td>
+                      <td className="px-4 py-3 text-right">{formatAmount(summary.fee_rate)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{formatAmount(summary.student_total)}</td>
+                    </tr>)}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        )}
 
         <section className="rounded-xl border border-slate-200 bg-white p-4">
-          <h4 className="text-lg font-bold text-slate-900">Teacher Fee Summary</h4>
-          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-4"><div><dt className="text-slate-500">Earned</dt><dd className="mt-1 font-bold text-slate-900">{formatAmount(report.earned_amount)}</dd></div><div><dt className="text-slate-500">Paid</dt><dd className="mt-1 font-bold text-slate-900">{formatAmount(report.paid_amount)}</dd></div><div><dt className="text-slate-500">Outstanding</dt><dd className="mt-1 font-bold text-slate-900">{formatAmount(report.outstanding_amount)}</dd></div><div><dt className="text-slate-500">Total Student Attendances</dt><dd className="mt-1 font-bold text-slate-900">{totalPresentAttendances}</dd></div></dl>
-          <section className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h4 className="text-lg font-bold text-slate-900">Settlement Information</h4>
-            <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
-              <div><dt className="text-slate-500">Period</dt><dd className="mt-1 font-medium text-slate-900">{formatPeriodStart(report.period_start)}</dd></div>
-              <div><dt className="text-slate-500">Status</dt><dd className="mt-1 font-medium uppercase text-slate-900">{report.status}</dd></div>
-              <div><dt className="text-slate-500">Earned</dt><dd className="mt-1 font-medium text-slate-900">{formatAmount(report.earned_amount)}</dd></div>
-              <div><dt className="text-slate-500">Paid</dt><dd className="mt-1 font-medium text-slate-900">{formatAmount(report.paid_amount)}</dd></div>
-              <div><dt className="text-slate-500">Paid At</dt><dd className="mt-1 font-medium text-slate-900">{formatDateTime(report.paid_at)}</dd></div>
-            </dl>
-          </section>
-
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase text-slate-700">{report.status}</span>
+          </div>
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+            <div><dt className="text-slate-500">Period</dt><dd className="mt-1 font-medium text-slate-900">{formatPeriodStart(report.period_start)}</dd></div>
+            <div><dt className="text-slate-500">Earned</dt><dd className="mt-1 font-medium text-slate-900">{formatAmount(report.earned_amount)}</dd></div>
+            <div><dt className="text-slate-500">Paid</dt><dd className="mt-1 font-medium text-slate-900">{formatAmount(report.paid_amount)}</dd></div>
+            <div><dt className="text-slate-500">Outstanding</dt><dd className="mt-1 font-medium text-slate-900">{formatAmount(report.outstanding_amount)}</dd></div>
+            <div><dt className="text-slate-500">Paid At</dt><dd className="mt-1 font-medium text-slate-900">{formatDateTime(report.paid_at)}</dd></div>
+          </dl>
           <p className={`mt-4 text-sm ${report.detail_reconciles_period ? 'text-emerald-700' : 'text-amber-700'}`}>{report.detail_reconciles_period ? '✓ ' : '⚠ '}{reconciliationMessage}</p>
         </section>
       </div>
     </div>
   </div>
 }
-
 function AdminTeacherFeesPage() {
   const { isAuthenticated, loading, profileLoading, profileError, role, status } = useAuthContext()
   const navigate = useNavigate()
